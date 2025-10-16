@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixBuddy – User Dashboard</title>
+    <link rel="stylesheet" href="../css-styling/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.log('Service Worker registration failed:', err));
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.log('Service Worker registration failed:', err));
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.log('Service Worker registration failed:', err));
+}
+</script>
+</head>
+<body class="admin-dashboard-body">
+    <header class="topbar dashboard-header">
+        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <div class="admin-topbar-right">
+            <span class="welcome-message" id="welcomeMessage">👋 Hi, User</span>
+            <div class="user-info">
+                <i class="fa-solid fa-bell notifications-icon"></i>
+                <span class="notification-badge">3</span>
+                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <aside class="sidebar">
+            <h2 class="sidebar-heading">FixBuddy</h2>
+            <nav class="sidebar-nav">
+                <a href="UserDashboard.html" class="sidebar-nav-item active"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+                <a href="MyTickets.html" class="sidebar-nav-item"><i class="fa-solid fa-ticket-alt"></i><span>My Tickets</span></a>
+                <a href="submitticket.html" class="sidebar-nav-item"><i class="fa-solid fa-plus-circle"></i><span>Submit Ticket</span></a>
+                <a href="reports.html" class="sidebar-nav-item"><i class="fa-solid fa-chart-line"></i><span>Reports</span></a>
+                <a href="../Main Dashboard/UserLoginPage.html" class="sidebar-nav-item logout-link"><i class="fa-solid fa-sign-out-alt"></i><span>Logout</span></a>
+            </nav>
+        </aside>
+        <section class="user-tickets-section">
+            <h2>My Tickets</h2>
+            <ul id="ticketList" class="ticket-list"></ul>
+        </section>
+        <script>
+        // Get user info from localStorage after login
+        let user = null;
+        try {
+            user = JSON.parse(localStorage.getItem('user'));
+        } catch (e) {}
+        const user_id = user && user.id ? user.id : 1;
+        if(user && user.email) {
+            document.getElementById('welcomeMessage').textContent = `👋 Hi, ${user.email}`;
+        }
+        async function loadTickets() {
+            try {
+                const response = await fetch('/api/tickets?user_id=' + user_id);
+                const tickets = await response.json();
+                const list = document.getElementById('ticketList');
+                list.innerHTML = '';
+                if (Array.isArray(tickets) && tickets.length === 0) {
+                    list.innerHTML = '<li class="ticket-item empty">No tickets submitted yet.</li>';
+                } else if (Array.isArray(tickets)) {
+                    tickets.forEach(ticket => {
+                        const li = document.createElement('li');
+                        li.className = 'ticket-item';
+                        li.textContent = `#${ticket.id}: ${ticket.title} [${ticket.status}]`;
+                        if(ticket.status === 'solved') {
+                            li.classList.add('solved');
+                        }
+                        list.appendChild(li);
+                    });
+                } else {
+                    list.innerHTML = '<li class="ticket-item error">Error loading tickets.</li>';
+                }
+            } catch (err) {
+                document.getElementById('ticketList').innerHTML = '<li>Error loading tickets.</li>';
+            }
+        }
+
+        // Automatically load tickets when the page loads
+        window.addEventListener('DOMContentLoaded', loadTickets);
+
+        /*
+        What this code does:
+        - Defines a function loadTickets() that fetches tickets for the current user from the backend API.
+        - It displays each ticket in a list, coloring solved tickets green.
+        - If there are no tickets, it shows a message.
+        - If there is an error, it shows an error message.
+        - The function is called automatically when the page loads, so the user sees their tickets instantly.
+        */
+        loadTickets();
+        </script>
+        </section>
+        
+        <section class="admin-content">
+            <div class="content-row">
+                <a href="submitticket.html" class="card action-card btn-primary">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <h3>Create New Ticket</h3>
+                </a>
+                <a href="#" class="card action-card btn-secondary">
+                    <i class="fa-solid fa-list-ul"></i>
+                    <h3>View My Tickets</h3>
+                </a>
+                <div class="card">
+                    <h3>Open Tickets</h3>
+                    <p class="card-metric">2</p>
+                    <p class="card-summary">Current active tickets</p>
+                </div>
+            </div>
+
+            <div class="content-row full-width">
+                <div class="tickets-management-container">
+                    <h2>My Recent Tickets</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>Title</th>
+                                    <th>Submitted</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#FB45678</td>
+                                    <td>Printer is not working</td>
+                                    <td>15 Sep 2025</td>
+                                    <td><span class="status-badge progress">In Progress</span></td>
+                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
+                                </tr>
+                                <tr>
+                                    <td>#FB45679</td>
+                                    <td>Cannot access email account</td>
+                                    <td>14 Sep 2025</td>
+                                    <td><span class="status-badge open">Open</span></td>
+                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
+                                </tr>
+                                <tr>
+                                    <td>#FB45680</td>
+                                    <td>New software installation</td>
+                                    <td>12 Sep 2025</td>
+                                    <td><span class="status-badge closed">Closed</span></td>
+                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <span>© <span id="year"></span> <strong>FixBuddy</strong></span>

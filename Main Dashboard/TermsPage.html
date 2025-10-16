@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixBuddy - Terms of Use</title>
+    <link rel="stylesheet" href="css-styling/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.log('Service Worker registration failed:', err));
+}
+</script>
+</head>
+<body class="main-body">
+
+    <header class="topbar dashboard-header">
+        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <nav class="topbar-nav">
+            <a href="MainDashBoard.html" class="topbar-nav-item">Home</a>
+            <a href="#" class="topbar-nav-item">About Us</a>
+            <a href="SupportPage.html" class="topbar-nav-item">Support</a>
+            <a href="Contact.html" class="topbar-nav-item">Contact Us</a>
+        </nav>
+        <div class="topbar-auth">
+            <a href="UserLogin.html" class="btn btn-primary">Login</a>
+            <a href="SignUp.html" class="btn btn-secondary">Sign Up</a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="content-row full-width">
+            <div class="card page-content-card">
+                <h1>Terms of Use</h1>
+                <p>Welcome to FixBuddy. By accessing or using our service, you agree to be bound by these Terms of Use ("Terms"). If you disagree with any part of the terms, then you may not access the service.</p>
+                <h2>1. User Account</h2>
+                <p>When you create an account with us, you must provide us with accurate and complete information. You are responsible for safeguarding the password that you use to access the service and for any activities or actions under your password.</p>
+                <h2>2. Prohibited Uses</h2>
+                <p>You may not use the service for any illegal or unauthorized purpose. You are prohibited from violating or attempting to violate any security features of the service.</p>
+                <h2>3. Termination</h2>
+                <p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+    <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
+    <span class="footer-sep">|</span>
+    <a href="PrivacyandPolicy.html">Privacy Policy</a>
+    </footer>
+    
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

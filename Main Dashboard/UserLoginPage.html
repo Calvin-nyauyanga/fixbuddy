@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:3000 https://accounts.google.com; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://accounts.google.com;">
+    <title>FixBuddy - Login</title>
+    <link rel="stylesheet" href="../css-styling/STYLING-UNIVERSAL.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered:', reg))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      }
+    </script>
+</head>
+<body class="login-body">
+    <main class="login-container">
+        <div class="login-card">
+            <h1 class="login-heading">Welcome to FixBuddy</h1>
+            <p class="login-subheading">Please sign in to your account</p>
+            <form action="#" method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                        <input type="email" id="email" name="email" placeholder="john.doe@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <div class="form-options">
+                    <a href="JS LOGIC/ForgotPassword.html">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary login-btn">Sign In</button>
+                <div id="loginMessage" style="margin-top:1em;"></div>
+                <!-- Google Sign In Button -->
+                <div id="g_id_onload"
+                    data-client_id="302019067009-t7ghuccd6oj44goe6frob9s0sunu0d63.apps.googleusercontent.com"
+                    data-context="signin"
+                    data-ux_mode="popup"
+                    data-login_uri="http://localhost:3000/api/google-auth"
+                    data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                    data-type="standard"
+                    data-shape="rectangular"
+                    data-theme="outline"
+                    data-text="signin_with"
+                    data-size="large"
+                    data-logo_alignment="left">
+                </div>
+                <script>
+    function handleCredentialResponse(response) {
+    console.log('Google credential:', response.credential);
+    if (!response.credential) {
+        document.getElementById('loginMessage').textContent = "No Google credential received. Please try again.";
+        return;
+    }
+    fetch('http://localhost:3000/api/google-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+    }).then(async res => {
+        const data = await res.json();
+        if (data.success) {
+            window.location.href = "../UserDashboard/UserDashboard.html";
+        } else {
+            document.getElementById('loginMessage').textContent = data.message || "Google sign in failed.";
+        }
+    });
+    }
+    window.onload = function() {
+        google.accounts.id.initialize({
+            client_id: "302019067009-t7ghuccd6oj44goe6frob9s0sunu0d63.apps.googleusercontent.com",
+            callback: handleCredentialResponse
+        });
+        google.accounts.id.renderButton(
+            document.querySelector('.g_id_signin'),
+            { theme: "outline", size: "large" }
+        );
+    };
+                document.querySelector('.login-form').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    const msg = document.getElementById('loginMessage');
+                    msg.textContent = "";
+                    try {
+                        const response = await fetch('http://localhost:3000/api/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, password })
+                        });
+                        const data= await response.json();
+                        if(data.success) {
+                            window.location.href = '../UserDashboard/UserDashboard.html';
+                        } else {
+                            msg.textContent = data.message || 'Email or password is incorrect.';
+                        }
+                    } catch (err) {
+                        msg.textContent = "Error login. Please try again.";
+                    }
+                });
+               </script>
+            </form>
+            <div class="login-options-footer">
+                <a href="SignUp.html" class="btn btn-secondary login-btn mb-1">Don't have an account? Sign Up</a>
+                <a href="AdminLoginPage.html" class="btn btn-secondary login-btn">Log in as Admin</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
+        <span class="footer-sep">|</span>
+    <a href="PrivacyandPolicy.html">Privacy Policy</a>
+        <span class="footer-sep">|</span>
+    <a href="TermsPage.html">Terms of Use</a>
+    </footer>
+    
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

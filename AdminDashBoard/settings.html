@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixBuddy – System Settings</title>
+    <link rel="stylesheet" href="CSS STYLING/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.log('Service Worker registration failed:', err));
+}
+</script>
+</head>
+<body class="admin-dashboard-body">
+
+    <header class="topbar dashboard-header">
+        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <div class="admin-topbar-right">
+            <div class="search-bar">
+                <input type="text" placeholder="Search...">
+                <i class="fa-solid fa-search"></i>
+            </div>
+            <div class="user-info">
+                <i class="fa-solid fa-bell notifications-icon"></i>
+                <i class="fa-solid fa-cog settings-icon"></i>
+                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <aside class="sidebar">
+            <h2 class="sidebar-heading">FixBuddy</h2>
+            <nav class="sidebar-nav">
+                <a href="AdminDashBoard.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-gauge"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="ManageTickets.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-ticket-alt"></i>
+                    <span>Manage Tickets</span>
+                </a>
+                <a href="Users.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="reports.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="sidebar-nav-item active">
+                    <i class="fa-solid fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="Notifications.html" class="sidebar-nav-item active">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="../Main Dashboard/JS LOGIC/AdminLoginPage.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+        
+        <section class="admin-content">
+            <div class="content-row full-width">
+                <div class="card page-content-card">
+                    <h2>System Settings</h2>
+                    <div class="subheading">Configure system-wide parameters and preferences.</div>
+                    
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label for="system-name">System Name</label>
+                            <input type="text" id="system-name" name

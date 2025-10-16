@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="../../../node_modules/@fontsource/poppins/index.css">
+    <meta charset="UTF-8">
+    <title>Verify OTP – FixBuddy</title>
+    <link rel="stylesheet" href="../css/STYLING-UNIVERSAL.css">
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.log('Service Worker registration failed:', err));
+}
+</script>
+</head>
+<body class="verifyotp-body">
+    <div class="verifyotp-container">
+        <h2>Verify OTP</h2>
+        <form id="verifyOtpForm">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+            <label for="otp">OTP:</label>
+            <input type="text" id="otp" required>
+            <button type="submit">Verify OTP</button>
+        </form>
+        <div id="message" class="verifyotp-message"></div>
+    </div>
+
+    <script>
+    document.getElementById('verifyOtpForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const otp = document.getElementById('otp').value;
+
+        const response = await fetch('/api/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp })
+        });
+
+        const result = await response.json();
+        document.getElementById('message').textContent = result.message;
+        if(result.message && result.message.toLowerCase().includes('otp verified')) {
+            // Store email for reset password page
+            localStorage.setItem('resetEmail', email);
+            setTimeout(function() {
+                window.location.href = 'ResetPassword.html';
+            }, 1200);
+        }
+    });
+    </script>
+</body>
+</html>
