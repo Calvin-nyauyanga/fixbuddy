@@ -10,27 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
+    <script src="/backend/site-utils.js"></script>
 </head>
 <body class="admin-dashboard-body">
     <header class="topbar dashboard-header">
@@ -53,7 +33,8 @@ if ('serviceWorker' in navigator) {
                 <a href="MyTickets.html" class="sidebar-nav-item"><i class="fa-solid fa-ticket-alt"></i><span>My Tickets</span></a>
                 <a href="submitticket.html" class="sidebar-nav-item"><i class="fa-solid fa-plus-circle"></i><span>Submit Ticket</span></a>
                 <a href="reports.html" class="sidebar-nav-item"><i class="fa-solid fa-chart-line"></i><span>Reports</span></a>
-                <a href="../Main Dashboard/UserLoginPage.html" class="sidebar-nav-item logout-link"><i class="fa-solid fa-sign-out-alt"></i><span>Logout</span></a>
+                <a href="../Main Dashboard/Settings.html" class="sidebar-nav-item"><i class="fa-solid fa-cog"></i><span>Settings</span></a>
+                <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link"><i class="fa-solid fa-sign-out-alt"></i><span>Logout</span></a>
             </nav>
         </aside>
         <section class="user-tickets-section">
@@ -174,3 +155,24 @@ if ('serviceWorker' in navigator) {
 
     <footer>
         <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
+        
+    </footer>
+    <script>
+        // Display current user if present
+        try {
+            const current = JSON.parse(localStorage.getItem('fixbuddy_current_user')) || JSON.parse(localStorage.getItem('user')) || null;
+            if (current && current.email) {
+                document.getElementById('welcomeMessage').textContent = `👋 Hi, ${current.name || current.email}`;
+            }
+        } catch (e) {}
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            // Clear local session keys
+            localStorage.removeItem('fixbuddy_current_user');
+            localStorage.removeItem('user');
+            // Redirect to main dashboard
+            window.location.href = '../Main Dashboard/MainDashboard.html';
+        });
+    </script>

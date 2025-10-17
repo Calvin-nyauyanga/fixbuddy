@@ -7,26 +7,22 @@
     <meta name="theme-color" content="#fff">
     <title>FixBuddy - Sign Up</title>
     <link rel="stylesheet" href="../css-styling/STYLING-UNIVERSAL.css">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
+    <script src="/backend/site-utils.js"></script>
 </head>
 <body class="login-body">
 
     <main class="login-container">
+        <header>
+            <div id="siteNav" style="position:absolute; right:1rem; top:1rem;"></div>
+        </header>
         <div class="login-card">
             <h1 class="login-heading">Create an Account</h1>
             <p class="login-subheading">Join FixBuddy to submit and track your tickets</p>
-            <form action="#" method="POST" class="login-form" autocomplete="on">
+            <form action="#" method="POST" class="signup-form" autocomplete="on" onsubmit="return false;">
                 <div class="form-group">
                     <label for="name">Full Name</label>
                     <input type="text" id="name" name="name" placeholder="John Doe" required autocomplete="name">
@@ -44,50 +40,7 @@ if ('serviceWorker' in navigator) {
                 </div>
                 <button type="submit" class="btn btn-primary login-btn">Sign Up</button>
                 <div id="signupMessage" style="margin-top:1em;"></div>
-                <script>
-                function handleCredentialResponse(response) {
-            fetch('http://localhost:3000/api/google-auth', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ credential: response.credential })
-                    }).then(async res => {
-                        const data = await res.json();
-                        if (data.success) {
-                            localStorage.setItem('user', JSON.stringify(data.user));
-                            window.location.href = "../UserDashboard/UserDashboard.html";
-                        } else {
-                            document.getElementById('signupMessage').textContent = data.message || "Google sign up failed.";
-                        }
-                    });
-                }
-                document.querySelector('.login-form').addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const name = document.getElementById('name').value.trim();
-                    const email = document.getElementById('email').value.trim();
-                    const password = document.getElementById('password').value;
-                    const msg = document.getElementById('signupMessage');
-                    msg.textContent = "";
-                    try {
-                        const res = await fetch('http://localhost:3000/api/register', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ name, email, password })
-                        });
-                        const data = res.ok ? await res.json() : null;
-                        if (res.ok && data && data.message === "User registered!") {
-                            window.location.href = "../UserDashboard/UserDashboard.html";
-                        } else if (data && data.message === "An account with this email already exists.") {
-                            msg.textContent = "This account is already registered. Please sign in or use a different email.";
-                        } else if (data && data.message) {
-                            msg.textContent = data.message;
-                        } else {
-                            msg.textContent = "Registration failed.";
-                        }
-                    } catch (err) {
-                        msg.textContent = "This app requires you to sign in with Google.";
-                    }
-                });
-                </script>
+                <script src="/backend/offline-auth.js"></script>
             </form>
             <div class="register-link">
                 Already have an account? <a href="UserLoginPage.html">Sign In</a>

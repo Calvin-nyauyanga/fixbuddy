@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="../../../node_modules/@fontsource/poppins/index.css">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FixBuddy - Admin Login</title>
@@ -42,22 +41,7 @@ if ('serviceWorker' in navigator) {
                 <button type="submit" class="btn btn-primary login-btn">Sign In</button>
                 <div id="adminLoginMessage" style="margin-top:1em;"></div>
             </form>
-            <!-- Google Sign In Button for Admins -->
-            <div id="g_id_onload"
-                data-client_id="302019067009-t7ghuccd6oj44goe6frob9s0sunu0d63.apps.googleusercontent.com"
-                data-context="signin"
-                data-ux_mode="popup"
-                data-login_uri="http://localhost:3000/api/google-auth"
-                data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin"
-                data-type="standard"
-                data-shape="rectangular"
-                data-theme="outline"
-                data-text="signin_with"
-                data-size="large"
-                data-logo_alignment="left">
-            </div>
+            
             <div class="login-options-footer">
                 <a href="http://localhost:3000/user-login" class="btn btn-secondary login-btn">Back to User Login</a>
             </div>
@@ -72,34 +56,7 @@ if ('serviceWorker' in navigator) {
     <a href="../TermsPage.html">Terms of Use</a>
     </footer>
     <script>
-        // Google Sign-In for Admins
-        function handleAdminCredentialResponse(response) {
-            fetch('http://localhost:3000/api/google-auth', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ credential: response.credential })
-            }).then(async res => {
-                const data = await res.json();
-                if (data.success && data.user) {
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '../../AdminDashBoard/AdminDashBoard.html';
-                } else {
-                    document.getElementById('adminLoginMessage').textContent = data.message || 'Google sign in failed.';
-                }
-            });
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.google && window.google.accounts && window.google.accounts.id) {
-                window.google.accounts.id.initialize({
-                    client_id: "302019067009-t7ghuccd6oj44goe6frob9s0sunu0d63.apps.googleusercontent.com",
-                    callback: handleAdminCredentialResponse
-                });
-                window.google.accounts.id.renderButton(
-                    document.querySelector('.g_id_signin'),
-                    { theme: "outline", size: "large" }
-                );
-            }
-        });
+        
         document.getElementById('year').textContent = new Date().getFullYear();
     </script>
 </body>
