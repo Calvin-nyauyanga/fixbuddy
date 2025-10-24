@@ -1,7 +1,11 @@
 // Small utilities used across pages: service worker registration and year updater
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log('Service Worker registered:', reg))
+    .then(reg => {
+      console.log('Service Worker registered:', reg);
+      // Listen for updatefound to notify user or auto-refresh
+      reg.addEventListener('updatefound', () => console.log('Service worker update found'));
+    })
     .catch(err => console.log('Service Worker registration failed:', err));
 }
 

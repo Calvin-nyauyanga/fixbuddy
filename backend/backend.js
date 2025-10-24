@@ -42,6 +42,16 @@ const path = require('path');
 // Serve static files from the project root so HTML, JS and CSS can be requested by the browser
 app.use(express.static(path.join(__dirname, '..')));
 
+// Mount UserDashboard tickets router if present
+try{
+  const userTicketsRouter = require(path.join(__dirname, '..', 'UserDashboard', 'backend', 'getTickets'));
+  app.use('/UserDashboard/backend/getTickets', userTicketsRouter);
+  // also expose it via a convenient API path
+  app.use('/api/tickets', userTicketsRouter);
+}catch(e){
+  console.warn('UserDashboard tickets router not mounted:', e.message);
+}
+
 const db = mysql.createPool({
     host: process.env.MYSQL_HOST || 'localhost',
     user: process.env.MYSQL_USER || 'root',
