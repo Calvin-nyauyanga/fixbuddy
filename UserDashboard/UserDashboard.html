@@ -176,3 +176,23 @@
             window.location.href = '../Main Dashboard/MainDashboard.html';
         });
     </script>
+
+    <script>
+        // Ensure dashboard card reliably navigates to view-my-tickets (fallback)
+        (function(){
+            try{
+                const card = document.querySelector("a.card.action-card.btn-secondary[href='view-my-tickets.html']");
+                if(card){
+                    card.addEventListener('click', function(e){
+                        if(e.defaultPrevented) return;
+                        if(e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                        e.preventDefault();
+                        window.location.href = 'view-my-tickets.html';
+                    });
+                }
+            }catch(err){ console.warn('nav hook failed', err); }
+        })();
+    </script>
+
+    </body>
+    </html>
