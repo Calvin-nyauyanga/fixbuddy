@@ -98,7 +98,7 @@
                     <i class="fa-solid fa-plus-circle"></i>
                     <h3>Create New Ticket</h3>
                 </a>
-                <a href="view-my-tickets.html" class="card action-card btn-secondary" role="button" onclick="window.location.href='view-my-tickets.html';">
+                <a id="openViewTicketsCard" href="view-my-tickets.html" class="card action-card btn-secondary" role="button" onclick="window.location.href='view-my-tickets.html';">
                     <i class="fa-solid fa-list-ul"></i>
                     <h3>View My Tickets</h3>
                 </a>
@@ -181,16 +181,18 @@
         // Ensure dashboard card reliably navigates to view-my-tickets (fallback)
         (function(){
             try{
-                const card = document.querySelector("a.card.action-card.btn-secondary[href='view-my-tickets.html']");
+                const card = document.getElementById('openViewTicketsCard');
                 if(card){
                     card.addEventListener('click', function(e){
                         if(e.defaultPrevented) return;
                         if(e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                        // debug log for devtools
+                        try{ console.log('View Tickets card clicked, navigating...'); }catch(_){}
                         e.preventDefault();
                         window.location.href = 'view-my-tickets.html';
                     });
                 }
-            }catch(err){ console.warn('nav hook failed', err); }
+            }catch(err){ try{ console.warn('nav hook failed', err); }catch(_){} }
         })();
     </script>
 
