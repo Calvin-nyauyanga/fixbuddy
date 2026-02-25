@@ -5,18 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FixBuddy – Submit Ticket</title>
-    <link rel="stylesheet" href="../css-styling/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="/CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<scrip>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
 </head>
 <body class="admin-dashboard-body">
 
@@ -60,16 +53,16 @@ if ('serviceWorker' in navigator) {
                             <textarea id="description" name="description" rows="8" placeholder="Provide a detailed description of the issue" required></textarea>
                         </div>
                         <!-- You can add attachments/category logic later if needed -->
+                        <div id="ticketMessage"></div>
                         <div class="login-options-footer">
                             <button type="submit" class="btn btn-primary login-btn">Submit Ticket</button>
                             <nav class="sidebar-nav"></nav>
-                            <a href="../UserDashboard/UserDashboard.html" class="btn btn-secondary login-btn">🔙 Cancel / Back to Dashboard</a>
+                            <a href="UserDashboard.html" class="btn btn-secondary login-btn">🔙 Cancel / Back to Dashboard</a>
                                 <a href="#" class="sidebar-nav-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
                         </nav>
                         </div>
                     </form>
-                    <script src="ticket.js"></script>
-                    <div id="ticketMessage"></div>
+                    <script src="/backend/client.js"></script>
                 </div>
             </div>
         </section>

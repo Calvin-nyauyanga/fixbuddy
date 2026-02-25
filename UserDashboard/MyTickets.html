@@ -5,18 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FixBuddy – My Tickets</title>
-    <link rel="stylesheet" href="../css-styling/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="/CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
 </head>
 <body class="admin-dashboard-body">
 
@@ -54,89 +47,7 @@ if ('serviceWorker' in navigator) {
                                             </thead>
                                             <tbody id="ticketsTable"></tbody>
                                         </table>
-<script>
-// This script fetches the user's tickets from the backend and populates the table.
-// It runs automatically when the page loads.
-
-// Replace with actual user_id from session or authentication logic
-const user_id = 1;
-
-async function loadUserTickets() {
-    const response = await fetch(`/api/tickets?user_id=${user_id}`);
-    // The backend should return an array of ticket objects like:
-    // [{ id, title, description, status, created_at }, ...]
-    const tickets = await response.json();
-    const table = document.getElementById('ticketsTable');
-    table.innerHTML = '';
-    tickets.forEach(ticket => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${ticket.id}</td>
-            <td>${ticket.title}</td>
-            <td>${ticket.description}</td>
-            <td>${ticket.status}</td>
-            <td>${ticket.created_at}</td>
-        `;
-        table.appendChild(tr);
-    });
-}
-
-window.addEventListener('DOMContentLoaded', loadUserTickets);
-</script>
-                                        <div class="filter-controls mb-3">
-                                                <label for="status-filter">Filter by Status:</label>
-                                                <select id="status-filter" class="form-group">
-                            <option value="all">All</option>
-                            <option value="open">Open</option>
-                            <option value="progress">In Progress</option>
-                            <option value="closed">Closed</option>
-                        </select>
-                    </div>
-
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Ticket ID</th>
-                                    <th>Title</th>
-                                    <th>Submitted</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#FB45678</td>
-                                    <td>Printer is not working</td>
-                                    <td>15 Sep 2025</td>
-                                    <td><span class="status-badge progress">In Progress</span></td>
-                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
-                                </tr>
-                                <tr>
-                                    <td>#FB45679</td>
-                                    <td>Cannot access email account</td>
-                                    <td>14 Sep 2025</td>
-                                    <td><span class="status-badge open">Open</span></td>
-                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
-                                </tr>
-                                <tr>
-                                    <td>#FB45680</td>
-                                    <td>New software installation</td>
-                                    <td>12 Sep 2025</td>
-                                    <td><span class="status-badge closed">Closed</span></td>
-                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
-                                </tr>
-                                <tr>
-                                    <td>#FB45681</td>
-                                    <td>Slow computer performance</td>
-                                    <td>11 Sep 2025</td>
-                                    <td><span class="status-badge closed">Closed</span></td>
-                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
+                    
                     <div class="pagination-footer mt-4">
                         <a href="#" class="btn btn-secondary">Load More Tickets</a>
                     </div>
@@ -153,6 +64,7 @@ window.addEventListener('DOMContentLoaded', loadUserTickets);
         <a href="terms.html">Terms of Use</a>
     </footer>
 
+    <script src="/backend/client.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
     </script>

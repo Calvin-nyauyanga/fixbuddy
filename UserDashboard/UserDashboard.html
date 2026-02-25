@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FixBuddy – User Dashboard</title>
-    <link rel="stylesheet" href="../css-styling/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="/CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,8 +53,26 @@
         }
         async function loadTickets() {
             try {
-                const response = await fetch('/api/tickets?user_id=' + user_id);
-                const tickets = await response.json();
+                // Try backend with timeout and fallback
+                let tickets = [];
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 3000);
+                    const response = await fetch('/api/tickets?user_id=' + user_id, { signal: controller.signal });
+                    clearTimeout(timeout);
+                    if (response.ok) {
+                        tickets = await response.json();
+                    } else {
+                        throw new Error('Backend unavailable: ' + response.status);
+                    }
+                } catch (backendErr) {
+                    console.warn('Backend unavailable, using offline fallback:', backendErr.message);
+                    // Offline fallback - show sample tickets
+                    tickets = [
+                        { id: 1, title: 'Sample Ticket - Backend Offline', status: 'Open', created_at: new Date().toISOString() }
+                    ];
+                }
+                
                 const list = document.getElementById('ticketList');
                 list.innerHTML = '';
                 if (Array.isArray(tickets) && tickets.length === 0) {
@@ -73,7 +91,8 @@
                     list.innerHTML = '<li class="ticket-item error">Error loading tickets.</li>';
                 }
             } catch (err) {
-                document.getElementById('ticketList').innerHTML = '<li>Error loading tickets.</li>';
+                console.error('Error in loadTickets:', err);
+                document.getElementById('ticketList').innerHTML = '<li class="ticket-item error">Error loading tickets. Backend status: check console.</li>';
             }
         }
 
@@ -98,9 +117,9 @@
                     <i class="fa-solid fa-plus-circle"></i>
                     <h3>Create New Ticket</h3>
                 </a>
-                <a id="openViewTicketsCard" href="view-my-tickets.html" class="card action-card btn-secondary" role="button" onclick="window.location.href='view-my-tickets.html';">
+                <a id="MyTickets" href="MyTickets.html" class="card action-card btn-secondary" >
                     <i class="fa-solid fa-list-ul"></i>
-                    <h3>View My Tickets</h3>
+                    <h3>My Tickets</h3>
                 </a>
                 <div class="card">
                     <h3>Open Tickets</h3>
@@ -123,29 +142,6 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#FB45678</td>
-                                    <td>Printer is not working</td>
-                                    <td>15 Sep 2025</td>
-                                    <td><span class="status-badge progress">In Progress</span></td>
-                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
-                                </tr>
-                                <tr>
-                                    <td>#FB45679</td>
-                                    <td>Cannot access email account</td>
-                                    <td>14 Sep 2025</td>
-                                    <td><span class="status-badge open">Open</span></td>
-                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
-                                </tr>
-                                <tr>
-                                    <td>#FB45680</td>
-                                    <td>New software installation</td>
-                                    <td>12 Sep 2025</td>
-                                    <td><span class="status-badge closed">Closed</span></td>
-                                    <td><a href="#" class="btn btn-secondary view-details-btn">View Details</a></td>
-                                </tr>
-                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -178,7 +174,7 @@
     </script>
 
     <script>
-        // Ensure dashboard card reliably navigates to view-my-tickets (fallback)
+        // Ensure dashboard card reliably navigates to view-my-tickets.html (fallback)
         (function(){
             try{
                 const card = document.getElementById('openViewTicketsCard');
@@ -193,6 +189,21 @@
                     });
                 }
             }catch(err){ try{ console.warn('nav hook failed', err); }catch(_){} }
+        })();
+
+        // Ensure sidebar "My Tickets" link navigates to MyTickets.html
+        (function(){
+            try{
+                // Find all sidebar nav items with My Tickets text or href
+                const sidebarItems = document.querySelectorAll('.sidebar-nav-item');
+                sidebarItems.forEach(item => {
+                    // Check if this is a My Tickets link (by text or current href)
+                    if(item.textContent.includes('My Tickets')){
+                        item.href = 'MyTickets.html';
+                        console.log('Updated sidebar My Tickets link to MyTickets.html');
+                    }
+                });
+            }catch(err){ try{ console.warn('Sidebar nav update failed', err); }catch(_){} }
         })();
     </script>
 

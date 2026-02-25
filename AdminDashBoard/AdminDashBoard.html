@@ -4,19 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FixBuddy – Admin Dashboard</title>
-    <link rel="stylesheet" href="CSS STYLING/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="/CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://127.0.0.1:5500; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://via.placeholder.com; script-src 'self' http://127.0.0.1:5500;">
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
 </head>
 <body class="admin-dashboard-body">
     <header class="topbar dashboard-header">
@@ -280,6 +273,7 @@ window.addEventListener('DOMContentLoaded', loadRecentActivities);
 </body>
         <!-- Socket.IO client for real-time updates -->
         <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+        <script src="/backend/client.js"></script>
         <script>
         const socket = io('http://localhost:3000');
         socket.on('new_ticket', ticket => {
