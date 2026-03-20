@@ -32,7 +32,7 @@ model Ticket {
   description String  @db.Text
   status      String  @default("open") // "open", "in_progress", "closed", "on_hold"
   priority    String  @default("medium")  //"low", "medium", "high", "critical"
-  category    String?
+  category    String? @default("General")
 
   createdById Int
   createdBy   User    @relation("CreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
@@ -44,6 +44,7 @@ model Ticket {
   updatedAt   DateTime @updatedAt
 
   comments    Comment[]
+  activities  Activity[]
 
   @@map("tickets")
 }
@@ -52,15 +53,28 @@ model Ticket {
 model Comment {
   id        Int     @id @default(autoincrement())
   content   String @db.Text
+  type              String    @default("response") // response, solution, note
+  createdAt         DateTime  @default(now())
 
   ticketId  Int
   ticket    Ticket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
   userId    Int
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("comments")
+}
+model Activity {
+  id                Int       @id @default(autoincrement())
+  type              String    // ticket_created, ticket_assigned, ticket_solved, admin_login, etc
+  details           String    @db.Text
+  createdAt         DateTime  @default(now())
+
+  // Relations
+  userId            Int?
+  user              User?     @relation(fields: [userId], references: [id])
+  ticketId          Int?
+  ticket            Ticket?   @relation(fields: [ticketId], references: [id])
+
+  @@map("activities")
 }

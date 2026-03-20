@@ -2,6 +2,10 @@ import bcrypt from 'bcryptjs';
 import prisma from '../config/database.js';
 import { generateToken } from '../utils/jwt.js';
 
+// ============================================
+// USER AUTHENTICATION FUNCTIONS
+// ============================================
+
 // SIGN UP
 export const signup = async (req, res) => {
   try {
@@ -61,7 +65,7 @@ export const signup = async (req, res) => {
     });
 
     // Generate token
-    const token = generateToken(user.id);
+    const token = generateToken(user.id, user.role);
 
     res.status(201).json({
       success: true,
@@ -121,7 +125,7 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate token
+    // Generate token with role
     const token = generateToken(user.id, user.role);
 
     res.status(200).json({
@@ -192,7 +196,9 @@ export const logout = async (req, res) => {
       error: error.message,
     });
   }
-  // ============================================
+};
+
+// ============================================
 // ADMIN AUTHENTICATION FUNCTIONS
 // ============================================
 
@@ -376,9 +382,4 @@ export const adminLogout = async (req, res) => {
       error: error.message,
     });
   }
-};
-
-// ============================================
-// END OF ADMIN FUNCTIONS
-// ============================================
 };
