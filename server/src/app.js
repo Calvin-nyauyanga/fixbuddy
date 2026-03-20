@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import helmet from 'helmet';
+import helpdeskRoutes from './routes/helpdeskRoutes.js';
 import prisma from './config/prisma.js';
 
 const app = express();
@@ -34,6 +35,7 @@ app.get('/test-prisma', async (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/helpdesk', helpdeskRoutes);
 //Root endpoint
 app.get('/', (req, res) => {
     res.json({ message: 'Fixbuddy API is running' });

@@ -1,7 +1,19 @@
 //JWT Helper functions for generating, verifying, and decoding tokens
 import jwt from 'jsonwebtoken';
 
-export const generateToken = (userId) => {
+export const generateToken = (userId, role = 'user ') => {
+  const payload = {
+    id: userId,
+    role: role,
+    iat: Math.floor(Date.now() / 1000),
+  }
+  const token = jwt.sign(
+    payload,
+    process.env.JWT_SECRET || 'your-secret-key',
+    { expiresIn:'24h'}
+  );
+  
+
   const secret = process.env.JWT_SECRET;
   const expiresIn = process.env.JWT_EXPIRE || '1d';
   if (!secret) {

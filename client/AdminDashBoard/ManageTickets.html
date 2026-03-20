@@ -1,178 +1,533 @@
-<!-- Add this section for detailed ticket view and response system -->
-<section class="ticket-detail-section" id="ticketDetailSection" style="display: none;">
-    <div class="detail-card">
-        <h2>Ticket #<span id="detailTicketId"></span> - <span id="detailTicketTitle"></span></h2>
-        
-        <div class="ticket-meta">
-            <div class="meta-item">
-                <strong>Customer:</strong> <span id="detailCustomerName"></span>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixBuddy – Manage Tickets</title>
+    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+</head>
+<body class="admin-dashboard-body">
+    <header class="topbar dashboard-header">
+        <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
+        <div class="admin-topbar-right">
+            <div class="search-bar">
+                <input type="text" id="searchTickets" placeholder="Search tickets...">
+                <i class="fa-solid fa-search"></i>
             </div>
-            <div class="meta-item">
-                <strong>Email:</strong> <span id="detailCustomerEmail"></span>
-            </div>
-            <div class="meta-item">
-                <strong>Created:</strong> <span id="detailCreatedDate"></span>
-            </div>
-            <div class="meta-item">
-                <strong>Priority:</strong> <span id="detailPriority" class="status-badge"></span>
-            </div>
-            <div class="meta-item">
-                <strong>Status:</strong> <span id="detailStatus" class="status-badge"></span>
-            </div>
-        </div>
-
-        <div class="ticket-description">
-            <h3>Description</h3>
-            <p id="detailDescription"></p>
-        </div>
-
-        <!-- Conversation Thread -->
-        <div class="conversation-thread" id="conversationThread">
-            <h3>Conversation</h3>
-            <div id="messagesContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; background: #f9f9f9;">
-                <!-- Messages will be loaded here -->
+            <div class="user-info">
+                <span style="position:relative;">
+                    <i class="fa-solid fa-bell notifications-icon" id="adminBell" style="cursor: pointer;"></i>
+                    <span id="adminNotifCount" style="position:absolute;top:-8px;right:-8px;background:red;color:white;border-radius:50%;padding:2px 6px;font-size:0.8em;display:none;">0</span>
+                </span>
+                <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
+                <span class="welcome-message" id="adminWelcome" style="margin-left: 1rem;">👤 Admin</span>
+                <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
             </div>
         </div>
+    </header>
 
-        <!-- Admin Response Form -->
-        <div class="admin-response-form">
-            <h3>Add Response</h3>
-            <form id="responseForm" onsubmit="submitAdminResponse(event)">
-                <textarea id="responseText" placeholder="Type your response to the customer..." required style="width: 100%; min-height: 100px; padding: 0.5rem; margin-bottom: 1rem;"></textarea>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button type="submit" class="btn btn-primary">Send Response</button>
-                    <button type="button" class="btn btn-secondary" onclick="markTicketSolved()">Mark as Solved</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeTicket()">Close Ticket</button>
+    <main class="dashboard-main">
+        <aside class="sidebar">
+            <h2 class="sidebar-heading">🛠️ Helpdesk Admin</h2>
+            <nav class="sidebar-nav">
+                <a href="AdminDashBoard.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-gauge"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="ManageTickets.html" class="sidebar-nav-item active">
+                    <i class="fa-solid fa-ticket-alt"></i>
+                    <span>Manage Tickets</span>
+                </a>
+                <a href="Users.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="AdminReports.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="Notifications.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="settings.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <section class="admin-content">
+            <!-- Tickets List View -->
+            <div class="tickets-management-container" id="ticketsListSection">
+                <h2>Manage Tickets</h2>
+                
+                <!-- Filter Options -->
+                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <select id="filterStatus" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">All Status</option>
+                        <option value="open">Open</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                    <select id="filterPriority" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">All Priority</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                    <button onclick="applyFilters()" class="btn btn-primary" style="padding: 0.5rem 1rem;">Filter</button>
+                    <button onclick="clearFilters()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Clear</button>
                 </div>
-            </form>
-        </div>
 
-        <button onclick="closeDetailView()" class="btn btn-secondary" style="margin-top: 1rem;">Back to List</button>
-    </div>
-</section>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Customer</th>
+                                <th>Title</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Assigned To</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketsTableBody">
+                            <tr><td colspan="8" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-<!-- JavaScript for detail view -->
-<script>
-async function viewTicketDetail(ticketId) {
-    try {
-        const response = await helpdeskAPI.getTicketDetails(ticketId);
-        const ticket = response.data || {};
+            <!-- Ticket Detail View -->
+            <section class="ticket-detail-section" id="ticketDetailSection" style="display: none;">
+                <div class="detail-card" style="background: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2>Ticket #<span id="detailTicketId"></span> - <span id="detailTicketTitle"></span></h2>
+                        <button onclick="closeDetailView()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Back to List</button>
+                    </div>
+                    
+                    <!-- Ticket Metadata -->
+                    <div class="ticket-meta" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 4px;">
+                        <div class="meta-item">
+                            <strong>Customer:</strong> <span id="detailCustomerName"></span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>Email:</strong> <span id="detailCustomerEmail"></span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>Created:</strong> <span id="detailCreatedDate"></span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>Priority:</strong> <span id="detailPriority" class="status-badge"></span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>Status:</strong> <span id="detailStatus" class="status-badge"></span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>Assigned To:</strong> <span id="detailAssignedTo">Unassigned</span>
+                        </div>
+                    </div>
 
-        // Display ticket details
-        document.getElementById('detailTicketId').textContent = ticket.id;
-        document.getElementById('detailTicketTitle').textContent = ticket.title;
-        document.getElementById('detailCustomerName').textContent = ticket.user_name || 'Unknown';
-        document.getElementById('detailCustomerEmail').textContent = ticket.user_email || 'N/A';
-        document.getElementById('detailCreatedDate').textContent = new Date(ticket.created_at).toLocaleString();
-        document.getElementById('detailPriority').textContent = ticket.priority || 'Medium';
-        document.getElementById('detailStatus').textContent = ticket.status || 'Open';
-        document.getElementById('detailDescription').textContent = ticket.description || 'No description provided';
+                    <!-- Description -->
+                    <div class="ticket-description" style="margin-bottom: 2rem;">
+                        <h3>Description</h3>
+                        <p id="detailDescription" style="background: #f9f9f9; padding: 1rem; border-radius: 4px; line-height: 1.6;"></p>
+                    </div>
 
-        // Load conversation
-        loadTicketConversation(ticketId);
+                    <!-- Conversation Thread -->
+                    <div class="conversation-thread" style="margin-bottom: 2rem;">
+                        <h3>Conversation History</h3>
+                        <div id="messagesContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; background: #f9f9f9; border-radius: 4px;">
+                            <p style="text-align: center; color: #999;">Loading messages...</p>
+                        </div>
+                    </div>
 
-        // Store current ticket ID
-        window.currentTicketId = ticketId;
+                    <!-- Admin Response Form -->
+                    <div class="admin-response-form" style="margin-bottom: 1.5rem; padding: 1.5rem; background: #f5f5f5; border-radius: 4px;">
+                        <h3>Add Response</h3>
+                        <form id="responseForm" onsubmit="submitAdminResponse(event)">
+                            <textarea id="responseText" placeholder="Type your response to the customer..." required style="width: 100%; min-height: 120px; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif;"></textarea>
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">
+                                    <i class="fa-solid fa-paper-plane"></i> Send Response
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="markTicketSolved()" style="padding: 0.75rem 1.5rem;">
+                                    <i class="fa-solid fa-check"></i> Mark as Solved
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="closeTicket()" style="padding: 0.75rem 1.5rem;">
+                                    <i class="fa-solid fa-times"></i> Close Ticket
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-        // Show detail view
-        document.getElementById('ticketDetailSection').style.display = 'block';
-        document.querySelector('.tickets-management-container').style.display = 'none';
-    } catch (error) {
-        alert(`Error loading ticket: ${error.message}`);
-    }
-}
+                    <!-- Quick Actions -->
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <select id="assignToAgent" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">-- Assign to Agent --</option>
+                        </select>
+                        <button onclick="assignToSelectedAgent()" class="btn btn-primary" style="padding: 0.5rem 1rem;">Assign</button>
+                        <button onclick="reloadTicketDetail()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
+                            <i class="fa-solid fa-refresh"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
 
-async function loadTicketConversation(ticketId) {
-    const container = document.getElementById('messagesContainer');
-    container.innerHTML = '<p>Loading messages...</p>';
+    <footer>
+        <span>© <span id="year"></span> <strong>FixBuddy</strong> - Admin Helpdesk System</span>
+    </footer>
 
-    try {
-        const response = await helpdeskAPI.getTicketDetails(ticketId);
-        const ticket = response.data || {};
-        const messages = ticket.messages || [];
+    <script src="../../js/api-client.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
 
-        container.innerHTML = '';
+        // ========== INITIALIZATION ==========
+        async function initManageTickets() {
+            // Check if admin is logged in
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            const token = localStorage.getItem('authToken');
+            const userRole = localStorage.getItem('userRole');
 
-        if (messages.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #999;">No messages yet. Start the conversation below.</p>';
-            return;
+            if (!token || !admin || userRole !== 'admin') {
+                window.location.href = '../Main Dashboard/AdminLoginPage.html';
+                return;
+            }
+
+            document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+
+            // Load initial data
+            await loadAllTickets();
+            await loadAgentsForAssignment();
+
+            // Set up event listeners
+            document.getElementById('searchTickets').addEventListener('keyup', searchTickets);
+            document.getElementById('filterStatus').addEventListener('change', applyFilters);
+            document.getElementById('filterPriority').addEventListener('change', applyFilters);
         }
 
-        messages.forEach(msg => {
-            const msgDiv = document.createElement('div');
-            msgDiv.style.marginBottom = '1rem';
-            msgDiv.style.padding = '0.75rem';
-            msgDiv.style.borderRadius = '4px';
-            msgDiv.style.backgroundColor = msg.sender === 'admin' ? '#e3f2fd' : '#f5f5f5';
-            msgDiv.style.borderLeft = msg.sender === 'admin' ? '4px solid #2196F3' : '4px solid #999';
+        // ========== LOAD ALL TICKETS ==========
+        async function loadAllTickets() {
+            const tbody = document.getElementById('ticketsTableBody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>';
+
+            try {
+                const response = await helpdeskAPI.getAllTickets();
+                const tickets = response && response.data && Array.isArray(response.data.tickets) 
+                    ? response.data.tickets 
+                    : [];
+
+                tbody.innerHTML = '';
+
+                if (tickets.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No tickets found</td></tr>';
+                    return;
+                }
+
+                tickets.forEach(ticket => {
+                    const row = document.createElement('tr');
+                    const createdDate = new Date(ticket.createdAt).toLocaleDateString();
+                    const priorityClass = ticket.priority === 'critical' ? 'critical' : 
+                                        ticket.priority === 'high' ? 'high' : 
+                                        ticket.priority === 'medium' ? 'medium' : 'low';
+                    const statusClass = ticket.status === 'open' ? 'open' : 
+                                      ticket.status === 'in_progress' ? 'pending' : 'solved';
+                    
+                    row.innerHTML = `
+                        <td><strong>#${ticket.id}</strong></td>
+                        <td>${ticket.createdBy?.name || 'Unknown'}</td>
+                        <td>${ticket.title}</td>
+                        <td><span class="status-badge ${priorityClass}">${ticket.priority}</span></td>
+                        <td><span class="status-badge ${statusClass}">${ticket.status}</span></td>
+                        <td>${ticket.assignedTo?.name || '<em style="color: #999;">Unassigned</em>'}</td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <button onclick="viewTicketDetail(${ticket.id})" class="btn-small" title="View Details">
+                                <i class="fa-solid fa-eye"></i> View
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error loading tickets:', error);
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red; padding: 20px;">Error loading tickets: ${error.message}</td></tr>`;
+            }
+        }
+
+        // ========== VIEW TICKET DETAIL ==========
+        async function viewTicketDetail(ticketId) {
+            try {
+                const response = await helpdeskAPI.getTicketDetails(ticketId);
+                const ticket = response.data || {};
+
+                // Display ticket details
+                document.getElementById('detailTicketId').textContent = ticket.id;
+                document.getElementById('detailTicketTitle').textContent = ticket.title;
+                document.getElementById('detailCustomerName').textContent = ticket.createdBy?.name || 'Unknown';
+                document.getElementById('detailCustomerEmail').textContent = ticket.createdBy?.email || 'N/A';
+                document.getElementById('detailCreatedDate').textContent = new Date(ticket.createdAt).toLocaleString();
+                document.getElementById('detailPriority').textContent = ticket.priority || 'Medium';
+                document.getElementById('detailStatus').textContent = ticket.status || 'Open';
+                document.getElementById('detailAssignedTo').textContent = ticket.assignedTo?.name || 'Unassigned';
+                document.getElementById('detailDescription').textContent = ticket.description || 'No description provided';
+
+                // Load conversation
+                loadTicketConversation(ticketId);
+
+                // Store current ticket ID
+                window.currentTicketId = ticketId;
+
+                // Show detail view
+                document.getElementById('ticketsListSection').style.display = 'none';
+                document.getElementById('ticketDetailSection').style.display = 'block';
+                window.scrollTo(0, 0);
+            } catch (error) {
+                alert(`Error loading ticket: ${error.message}`);
+            }
+        }
+
+        // ========== LOAD CONVERSATION ==========
+        async function loadTicketConversation(ticketId) {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '<p style="text-align: center; color: #999;">Loading messages...</p>';
+
+            try {
+                const response = await helpdeskAPI.getTicketDetails(ticketId);
+                const ticket = response.data || {};
+                const messages = ticket.comments || [];
+
+                container.innerHTML = '';
+
+                if (messages.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #999;">No messages yet. Start the conversation below.</p>';
+                    return;
+                }
+
+                messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.style.marginBottom = '1rem';
+                    msgDiv.style.padding = '0.75rem';
+                    msgDiv.style.borderRadius = '4px';
+                    msgDiv.style.backgroundColor = msg.user?.role === 'admin' ? '#e3f2fd' : '#fff9c4';
+                    msgDiv.style.borderLeft = msg.user?.role === 'admin' ? '4px solid #2196F3' : '4px solid #ff9800';
+                    
+                    const time = new Date(msg.createdAt).toLocaleTimeString();
+                    msgDiv.innerHTML = `
+                        <strong>${msg.user?.role === 'admin' ? '👨‍💼 Admin' : '👤 Customer'}: ${msg.user?.name || 'Unknown'}</strong> - ${time}
+                        <p style="margin: 0.5rem 0 0 0;">${msg.content || msg.message}</p>
+                    `;
+                    container.appendChild(msgDiv);
+                });
+
+                // Auto-scroll to bottom
+                container.scrollTop = container.scrollHeight;
+            } catch (error) {
+                container.innerHTML = `<p style="color: red;">Error loading messages: ${error.message}</p>`;
+            }
+        }
+
+        // ========== SUBMIT RESPONSE ==========
+        async function submitAdminResponse(event) {
+            event.preventDefault();
+            const ticketId = window.currentTicketId;
+            const responseText = document.getElementById('responseText').value;
+
+            if (!responseText.trim()) {
+                alert('Please enter a response');
+                return;
+            }
+
+            try {
+                await helpdeskAPI.addResponse(ticketId, responseText, 'admin');
+                alert('✅ Response sent to customer!');
+                document.getElementById('responseText').value = '';
+                await loadTicketConversation(ticketId);
+            } catch (error) {
+                alert(`❌ Failed to send response: ${error.message}`);
+            }
+        }
+
+        // ========== MARK AS SOLVED ==========
+        async function markTicketSolved() {
+            const ticketId = window.currentTicketId;
+            const solution = prompt('Enter the solution/resolution:');
             
-            const time = new Date(msg.created_at).toLocaleTimeString();
-            msgDiv.innerHTML = `
-                <strong>${msg.sender === 'admin' ? '👨‍💼 Admin' : '👤 Customer'}</strong> - ${time}
-                <p>${msg.text || msg.message}</p>
-            `;
-            container.appendChild(msgDiv);
+            if (!solution) return;
+
+            try {
+                await helpdeskAPI.solveTicket(ticketId, solution);
+                alert('✅ Ticket marked as solved!');
+                await reloadTicketDetail();
+            } catch (error) {
+                alert(`❌ Failed to solve ticket: ${error.message}`);
+            }
+        }
+
+        // ========== CLOSE TICKET ==========
+        async function closeTicket() {
+            const ticketId = window.currentTicketId;
+            
+            if (!confirm('Are you sure you want to close this ticket?')) return;
+
+            try {
+                await helpdeskAPI.closeTicket(ticketId);
+                alert('✅ Ticket closed!');
+                closeDetailView();
+            } catch (error) {
+                alert(`❌ Failed to close ticket: ${error.message}`);
+            }
+        }
+
+        // ========== LOAD AGENTS FOR ASSIGNMENT ==========
+        async function loadAgentsForAssignment() {
+            try {
+                const response = await helpdeskAPI.getAllUsers();
+                const users = response && response.data && Array.isArray(response.data.users)
+                    ? response.data.users
+                    : [];
+
+                const select = document.getElementById('assignToAgent');
+                select.innerHTML = '<option value="">-- Assign to Agent --</option>';
+
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `${user.name} (${user.role})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.warn('Error loading agents:', error);
+            }
+        }
+
+        // ========== ASSIGN TO SELECTED AGENT ==========
+        async function assignToSelectedAgent() {
+            const ticketId = window.currentTicketId;
+            const agentId = document.getElementById('assignToAgent').value;
+
+            if (!agentId) {
+                alert('Please select an agent');
+                return;
+            }
+
+            try {
+                await helpdeskAPI.assignTicket(ticketId, agentId);
+                alert('✅ Ticket assigned successfully!');
+                document.getElementById('assignToAgent').value = '';
+                await reloadTicketDetail();
+            } catch (error) {
+                alert(`❌ Failed to assign ticket: ${error.message}`);
+            }
+        }
+
+        // ========== RELOAD TICKET DETAIL ==========
+        async function reloadTicketDetail() {
+            if (window.currentTicketId) {
+                await viewTicketDetail(window.currentTicketId);
+            }
+        }
+
+        // ========== CLOSE DETAIL VIEW ==========
+        function closeDetailView() {
+            document.getElementById('ticketDetailSection').style.display = 'none';
+            document.getElementById('ticketsListSection').style.display = 'block';
+            window.currentTicketId = null;
+            loadAllTickets();
+        }
+
+        // ========== SEARCH TICKETS ==========
+        async function searchTickets(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#ticketsTableBody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        // ========== APPLY FILTERS ==========
+        async function applyFilters() {
+            const status = document.getElementById('filterStatus').value;
+            const priority = document.getElementById('filterPriority').value;
+
+            try {
+                let query = '/api/helpdesk/tickets';
+                const params = new URLSearchParams();
+
+                if (status) params.append('status', status);
+                if (priority) params.append('priority', priority);
+
+                if (params.toString()) {
+                    query += '?' + params.toString();
+                }
+
+                // Note: This would require a proper API call with query parameters
+                // For now, we'll reload and filter manually
+                await loadAllTickets();
+            } catch (error) {
+                alert(`Error applying filters: ${error.message}`);
+            }
+        }
+
+        // ========== CLEAR FILTERS ==========
+        function clearFilters() {
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterPriority').value = '';
+            document.getElementById('searchTickets').value = '';
+            loadAllTickets();
+        }
+
+        // ========== LOGOUT ==========
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            try {
+                await adminAPI.logout();
+            } catch (error) {
+                console.warn('Logout API call failed:', error);
+            }
+
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('admin');
+            localStorage.removeItem('userRole');
+
+            window.location.href = '../Main Dashboard/AdminLoginPage.html';
         });
 
-        // Auto-scroll to bottom
-        container.scrollTop = container.scrollHeight;
-    } catch (error) {
-        container.innerHTML = `<p style="color: red;">Error loading messages: ${error.message}</p>`;
-    }
-}
+        // ========== SETTINGS & PROFILE ICONS ==========
+        document.querySelector('.settings-icon').addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
 
-async function submitAdminResponse(event) {
-    event.preventDefault();
-    const ticketId = window.currentTicketId;
-    const responseText = document.getElementById('responseText').value;
+        document.getElementById('adminBell').addEventListener('click', () => {
+            window.location.href = 'Notifications.html';
+        });
 
-    if (!responseText.trim()) {
-        alert('Please enter a response');
-        return;
-    }
+        document.querySelector('.admin-profile-icon').addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
 
-    try {
-        await helpdeskAPI.addResponse(ticketId, responseText, 'admin');
-        alert('✅ Response sent to customer!');
-        document.getElementById('responseText').value = '';
-        await loadTicketConversation(ticketId);
-    } catch (error) {
-        alert(`❌ Failed to send response: ${error.message}`);
-    }
-}
-
-async function markTicketSolved() {
-    const ticketId = window.currentTicketId;
-    const solution = prompt('Enter the solution/resolution:');
-    
-    if (!solution) return;
-
-    try {
-        await helpdeskAPI.solveTicket(ticketId, solution);
-        alert('✅ Ticket marked as solved!');
-        closeDetailView();
-    } catch (error) {
-        alert(`❌ Failed to solve ticket: ${error.message}`);
-    }
-}
-
-async function closeTicket() {
-    const ticketId = window.currentTicketId;
-    
-    if (!confirm('Are you sure you want to close this ticket?')) return;
-
-    try {
-        await helpdeskAPI.closeTicket(ticketId);
-        alert('✅ Ticket closed!');
-        closeDetailView();
-    } catch (error) {
-        alert(`❌ Failed to close ticket: ${error.message}`);
-    }
-}
-
-function closeDetailView() {
-    document.getElementById('ticketDetailSection').style.display = 'none';
-    document.querySelector('.tickets-management-container').style.display = 'block';
-    window.currentTicketId = null;
-}
-</script>
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initManageTickets);
+        initManageTickets();
+    </script>
+</body>
+</html>
