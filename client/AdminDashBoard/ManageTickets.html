@@ -1,190 +1,178 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FixBuddy – Manage Tickets</title>
-    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        .filter-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-        .filter-actions .form-group {
-            margin-bottom: 0;
-            flex-grow: 1;
-        }
-        .action-icons a {
-            font-size: 1.25rem;
-            color: var(--secondary-color);
-            transition: color 0.3s ease;
-            margin-right: 1rem;
-        }
-        .action-icons a:last-child {
-            margin-right: 0;
-        }
-        .action-icons a:hover {
-            color: var(--primary-color);
-        }
-    </style>
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
-</head>
-<body class="admin-dashboard-body">
-
-    <header class="topbar dashboard-header">
-        <div class="logo">🖥️ <span>FixBuddy</span></div>
-        <div class="admin-topbar-right">
-            <div class="search-bar">
-                <input type="text" placeholder="Search tickets...">
-                <i class="fa-solid fa-search"></i>
+<!-- Add this section for detailed ticket view and response system -->
+<section class="ticket-detail-section" id="ticketDetailSection" style="display: none;">
+    <div class="detail-card">
+        <h2>Ticket #<span id="detailTicketId"></span> - <span id="detailTicketTitle"></span></h2>
+        
+        <div class="ticket-meta">
+            <div class="meta-item">
+                <strong>Customer:</strong> <span id="detailCustomerName"></span>
             </div>
-            <div class="user-info">
-                <i class="fa-solid fa-bell notifications-icon"></i>
-                <i class="fa-solid fa-cog settings-icon"></i>
-                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
+            <div class="meta-item">
+                <strong>Email:</strong> <span id="detailCustomerEmail"></span>
+            </div>
+            <div class="meta-item">
+                <strong>Created:</strong> <span id="detailCreatedDate"></span>
+            </div>
+            <div class="meta-item">
+                <strong>Priority:</strong> <span id="detailPriority" class="status-badge"></span>
+            </div>
+            <div class="meta-item">
+                <strong>Status:</strong> <span id="detailStatus" class="status-badge"></span>
             </div>
         </div>
-    </header>
 
-    <main class="dashboard-main">
-        <aside class="sidebar">
-            <h2 class="sidebar-heading">FixBuddy</h2>
-            <nav class="sidebar-nav">
-                <a href="AdminDashBoard.html" class="sidebar-nav-item">
-                    <i class="fa-solid fa-gauge"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="ManageTickets.html" class="sidebar-nav-item active">
-                    <i class="fa-solid fa-ticket-alt"></i>
-                    <span>Manage Tickets</span>
-                </a>
-                <a href="Users.html" class="sidebar-nav-item">
-                    <i class="fa-solid fa-users"></i>
-                    <span>Users</span>
-                </a>
-                <a href="reports.html" class="sidebar-nav-item">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Reports</span>
-                </a>
-                <a href="settings.html" class="sidebar-nav-item">
-                    <i class="fa-solid fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-                <a href="Notifications.html" class="sidebar-nav-item">
-                    <i class="fa-solid fa-bell"></i>
-                    <span>Notifications</span>  
-                </a>
-                <a href="../Main Dashboard/JS LOGIC/AdminLoginPage.html" class="sidebar-nav-item">
-                    <i class="fa-solid fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </nav>
-        </aside>
-        
-        <section class="admin-content">
-            <div class="content-row full-width">
-                <div class="tickets-management-container">
-                    <h2>Manage Tickets</h2>
-                    
-                    <div class="filter-actions">
-                        <div class="form-group" style="flex-grow: 1;">
-                            <label for="status-filter">Status</label>
-                            <select id="status-filter">
-                                <option value="all">All</option>
-                                <option value="open">Open</option>
-                                <option value="progress">In Progress</option>
-                                <option value="closed">Closed</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex-grow: 1;">
-                            <label for="priority-filter">Priority</label>
-                            <select id="priority-filter">
-                                <option value="all">All</option>
-                                <option value="high">High</option>
-                                <option value="medium">Medium</option>
-                                <option value="low">Low</option>
-                            </select>
-                        </div>
-                    </div>
+        <div class="ticket-description">
+            <h3>Description</h3>
+            <p id="detailDescription"></p>
+        </div>
 
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Ticket ID</th>
-                                    <th>Title</th>
-                                    <th>Status</th>
-                                    <th>Priority</th>
-                                    <th>Assigned To</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#FB45678</td>
-                                    <td>Network outage on Floor 3</td>
-                                    <td><span class="status-badge progress">In Progress</span></td>
-                                    <td><span class="priority-badge high">High</span></td>
-                                    <td>Alex R.</td>
-                                    <td class="action-icons">
-                                        <a href="#" title="View Details"><i class="fa-solid fa-eye"></i></a>
-                                        <a href="#" title="Edit Ticket"><i class="fa-solid fa-pen-to-square"></i></a>
-                                        <a href="#" title="Delete Ticket"><i class="fa-solid fa-trash-alt"></i></a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#FB45679</td>
-                                    <td>Projector in meeting room not working</td>
-                                    <td><span class="status-badge open">Open</span></td>
-                                    <td><span class="priority-badge high">High</span></td>
-                                    <td>Not Assigned</td>
-                                    <td class="action-icons">
-                                        <a href="#" title="View Details"><i class="fa-solid fa-eye"></i></a>
-                                        <a href="#" title="Edit Ticket"><i class="fa-solid fa-pen-to-square"></i></a>
-                                        <a href="#" title="Delete Ticket"><i class="fa-solid fa-trash-alt"></i></a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#FB45680</td>
-                                    <td>Request to install new software</td>
-                                    <td><span class="status-badge closed">Closed</span></td>
-                                    <td><span class="priority-badge low">Low</span></td>
-                                    <td>Mark P.</td>
-                                    <td class="action-icons">
-                                        <a href="#" title="View Details"><i class="fa-solid fa-eye"></i></a>
-                                        <a href="#" title="Edit Ticket"><i class="fa-solid fa-pen-to-square"></i></a>
-                                        <a href="#" title="Delete Ticket"><i class="fa-solid fa-trash-alt"></i></a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <!-- Conversation Thread -->
+        <div class="conversation-thread" id="conversationThread">
+            <h3>Conversation</h3>
+            <div id="messagesContainer" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; background: #f9f9f9;">
+                <!-- Messages will be loaded here -->
             </div>
-        </section>
-    </main>
+        </div>
 
-    <footer>
-        <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
-        <span class="footer-sep">|</span>
-        
+        <!-- Admin Response Form -->
+        <div class="admin-response-form">
+            <h3>Add Response</h3>
+            <form id="responseForm" onsubmit="submitAdminResponse(event)">
+                <textarea id="responseText" placeholder="Type your response to the customer..." required style="width: 100%; min-height: 100px; padding: 0.5rem; margin-bottom: 1rem;"></textarea>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="submit" class="btn btn-primary">Send Response</button>
+                    <button type="button" class="btn btn-secondary" onclick="markTicketSolved()">Mark as Solved</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeTicket()">Close Ticket</button>
+                </div>
+            </form>
+        </div>
 
-    <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
-</body>
-</html>
+        <button onclick="closeDetailView()" class="btn btn-secondary" style="margin-top: 1rem;">Back to List</button>
+    </div>
+</section>
+
+<!-- JavaScript for detail view -->
+<script>
+async function viewTicketDetail(ticketId) {
+    try {
+        const response = await helpdeskAPI.getTicketDetails(ticketId);
+        const ticket = response.data || {};
+
+        // Display ticket details
+        document.getElementById('detailTicketId').textContent = ticket.id;
+        document.getElementById('detailTicketTitle').textContent = ticket.title;
+        document.getElementById('detailCustomerName').textContent = ticket.user_name || 'Unknown';
+        document.getElementById('detailCustomerEmail').textContent = ticket.user_email || 'N/A';
+        document.getElementById('detailCreatedDate').textContent = new Date(ticket.created_at).toLocaleString();
+        document.getElementById('detailPriority').textContent = ticket.priority || 'Medium';
+        document.getElementById('detailStatus').textContent = ticket.status || 'Open';
+        document.getElementById('detailDescription').textContent = ticket.description || 'No description provided';
+
+        // Load conversation
+        loadTicketConversation(ticketId);
+
+        // Store current ticket ID
+        window.currentTicketId = ticketId;
+
+        // Show detail view
+        document.getElementById('ticketDetailSection').style.display = 'block';
+        document.querySelector('.tickets-management-container').style.display = 'none';
+    } catch (error) {
+        alert(`Error loading ticket: ${error.message}`);
+    }
+}
+
+async function loadTicketConversation(ticketId) {
+    const container = document.getElementById('messagesContainer');
+    container.innerHTML = '<p>Loading messages...</p>';
+
+    try {
+        const response = await helpdeskAPI.getTicketDetails(ticketId);
+        const ticket = response.data || {};
+        const messages = ticket.messages || [];
+
+        container.innerHTML = '';
+
+        if (messages.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #999;">No messages yet. Start the conversation below.</p>';
+            return;
+        }
+
+        messages.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.style.marginBottom = '1rem';
+            msgDiv.style.padding = '0.75rem';
+            msgDiv.style.borderRadius = '4px';
+            msgDiv.style.backgroundColor = msg.sender === 'admin' ? '#e3f2fd' : '#f5f5f5';
+            msgDiv.style.borderLeft = msg.sender === 'admin' ? '4px solid #2196F3' : '4px solid #999';
+            
+            const time = new Date(msg.created_at).toLocaleTimeString();
+            msgDiv.innerHTML = `
+                <strong>${msg.sender === 'admin' ? '👨‍💼 Admin' : '👤 Customer'}</strong> - ${time}
+                <p>${msg.text || msg.message}</p>
+            `;
+            container.appendChild(msgDiv);
+        });
+
+        // Auto-scroll to bottom
+        container.scrollTop = container.scrollHeight;
+    } catch (error) {
+        container.innerHTML = `<p style="color: red;">Error loading messages: ${error.message}</p>`;
+    }
+}
+
+async function submitAdminResponse(event) {
+    event.preventDefault();
+    const ticketId = window.currentTicketId;
+    const responseText = document.getElementById('responseText').value;
+
+    if (!responseText.trim()) {
+        alert('Please enter a response');
+        return;
+    }
+
+    try {
+        await helpdeskAPI.addResponse(ticketId, responseText, 'admin');
+        alert('✅ Response sent to customer!');
+        document.getElementById('responseText').value = '';
+        await loadTicketConversation(ticketId);
+    } catch (error) {
+        alert(`❌ Failed to send response: ${error.message}`);
+    }
+}
+
+async function markTicketSolved() {
+    const ticketId = window.currentTicketId;
+    const solution = prompt('Enter the solution/resolution:');
+    
+    if (!solution) return;
+
+    try {
+        await helpdeskAPI.solveTicket(ticketId, solution);
+        alert('✅ Ticket marked as solved!');
+        closeDetailView();
+    } catch (error) {
+        alert(`❌ Failed to solve ticket: ${error.message}`);
+    }
+}
+
+async function closeTicket() {
+    const ticketId = window.currentTicketId;
+    
+    if (!confirm('Are you sure you want to close this ticket?')) return;
+
+    try {
+        await helpdeskAPI.closeTicket(ticketId);
+        alert('✅ Ticket closed!');
+        closeDetailView();
+    } catch (error) {
+        alert(`❌ Failed to close ticket: ${error.message}`);
+    }
+}
+
+function closeDetailView() {
+    document.getElementById('ticketDetailSection').style.display = 'none';
+    document.querySelector('.tickets-management-container').style.display = 'block';
+    window.currentTicketId = null;
+}
+</script>

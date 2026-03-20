@@ -69,6 +69,9 @@ const authAPI = {
 
   logout: () =>
     apiRequest('/auth/logout', 'POST'),
+
+  adminLogin: (email, password) =>
+        apiRequest('/auth/admin-login', 'POST', { email, password }),
 };
 
 /**
@@ -96,6 +99,86 @@ const ticketsAPI = {
   assign: (id, agentId) =>
     apiRequest(`/tickets/${id}/assign`, 'PATCH', { assignedTo: agentId }),
 };
+/**
+ * Admin Auth API endpoints
+ */
+const adminAPI = {
+  login: (email, password, adminCode) =>
+    apiRequest('/auth/admin-login', 'POST', { email, password, adminCode }),
+
+  getProfile: () =>
+    apiRequest('/auth/admin/profile', 'GET'),
+
+  logout: () =>
+    apiRequest('/auth/admin/logout', 'POST'),
+
+  verifyAdminCode: (email, code) =>
+    apiRequest('/auth/admin/verify-code', 'POST', { email, code }),
+};
+
+/**
+ * Helpdesk/Tickets Management API (Admin functions)
+ */
+const helpdeskAPI = {
+  // Get all tickets (admin view)
+  getAllTickets: () =>
+    apiRequest('/helpdesk/tickets', 'GET'),
+
+  // Get ticket by ID with full details
+  getTicketDetails: (id) =>
+    apiRequest(`/helpdesk/tickets/${id}`, 'GET'),
+
+  // Assign ticket to agent
+  assignTicket: (ticketId, agentId) =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/assign`, 'PATCH', { assignedTo: agentId }),
+
+  // Update ticket status
+  updateTicketStatus: (ticketId, status) =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/status`, 'PATCH', { status }),
+
+  // Add response to ticket
+  addResponse: (ticketId, response, responseType = 'admin') =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/response`, 'POST', { response, responseType }),
+
+  // Mark ticket as solved
+  solveTicket: (ticketId, solution) =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/solve`, 'POST', { solution }),
+
+  // Close ticket
+  closeTicket: (ticketId) =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/close`, 'PATCH'),
+
+  // Get all users (admin view)
+  getAllUsers: () =>
+    apiRequest('/helpdesk/users', 'GET'),
+
+  // Get user details
+  getUserDetails: (userId) =>
+    apiRequest(`/helpdesk/users/${userId}`, 'GET'),
+
+  // Get recent activities
+  getRecentActivities: () =>
+    apiRequest('/helpdesk/activities', 'GET'),
+
+  // Get dashboard statistics
+  getDashboardStats: () =>
+    apiRequest('/helpdesk/stats', 'GET'),
+
+  // Get notifications
+  getNotifications: () =>
+    apiRequest('/helpdesk/notifications', 'GET'),
+
+  // Mark notifications as read
+  markNotificationsRead: (notificationIds) =>
+    apiRequest('/helpdesk/notifications/read', 'PATCH', { notificationIds }),
+};
+
+// Export for use in HTML files
+window.apiRequest = apiRequest;
+window.authAPI = authAPI;
+window.adminAPI = adminAPI;
+window.ticketsAPI = ticketsAPI;
+window.helpdeskAPI = helpdeskAPI;
 
 // Export for use in HTML files
 window.apiRequest = apiRequest;

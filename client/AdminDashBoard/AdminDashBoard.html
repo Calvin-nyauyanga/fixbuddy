@@ -3,36 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FixBuddy – Admin Dashboard</title>
+    <title>FixBuddy – Admin Helpdesk Dashboard</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://127.0.0.1:5500; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://via.placeholder.com; script-src 'self' http://127.0.0.1:5500;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://127.0.0.1:5500; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://via.placeholder.com;">
 </head>
 <body class="admin-dashboard-body">
     <header class="topbar dashboard-header">
-        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
             <div class="search-bar">
-                <input type="text" placeholder="Search tickets...">
+                <input type="text" id="searchTickets" placeholder="Search tickets...">
                 <i class="fa-solid fa-search"></i>
             </div>
             <div class="user-info">
                 <span style="position:relative;">
-                    <i class="fa-solid fa-bell notifications-icon" id="adminBell"></i>
+                    <i class="fa-solid fa-bell notifications-icon" id="adminBell" style="cursor: pointer;"></i>
                     <span id="adminNotifCount" style="position:absolute;top:-8px;right:-8px;background:red;color:white;border-radius:50%;padding:2px 6px;font-size:0.8em;display:none;">0</span>
                 </span>
-                <i class="fa-solid fa-cog settings-icon"></i>
-                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
+                <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
+                <span class="welcome-message" id="adminWelcome" style="margin-left: 1rem;">👤 Admin</span>
+                <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
             </div>
         </div>
     </header>
 
     <main class="dashboard-main">
         <aside class="sidebar">
-            <h2 class="sidebar-heading">FixBuddy</h2>
+            <h2 class="sidebar-heading">🛠️ Helpdesk Admin</h2>
             <nav class="sidebar-nav">
                 <a href="AdminDashBoard.html" class="sidebar-nav-item active">
                     <i class="fa-solid fa-gauge"></i>
@@ -46,19 +47,20 @@
                     <i class="fa-solid fa-users"></i>
                     <span>Users</span>
                 </a>
-                <a href="reports.html" class="sidebar-nav-item">
+                <a href="AdminReports.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Reports</span>
+                </a>
+                <a href="Notifications.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notifications</span>
                 </a>
                 <a href="settings.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-cog"></i>
                     <span>Settings</span>
                 </a>
-                <a href="Notifications.html" class="sidebar-nav-item active">
-                    <i class="fa-solid fa-bell"></i>
-                    <span>Notifications</span>
-                </a>
-                <a href="../Main Dashboard/JS LOGIC/AdminLoginPage.html" class="sidebar-nav-item">
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link">
                     <i class="fa-solid fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -66,42 +68,49 @@
         </aside>
         
         <section class="admin-content">
+            <!-- KPI Cards -->
             <div class="content-row">
                 <div class="card">
                     <h3>Total Tickets</h3>
-                    <p class="card-metric">156</p>
-                    <p class="card-summary">Up from last month</p>
+                    <p class="card-metric" id="totalTicketsCount">0</p>
+                    <p class="card-summary">All time tickets</p>
                 </div>
                 <div class="card">
-                    <h3>Open</h3>
-                    <p class="card-metric">23</p>
-                    <p class="card-summary">Current backlog</p>
+                    <h3>Open Tickets</h3>
+                    <p class="card-metric" id="openTicketsCount">0</p>
+                    <p class="card-summary" style="color: #f44336;">Awaiting response</p>
                 </div>
                 <div class="card">
                     <h3>In Progress</h3>
-                    <p class="card-metric">15</p>
-                    <p class="card-summary">Currently being handled</p>
+                    <p class="card-metric" id="inProgressCount">0</p>
+                    <p class="card-summary" style="color: #ff9800;">Being resolved</p>
+                </div>
+                <div class="card">
+                    <h3>Resolved Today</h3>
+                    <p class="card-metric" id="resolvedTodayCount">0</p>
+                    <p class="card-summary" style="color: #4caf50;">Closed tickets</p>
                 </div>
             </div>
 
+            <!-- Charts Row -->
             <div class="charts-row">
                 <div class="chart-card line-chart">
-                    <h3>Tickets Created Per Day</h3>
+                    <h3>Tickets Created Per Day (Last 7 Days)</h3>
                     <div class="chart-placeholder">
-                        <p>Line chart placeholder</p>
-                        <img src="https://via.placeholder.com/600x250/fff?text=Ticket+Trends+Chart" alt="Ticket Trends Chart">
+                        <canvas id="ticketsTrendChart" style="max-height: 250px;"></canvas>
                     </div>
                 </div>
                 <div class="chart-card pie-chart">
-                    <h3>Tickets by Status</h3>
+                    <h3>Ticket Status Distribution</h3>
                     <div class="chart-placeholder">
-                        <p>Pie chart placeholder</p>
-                        <img src="https://via.placeholder.com/250x250/fff?text=Ticket+Status+Chart" alt="Ticket Status Chart">
+                        <canvas id="statusDistributionChart" style="max-height: 250px;"></canvas>
                     </div>
                 </div>
             </div>
 
+            <!-- Main Content Row -->
             <div class="content-row full-width">
+                <!-- Recent Activities Section -->
                 <div class="reports-analytics">
                     <h2>Recent Activities</h2>
                     <div class="recent-activities-list">
@@ -109,175 +118,263 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Activity</th>
-                                        <th>User</th>
+                                        <th>Activity Type</th>
+                                        <th>User/Ticket</th>
                                         <th>Details</th>
-                                        <th>Date</th>
+                                        <th>Time</th>
                                     </tr>
                                 </thead>
-                                <tbody id="adminActivitiesTable"></tbody>
+                                <tbody id="activitiesTableBody">
+                                    <tr><td colspan="4" style="text-align: center; padding: 20px;">Loading activities...</td></tr>
+                                </tbody>
                             </table>
                         </div>
+                    </div>
                 </div>
                 
+                <!-- Ticket Management Section -->
                 <div class="tickets-management-container">
-                    <h2>Ticket Management</h2>
+                    <h2>High Priority Tickets</h2>
                     <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Ticket ID</th>
-                                        <th>Title</th>
-                                        <th>Description</th>
-                                        <th>Status</th>
-                                        <th>Created At</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="adminTicketTable"></tbody>
-<script>
-async function loadAllTickets() {
-    try {
-        const response = await fetch('/api/tickets', { headers: { 'Content-Type': 'application/json' } });
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        const result = await response.json();
-        const tickets = result && result.data && Array.isArray(result.data.tickets) ? result.data.tickets : [];
-
-        const table = document.getElementById('adminTicketTable');
-        table.innerHTML = '';
-
-        if (tickets.length === 0) {
-            table.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No tickets found.</td></tr>';
-            return;
-        }
-
-        tickets.forEach(ticket => {
-            const tr = document.createElement('tr');
-            const createdDate = ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-';
-            tr.innerHTML = `
-                <td>#${ticket.id}</td>
-                <td>${ticket.title || 'Untitled'}</td>
-                <td>${ticket.description || 'No description'}</td>
-                <td>${ticket.status || 'open'}</td>
-                <td>${createdDate}</td>
-                <td><button onclick="viewTicket(${ticket.id})">View</button></td>
-            `;
-            table.appendChild(tr);
-        });
-    } catch (error) {
-        const table = document.getElementById('adminTicketTable');
-        table.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Error loading tickets: ${error.message}</td></tr>`;
-        console.error('Admin tickets load error:', error);
-    }
-}
-
-window.addEventListener('DOMContentLoaded', loadAllTickets);
-
-async function loadRecentActivities() {
-    try {
-        const response = await fetch('/api/recent-activities');
-        if (!response.ok) return;
-        const activities = await response.json();
-        const table = document.getElementById('adminActivitiesTable');
-        table.innerHTML = '';
-
-        if (!Array.isArray(activities) || activities.length === 0) {
-            table.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No recent activities yet.</td></tr>';
-            return;
-        }
-
-        activities.forEach(activity => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${activity.type || ''}</td>
-                <td>${activity.user || ''}</td>
-                <td>${activity.details || ''}</td>
-                <td>${activity.date || ''}</td>
-            `;
-            table.appendChild(tr);
-        });
-    } catch (error) {
-        console.error('Error loading recent activities:', error);
-    }
-}
-
-window.addEventListener('DOMContentLoaded', loadRecentActivities);
-
-function viewTicket(id) { alert(`View ticket #${id}`); }
-</script>
-                            </table>
-                        </div>
-                    <div id="adminReportMessage" style="margin-top:1em;"></div>
-                    <script>
-                    // Replace with actual admin ID from your session logic
-                    const admin_id = 1;
-                    async function showReportForm(ticket_id) {
-                        const formHtml = `
-                            <form id='reportForm'>
-                                <input type='hidden' id='ticket_id' value='${ticket_id}'>
-                                <textarea id='report_text' placeholder='Describe the solution' required></textarea>
-                                <button type='submit'>Post Report & Mark Solved</button>
-                            </form>
-                        `;
-                        document.getElementById('adminReportMessage').innerHTML = formHtml;
-                        document.getElementById('reportForm').addEventListener('submit', async function(e) {
-                            e.preventDefault();
-                            const report_text = document.getElementById('report_text').value;
-                            const response = await fetch(`/api/tickets/${ticket_id}/solve`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ admin_id, report_text })
-                            });
-                            const result = await response.json();
-                            document.getElementById('adminReportMessage').textContent = result.message;
-                            loadAllTickets();
-                        });
-                    }
-                    </script>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>User</th>
+                                    <th>Title</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="highPriorityTicketsBody">
+                                <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
     <footer>
-        <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
-        
+        <span>© <span id="year"></span> <strong>FixBuddy</strong> - Admin Helpdesk System</span>
     </footer>
 
+    <script src="../../js/api-client.js"></script>
     <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    // Admin notification bell logic
-    async function fetchAdminNotifications() {
-        const response = await fetch('/api/admin/notifications');
-        const data = await response.json();
-        const notifCount = document.getElementById('adminNotifCount');
-        if (data.count > 0) {
-            notifCount.textContent = data.count;
-            notifCount.style.display = 'inline-block';
-        } else {
-            notifCount.style.display = 'none';
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // ========== INITIALIZATION ==========
+        async function initAdminDashboard() {
+            // Check if admin is logged in
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            const token = localStorage.getItem('authToken');
+            const userRole = localStorage.getItem('userRole');
+
+            if (!token || !admin || userRole !== 'admin') {
+                window.location.href = '../Main Dashboard/AdminLoginPage.html';
+                return;
+            }
+
+            // Update welcome message
+            document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+
+            // Load dashboard data
+            await loadDashboardStats();
+            await loadHighPriorityTickets();
+            await loadRecentActivities();
+            await loadNotifications();
+
+            // Set up real-time updates
+            setInterval(loadNotifications, 30000); // Check notifications every 30s
         }
-    }
-    fetchAdminNotifications();
-    setInterval(fetchAdminNotifications, 10000); // Poll every 10s
-    document.getElementById('adminBell').addEventListener('click', async function() {
-        await fetch('/api/admin/notifications/clear', { method: 'POST' });
-        fetchAdminNotifications();
-    });
+
+        // ========== LOAD DASHBOARD STATISTICS ==========
+        async function loadDashboardStats() {
+            try {
+                const response = await helpdeskAPI.getDashboardStats();
+                const stats = response.data || {};
+
+                document.getElementById('totalTicketsCount').textContent = stats.totalTickets || 0;
+                document.getElementById('openTicketsCount').textContent = stats.openTickets || 0;
+                document.getElementById('inProgressCount').textContent = stats.inProgressTickets || 0;
+                document.getElementById('resolvedTodayCount').textContent = stats.resolvedToday || 0;
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        // ========== LOAD HIGH PRIORITY TICKETS ==========
+        async function loadHighPriorityTickets() {
+            const tbody = document.getElementById('highPriorityTicketsBody');
+
+            try {
+                const response = await helpdeskAPI.getAllTickets();
+                const tickets = response && response.data && Array.isArray(response.data.tickets) ? response.data.tickets : [];
+
+                // Filter for high priority and open status
+                const highPriority = tickets.filter(t => t.priority === 'high' || t.priority === 'critical').slice(0, 10);
+
+                tbody.innerHTML = '';
+
+                if (highPriority.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #4caf50;">✅ No high priority tickets</td></tr>';
+                    return;
+                }
+
+                highPriority.forEach(ticket => {
+                    const row = document.createElement('tr');
+                    const createdDate = new Date(ticket.created_at).toLocaleDateString();
+                    const priorityClass = ticket.priority === 'critical' ? 'critical' : ticket.priority === 'high' ? 'high' : 'medium';
+                    const statusClass = ticket.status === 'open' ? 'open' : ticket.status === 'in_progress' ? 'pending' : 'solved';
+                    
+                    row.innerHTML = `
+                        <td><strong>#${ticket.id}</strong></td>
+                        <td>${ticket.user_name || 'Unknown'}</td>
+                        <td>${ticket.title}</td>
+                        <td><span class="status-badge ${priorityClass}">${ticket.priority}</span></td>
+                        <td><span class="status-badge ${statusClass}">${ticket.status}</span></td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <button onclick="viewTicketDetail(${ticket.id})" class="btn-small">View</button>
+                            <button onclick="assignTicketForm(${ticket.id})" class="btn-small">Assign</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error loading tickets:', error);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Error loading tickets: ${error.message}</td></tr>`;
+            }
+        }
+
+        // ========== LOAD RECENT ACTIVITIES ==========
+        async function loadRecentActivities() {
+            const tbody = document.getElementById('activitiesTableBody');
+
+            try {
+                const response = await helpdeskAPI.getRecentActivities();
+                const activities = response && response.data && Array.isArray(response.data.activities) ? response.data.activities : [];
+
+                tbody.innerHTML = '';
+
+                if (activities.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No recent activities</td></tr>';
+                    return;
+                }
+
+                activities.slice(0, 8).forEach(activity => {
+                    const row = document.createElement('tr');
+                    const activityTime = new Date(activity.created_at).toLocaleTimeString();
+                    
+                    row.innerHTML = `
+                        <td><strong>${activity.type || 'Unknown'}</strong></td>
+                        <td>${activity.user_name || activity.ticket_id || 'N/A'}</td>
+                        <td>${activity.details || 'No details'}</td>
+                        <td>${activityTime}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error loading activities:', error);
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">Error loading activities</td></tr>`;
+            }
+        }
+
+        // ========== LOAD NOTIFICATIONS ==========
+        async function loadNotifications() {
+            try {
+                const response = await helpdeskAPI.getNotifications();
+                const notifications = response && response.data && Array.isArray(response.data.notifications) ? response.data.notifications : [];
+                const unreadCount = notifications.filter(n => !n.is_read).length;
+
+                const notifCount = document.getElementById('adminNotifCount');
+                if (unreadCount > 0) {
+                    notifCount.textContent = unreadCount;
+                    notifCount.style.display = 'inline-block';
+                } else {
+                    notifCount.style.display = 'none';
+                }
+            } catch (error) {
+                console.warn('Error loading notifications:', error);
+            }
+        }
+
+        // ========== VIEW TICKET DETAILS ==========
+        function viewTicketDetail(ticketId) {
+            window.location.href = `ManageTickets.html?id=${ticketId}`;
+        }
+
+        // ========== ASSIGN TICKET ==========
+        function assignTicketForm(ticketId) {
+            const agentId = prompt('Enter Agent ID to assign this ticket:');
+            if (agentId) {
+                assignTicket(ticketId, agentId);
+            }
+        }
+
+        async function assignTicket(ticketId, agentId) {
+            try {
+                await helpdeskAPI.assignTicket(ticketId, agentId);
+                alert('✅ Ticket assigned successfully!');
+                await loadHighPriorityTickets();
+            } catch (error) {
+                alert(`❌ Failed to assign ticket: ${error.message}`);
+            }
+        }
+
+        // ========== SEARCH TICKETS ==========
+        document.getElementById('searchTickets').addEventListener('keyup', async (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#highPriorityTicketsBody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // ========== LOGOUT ==========
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            try {
+                await adminAPI.logout();
+            } catch (error) {
+                console.warn('Logout API call failed:', error);
+            }
+
+            // Clear local storage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('admin');
+            localStorage.removeItem('userRole');
+
+            // Redirect to login
+            window.location.href = '../Main Dashboard/AdminLoginPage.html';
+        });
+
+        // ========== SETTINGS ICON ==========
+        document.querySelector('.settings-icon').addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
+
+        // ========== NOTIFICATIONS BELL ==========
+        document.getElementById('adminBell').addEventListener('click', () => {
+            window.location.href = 'Notifications.html';
+        });
+
+        // ========== PROFILE ICON ==========
+        document.querySelector('.admin-profile-icon').addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initAdminDashboard);
+        initAdminDashboard();
     </script>
 </body>
-        <!-- Socket.IO client for real-time updates -->
-        <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-        <script src="/backend/client.js"></script>
-        <script>
-        const socket = io('http://localhost:3000');
-        socket.on('new_ticket', ticket => {
-            if (typeof loadTickets === 'function') loadTickets();
-        });
-        socket.on('activity', activity => {
-            if (typeof loadActivities === 'function') loadActivities();
-        });
-        </script>
 </html>
