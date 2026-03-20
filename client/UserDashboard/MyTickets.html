@@ -92,7 +92,12 @@
             const tbody = document.getElementById('ticketsTableBody');
 
             try {
-                allTickets = await ticketsAPI.getMyTickets();
+                const response = await ticketsAPI.getMyTickets();
+                if (!response || !response.data) {
+                    throw new Error('Invalid tickets response from server');
+                }
+
+                allTickets = Array.isArray(response.data.tickets) ? response.data.tickets : [];
                 displayTickets(allTickets);
             } catch (error) {
                 console.error('Error loading tickets:', error);
@@ -123,9 +128,9 @@
                     <td><span class="status-badge ${statusClass}">${ticket.status}</span></td>
                     <td>${createdDate}</td>
                     <td>
-                        <button onclick="viewTicketDetails(${ticket.id})" class="btn-small">View</button>
-                        <button onclick="editTicket(${ticket.id})" class="btn-small">Edit</button>
-                        <button onclick="deleteTicket(${ticket.id})" class="btn-small btn-danger">Delete</button>
+                        <button onclick="viewTicketDetails(${ticket.id})" class="btn-small" title="View"><i class="fa-solid fa-eye"></i></button>
+                        <button onclick="editTicket(${ticket.id})" class="btn-small" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteTicket(${ticket.id})" class="btn-small btn-danger" title="Delete"><i class="fa-solid fa-trash-alt"></i></button>
                     </td>
                 `;
                 tbody.appendChild(row);

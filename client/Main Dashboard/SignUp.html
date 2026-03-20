@@ -92,7 +92,7 @@
 
             try {
                 // Call backend signup endpoint
-                const response = await authAPI.signup(name, email, password);
+                const response = await authAPI.signup(name, email, password, confirmPassword);
 
                 // Store auth token
                 if (response.token) {
@@ -100,8 +100,8 @@
                 }
 
                 // Store user info
-                if (response.user) {
-                    localStorage.setItem('user', JSON.stringify(response.user));
+                if (response.data) {
+                    localStorage.setItem('user', JSON.stringify(response.data));
                 }
 
                 // Show success message

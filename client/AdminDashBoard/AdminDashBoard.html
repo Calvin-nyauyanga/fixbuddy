@@ -136,56 +136,76 @@
                                 </thead>
                                 <tbody id="adminTicketTable"></tbody>
 <script>
-// This script fetches all tickets for admin and populates the ticket management table.
-// It runs automatically when the page loads.
-
 async function loadAllTickets() {
-    const response = await fetch('/api/tickets');
-    // The backend should return an array of ticket objects like:
-    // [{ id, title, description, status, created_at }, ...]
-    const tickets = await response.json();
-    const table = document.getElementById('adminTicketTable');
-    table.innerHTML = '';
-    tickets.forEach(ticket => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${ticket.id}</td>
-            <td>${ticket.title}</td>
-            <td>${ticket.description}</td>
-            <td>${ticket.status}</td>
-            <td>${ticket.created_at}</td>
-            <td><button onclick="viewTicket(${ticket.id})">View</button></td>
-        `;
-        table.appendChild(tr);
-    });
+    try {
+        const response = await fetch('/api/tickets', { headers: { 'Content-Type': 'application/json' } });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const result = await response.json();
+        const tickets = result && result.data && Array.isArray(result.data.tickets) ? result.data.tickets : [];
+
+        const table = document.getElementById('adminTicketTable');
+        table.innerHTML = '';
+
+        if (tickets.length === 0) {
+            table.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No tickets found.</td></tr>';
+            return;
+        }
+
+        tickets.forEach(ticket => {
+            const tr = document.createElement('tr');
+            const createdDate = ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-';
+            tr.innerHTML = `
+                <td>#${ticket.id}</td>
+                <td>${ticket.title || 'Untitled'}</td>
+                <td>${ticket.description || 'No description'}</td>
+                <td>${ticket.status || 'open'}</td>
+                <td>${createdDate}</td>
+                <td><button onclick="viewTicket(${ticket.id})">View</button></td>
+            `;
+            table.appendChild(tr);
+        });
+    } catch (error) {
+        const table = document.getElementById('adminTicketTable');
+        table.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Error loading tickets: ${error.message}</td></tr>`;
+        console.error('Admin tickets load error:', error);
+    }
 }
 
 window.addEventListener('DOMContentLoaded', loadAllTickets);
-</script>
-<script>
-// This script fetches recent activities for admin and populates the activities table.
-// It runs automatically when the page loads.
 
 async function loadRecentActivities() {
-    const response = await fetch('/api/recent-activities');
-    // The backend should return an array of activity objects like:
-    // [{ type, user, details, date }, ...]
-    const activities = await response.json();
-    const table = document.getElementById('adminActivitiesTable');
-    table.innerHTML = '';
-    activities.forEach(activity => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${activity.type}</td>
-            <td>${activity.user}</td>
-            <td>${activity.details}</td>
-            <td>${activity.date}</td>
-        `;
-        table.appendChild(tr);
-    });
+    try {
+        const response = await fetch('/api/recent-activities');
+        if (!response.ok) return;
+        const activities = await response.json();
+        const table = document.getElementById('adminActivitiesTable');
+        table.innerHTML = '';
+
+        if (!Array.isArray(activities) || activities.length === 0) {
+            table.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">No recent activities yet.</td></tr>';
+            return;
+        }
+
+        activities.forEach(activity => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${activity.type || ''}</td>
+                <td>${activity.user || ''}</td>
+                <td>${activity.details || ''}</td>
+                <td>${activity.date || ''}</td>
+            `;
+            table.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error loading recent activities:', error);
+    }
 }
 
 window.addEventListener('DOMContentLoaded', loadRecentActivities);
+
+function viewTicket(id) { alert(`View ticket #${id}`); }
 </script>
                             </table>
                         </div>
@@ -193,26 +213,7 @@ window.addEventListener('DOMContentLoaded', loadRecentActivities);
                     <script>
                     // Replace with actual admin ID from your session logic
                     const admin_id = 1;
-                    async function loadAllTickets() {
-                        const response = await fetch('/api/tickets');
-                        const tickets = await response.json();
-                        const table = document.getElementById('adminTicketTable');
-                        table.innerHTML = '';
-                        tickets.forEach(ticket => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td>#${ticket.id}</td>
-                                <td>${ticket.title}</td>
-                                <td>${ticket.description}</td>
-                                <td>${ticket.status}</td>
-                                <td>
-                                    ${ticket.status !== 'solved' ? `<button onclick="showReportForm(${ticket.id})">Solve & Report</button>` : 'Solved'}
-                                </td>
-                            `;
-                            table.appendChild(tr);
-                        });
-                    }
-                    function showReportForm(ticket_id) {
+                    async function showReportForm(ticket_id) {
                         const formHtml = `
                             <form id='reportForm'>
                                 <input type='hidden' id='ticket_id' value='${ticket_id}'>
@@ -234,7 +235,6 @@ window.addEventListener('DOMContentLoaded', loadRecentActivities);
                             loadAllTickets();
                         });
                     }
-                    loadAllTickets();
                     </script>
                 </div>
             </div>
@@ -243,10 +243,7 @@ window.addEventListener('DOMContentLoaded', loadRecentActivities);
 
     <footer>
         <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
-        <span class="footer-sep">|</span>
-        <a href="privacy-policy.html">Privacy Policy</a>
-        <span class="footer-sep">|</span>
-        <a href="terms.html">Terms of Use</a>
+        
     </footer>
 
     <script>

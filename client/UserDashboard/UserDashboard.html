@@ -110,12 +110,13 @@
 
             try {
                 // Fetch user's tickets from backend
-                const tickets = await ticketsAPI.getMyTickets();
+                const response = await ticketsAPI.getMyTickets();
+                const tickets = response && response.data && Array.isArray(response.data.tickets) ? response.data.tickets : [];
 
                 tbody.innerHTML = '';
                 ticketCount.textContent = tickets.length;
 
-                if (!tickets || tickets.length === 0) {
+                if (tickets.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No tickets created yet. <a href="submitticket.html">Create one now!</a></td></tr>';
                     return;
                 }
