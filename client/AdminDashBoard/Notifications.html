@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Notifications</title>
+    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker registered:', reg))
+        .catch(err => console.log('Service Worker registration failed:', err));
+}
+</script>
+</head>
+<body>
+    <header class="topbar dashboard-header">
+        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <div class="admin-topbar-right">
+            <div class="search-bar">
+                <input type="text" placeholder="Search notifications...">
+                <i class="fa-solid fa-search"></i>
+            </div>
+            <div class="user-info">
+                <i class="fa-solid fa-bell notifications-icon"></i>
+                <i class="fa-solid fa-cog settings-icon"></i>
+                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <aside class="sidebar">
+            <h2 class="sidebar-heading">FixBuddy</h2>
+            <nav class="sidebar-nav">
+                <a href="AdminDashBoard.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-gauge"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="ManageTickets.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-ticket-alt"></i>
+                    <span>Manage Tickets</span>
+                </a>
+                <a href="Users.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="reports.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="Notifications.html" class="sidebar-nav-item active">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="../Main Dashboard/JS LOGIC/AdminLoginPage.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <section class="admin-notifications-section">
+            <h1>Notifications</h1>
+            <p>This is the notifications page for admins.</p>
+        </section>
+    </main>
+</body>
+</html>

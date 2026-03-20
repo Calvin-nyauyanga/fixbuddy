@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixBuddy – Submit Ticket</title>
+    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-dashboard-body">
+
+    <header class="topbar dashboard-header">
+        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <div class="admin-topbar-right">
+            <span class="welcome-message">👋 Hi, User Name</span>
+            <div class="user-info">
+                <i class="fa-solid fa-bell notifications-icon"></i>
+                <span class="notification-badge">3</span>
+                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <aside class="sidebar">
+            <h2 class="sidebar-heading">FixBuddy</h2>
+            <nav class="sidebar-nav">
+                <a href="UserDashboard.html" class="sidebar-nav-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+                <a href="MyTickets.html" class="sidebar-nav-item"><i class="fa-solid fa-ticket-alt"></i><span>My Tickets</span></a>
+                <a href="submitticket.html" class="sidebar-nav-item active"><i class="fa-solid fa-plus-circle"></i><span>Submit Ticket</span></a>
+                <a href="reports.html" class="sidebar-nav-item"><i class="fa-solid fa-chart-line"></i><span>Reports</span></a>
+                <a href="../Main Dashboard/UserLoginPage.html" class="sidebar-nav-item logout-link"><i class="fa-solid fa-sign-out-alt"></i><span>Logout</span></a>
+            </nav>
+        </aside>
+        
+        <section class="admin-content">
+            <div class="content-row full-width">
+                <div class="card page-content-card">
+                    <h1>Submit New Ticket</h1>
+                    <div class="subheading">Please fill out the form below with details of your issue.</div>
+                    <!-- Ticket Creation Form -->
+                    <form id="ticketForm" class="ticket-form">
+                        <div class="form-group">
+                            <label for="title">📝 Title</label>
+                            <input type="text" id="title" name="title" placeholder="A short, descriptive title for the issue" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">📄 Description</label>
+                            <textarea id="description" name="description" rows="8" placeholder="Provide a detailed description of the issue" required></textarea>
+                        </div>
+                        <!-- You can add attachments/category logic later if needed -->
+                        <div id="ticketMessage"></div>
+                        <div class="login-options-footer">
+                            <button type="submit" class="btn btn-primary login-btn">Submit Ticket</button>
+                            <nav class="sidebar-nav"></nav>
+                            <a href="UserDashboard.html" class="btn btn-secondary login-btn">🔙 Cancel / Back to Dashboard</a>
+                                <a href="#" class="sidebar-nav-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+                        </nav>
+                        </div>
+                    </form>
+                    <script src="/backend/client.js"></script>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
+        <span class="footer-sep">|</span>
+     
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+
+</body>
+</html>

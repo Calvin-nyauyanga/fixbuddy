@@ -1,26 +1,8 @@
 {
-  "dependencies": {
-    "@fontsource/poppins": "^5.2.7",
-    "bcrypt": "^6.0.0",
-    "bcryptjs": "^3.0.2",
-    "body-parser": "^2.2.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "mysql2": "^3.15.1",
-    "nodemailer": "^7.0.6",
-    "socket.io": "^4.8.1",
-    "sqlite3": "^5.1.7"
-  },
-  "name": "fixbuddy",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node backend/backend.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "type": "module",
+"scripts": {
+  "start": "node src/app.js",
+  "dev": "nodemon src/app.js"
+}
+
 }
