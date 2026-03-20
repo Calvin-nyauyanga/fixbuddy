@@ -1,27 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FixBuddy – My Tickets</title>
+    <title>FixBuddy - My Tickets</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="admin-dashboard-body">
-
     <header class="topbar dashboard-header">
         <div class="logo">🖥️ <span>FixBuddy</span></div>
         <div class="admin-topbar-right">
-            <span class="welcome-message">👋 Hi, User Name</span>
-            <div class="user-info">
-                <i class="fa-solid fa-bell notifications-icon"></i>
-                <span class="notification-badge">3</span>
-                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
-            </div>
+            <span class="welcome-message" id="welcomeMessage">👋 Hi, User</span>
         </div>
     </header>
 
@@ -33,23 +23,40 @@
                 <a href="MyTickets.html" class="sidebar-nav-item active"><i class="fa-solid fa-ticket-alt"></i><span>My Tickets</span></a>
                 <a href="submitticket.html" class="sidebar-nav-item"><i class="fa-solid fa-plus-circle"></i><span>Submit Ticket</span></a>
                 <a href="reports.html" class="sidebar-nav-item"><i class="fa-solid fa-chart-line"></i><span>Reports</span></a>
-                <a href="../Main Dashboard/UserLoginPage.html" class="sidebar-nav-item logout-link"><i class="fa-solid fa-sign-out-alt"></i><span>Logout</span></a>
+                <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link"><i class="fa-solid fa-sign-out-alt"></i><span>Logout</span></a>
             </nav>
         </aside>
-        
+
         <section class="admin-content">
-                        <div class="content-row full-width">
-                                <div class="tickets-management-container">
-                                        <h2>My Tickets</h2>
-                                        <table>
-                                            <thead>
-                                                <tr><th>ID</th><th>Title</th><th>Description</th><th>Status</th><th>Created At</th></tr>
-                                            </thead>
-                                            <tbody id="ticketsTable"></tbody>
-                                        </table>
-                    
-                    <div class="pagination-footer mt-4">
-                        <a href="#" class="btn btn-secondary">Load More Tickets</a>
+            <div class="content-row full-width">
+                <div class="tickets-management-container">
+                    <h2>All My Tickets</h2>
+                    <div id="filterOptions" style="margin-bottom: 1.5rem;">
+                        <label>Filter by Status: </label>
+                        <select id="statusFilter" onchange="filterTickets()">
+                            <option value="">All</option>
+                            <option value="open">Open</option>
+                            <option value="pending">Pending</option>
+                            <option value="solved">Solved</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticketsTableBody">
+                                <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -58,13 +65,127 @@
 
     <footer>
         <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
-        <span class="footer-sep">|</span>
-       
     </footer>
 
-    <script src="/backend/client.js"></script>
+    <script src="../../js/api-client.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        let allTickets = [];
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            const token = localStorage.getItem('authToken');
+
+            if (!token || !user) {
+                window.location.href = '../Main Dashboard/UserLoginPage.html';
+                return;
+            }
+
+            document.getElementById('welcomeMessage').textContent = `👋 Hi, ${user.name || user.email}`;
+            loadAllTickets();
+        });
+
+        // Load all tickets
+        async function loadAllTickets() {
+            const tbody = document.getElementById('ticketsTableBody');
+
+            try {
+                allTickets = await ticketsAPI.getMyTickets();
+                displayTickets(allTickets);
+            } catch (error) {
+                console.error('Error loading tickets:', error);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Error loading tickets: ${error.message}</td></tr>`;
+            }
+        }
+
+        // Display tickets
+        function displayTickets(tickets) {
+            const tbody = document.getElementById('ticketsTableBody');
+            tbody.innerHTML = '';
+
+            if (!tickets || tickets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No tickets found. <a href="submitticket.html">Submit one now!</a></td></tr>';
+                return;
+            }
+
+            tickets.forEach(ticket => {
+                const row = document.createElement('tr');
+                const createdDate = new Date(ticket.created_at).toLocaleDateString();
+                const statusClass = ticket.status === 'solved' ? 'solved' : ticket.status === 'pending' ? 'pending' : 'open';
+                
+                row.innerHTML = `
+                    <td>#${ticket.id}</td>
+                    <td>${ticket.title}</td>
+                    <td>${ticket.category || 'N/A'}</td>
+                    <td><span class="priority-badge ${ticket.priority}">${ticket.priority || 'Medium'}</span></td>
+                    <td><span class="status-badge ${statusClass}">${ticket.status}</span></td>
+                    <td>${createdDate}</td>
+                    <td>
+                        <button onclick="viewTicketDetails(${ticket.id})" class="btn-small">View</button>
+                        <button onclick="editTicket(${ticket.id})" class="btn-small">Edit</button>
+                        <button onclick="deleteTicket(${ticket.id})" class="btn-small btn-danger">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Filter tickets
+        function filterTickets() {
+            const status = document.getElementById('statusFilter').value;
+            const filtered = status ? allTickets.filter(t => t.status === status) : allTickets;
+            displayTickets(filtered);
+        }
+
+        // View ticket details
+        function viewTicketDetails(ticketId) {
+            // For now, just alert. You can create a modal later
+            alert(`Viewing ticket #${ticketId}`);
+        }
+
+        // Edit ticket
+        async function editTicket(ticketId) {
+            const newStatus = prompt('Enter new status (open, pending, solved):');
+            if (!newStatus) return;
+
+            try {
+                await ticketsAPI.update(ticketId, { status: newStatus });
+                alert('✅ Ticket updated!');
+                await loadAllTickets();
+            } catch (error) {
+                alert(`❌ Failed to update ticket: ${error.message}`);
+            }
+        }
+
+        // Delete ticket
+        async function deleteTicket(ticketId) {
+            if (!confirm('Are you sure you want to delete this ticket?')) return;
+
+            try {
+                await ticketsAPI.delete(ticketId);
+                alert('✅ Ticket deleted!');
+                await loadAllTickets();
+            } catch (error) {
+                alert(`❌ Failed to delete ticket: ${error.message}`);
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            try {
+                await authAPI.logout();
+            } catch (error) {
+                console.warn('Logout failed:', error);
+            }
+
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            window.location.href = '../Main Dashboard/UserLoginPage.html';
+        });
     </script>
 </body>
 </html>

@@ -9,8 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
-    <script src="/backend/site-utils.js"></script>
 </head>
 <body class="admin-dashboard-body">
     <header class="topbar dashboard-header">
@@ -37,94 +35,21 @@
                 <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link"><i class="fa-solid fa-sign-out-alt"></i><span>Logout</span></a>
             </nav>
         </aside>
-        <section class="user-tickets-section">
-            <h2>My Tickets</h2>
-            <ul id="ticketList" class="ticket-list"></ul>
-        </section>
-        <script>
-        // Get user info from localStorage after login
-        let user = null;
-        try {
-            user = JSON.parse(localStorage.getItem('user'));
-        } catch (e) {}
-        const user_id = user && user.id ? user.id : 1;
-        if(user && user.email) {
-            document.getElementById('welcomeMessage').textContent = `👋 Hi, ${user.email}`;
-        }
-        async function loadTickets() {
-            try {
-                // Try backend with timeout and fallback
-                let tickets = [];
-                try {
-                    const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 3000);
-                    const response = await fetch('/api/tickets?user_id=' + user_id, { signal: controller.signal });
-                    clearTimeout(timeout);
-                    if (response.ok) {
-                        tickets = await response.json();
-                    } else {
-                        throw new Error('Backend unavailable: ' + response.status);
-                    }
-                } catch (backendErr) {      
-                    console.warn('Backend unavailable, using offline fallback:', backendErr.message);
-                    // Offline fallback - show sample tickets
-                    tickets = [
-                        { id: 1, title: 'Sample Ticket - Backend Offline', status: 'Open', created_at: new Date().toISOString() }
-                    ];
-                }
-                
-                const list = document.getElementById('ticketList');
-                list.innerHTML = '';
-                if (Array.isArray(tickets) && tickets.length === 0) {
-                    list.innerHTML = '<li class="ticket-item empty">No tickets submitted yet.</li>';
-                } else if (Array.isArray(tickets)) {
-                    tickets.forEach(ticket => {
-                        const li = document.createElement('li');
-                        li.className = 'ticket-item';
-                        li.textContent = `#${ticket.id}: ${ticket.title} [${ticket.status}]`;
-                        if(ticket.status === 'solved') {
-                            li.classList.add('solved');
-                        }
-                        list.appendChild(li);
-                    });
-                } else {
-                    list.innerHTML = '<li class="ticket-item error">Error loading tickets.</li>';
-                }
-            } catch (err) {
-                console.error('Error in loadTickets:', err);
-                document.getElementById('ticketList').innerHTML = '<li class="ticket-item error">Error loading tickets. Backend status: check console.</li>';
-            }
-        }
 
-        // Automatically load tickets when the page loads
-        window.addEventListener('DOMContentLoaded', loadTickets);
-
-        /*
-        What this code does:
-        - Defines a function loadTickets() that fetches tickets for the current user from the backend API.
-        - It displays each ticket in a list, coloring solved tickets green.
-        - If there are no tickets, it shows a message.
-        - If there is an error, it shows an error message.
-        - The function is called automatically when the page loads, so the user sees their tickets instantly.
-        */
-        loadTickets();
-        </script>
-        </section>
-        
         <section class="admin-content">
             <div class="content-row">
                 <a href="submitticket.html" class="card action-card btn-primary">
                     <i class="fa-solid fa-plus-circle"></i>
                     <h3>Create New Ticket</h3>
                 </a>
-                <a id="MyTickets" href="MyTickets.html" class="card action-card btn-secondary" >
+                <a href="MyTickets.html" class="card action-card btn-secondary">
                     <i class="fa-solid fa-list-ul"></i>
                     <h3>My Tickets</h3>
                 </a>
                 <div class="card">
-                    <h3>Open Tickets</h3>
-                    <p class="card-metric">2</p>
-                    <p class="card-summary">Current active tickets</p>
+                    <h3>Dashboard</h3>
+                    <p class="card-metric" id="ticketCount">0</p>
+                    <p class="card-summary">Total tickets created</p>
                 </div> 
             </div>
 
@@ -137,11 +62,14 @@
                                 <tr>
                                     <th>Ticket ID</th>
                                     <th>Title</th>
-                                    <th>Submitted</th>
                                     <th>Status</th>
+                                    <th>Created</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
+                            <tbody id="ticketsTableBody">
+                                <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -151,61 +79,111 @@
 
     <footer>
         <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
-        
     </footer>
+
+    <script src="../../js/api-client.js"></script>
     <script>
-        // Display current user if present
-        try {
-            const current = JSON.parse(localStorage.getItem('fixbuddy_current_user')) || JSON.parse(localStorage.getItem('user')) || null;
-            if (current && current.email) {
-                document.getElementById('welcomeMessage').textContent = `👋 Hi, ${current.name || current.email}`;
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // ========== INIT ==========
+        async function initDashboard() {
+            // Check if user is logged in
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            const token = localStorage.getItem('authToken');
+
+            if (!token || !user) {
+                window.location.href = '../Main Dashboard/UserLoginPage.html';
+                return;
             }
-        } catch (e) {}
 
-        // Logout handler
-        document.getElementById('logoutBtn').addEventListener('click', function (e) {
-            e.preventDefault();
-            // Clear local session keys
-            localStorage.removeItem('fixbuddy_current_user');
-            localStorage.removeItem('user');
-            // Redirect to main dashboard
-            window.location.href = '../Main Dashboard/MainDashboard.html';
-        });
-    </script>
+            // Update welcome message
+            document.getElementById('welcomeMessage').textContent = `👋 Hi, ${user.name || user.email}`;
 
-    <script>
-        // Ensure dashboard card reliably navigates to view-my-tickets.html (fallback)
-        (function(){
-            try{
-                const card = document.getElementById('openViewTicketsCard');
-                if(card){
-                    card.addEventListener('click', function(e){
-                        if(e.defaultPrevented) return;
-                        if(e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-                        // debug log for devtools
-                        try{ console.log('View Tickets card clicked, navigating...'); }catch(_){}
-                        e.preventDefault();
-                        window.location.href = 'view-my-tickets.html';
-                    });
+            // Load user's tickets
+            await loadUserTickets();
+        }
+
+        // ========== LOAD TICKETS ==========
+        async function loadUserTickets() {
+            const tbody = document.getElementById('ticketsTableBody');
+            const ticketCount = document.getElementById('ticketCount');
+
+            try {
+                // Fetch user's tickets from backend
+                const tickets = await ticketsAPI.getMyTickets();
+
+                tbody.innerHTML = '';
+                ticketCount.textContent = tickets.length;
+
+                if (!tickets || tickets.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No tickets created yet. <a href="submitticket.html">Create one now!</a></td></tr>';
+                    return;
                 }
-            }catch(err){ try{ console.warn('nav hook failed', err); }catch(_){} }
-        })();
 
-        // Ensure sidebar "My Tickets" link navigates to MyTickets.html
-        (function(){
-            try{
-                // Find all sidebar nav items with My Tickets text or href
-                const sidebarItems = document.querySelectorAll('.sidebar-nav-item');
-                sidebarItems.forEach(item => {
-                    // Check if this is a My Tickets link (by text or current href)
-                    if(item.textContent.includes('My Tickets')){
-                        item.href = 'MyTickets.html';
-                        console.log('Updated sidebar My Tickets link to MyTickets.html');
-                    }
+                // Populate table
+                tickets.forEach(ticket => {
+                    const row = document.createElement('tr');
+                    const createdDate = new Date(ticket.created_at).toLocaleDateString();
+                    const statusClass = ticket.status === 'solved' ? 'solved' : ticket.status === 'pending' ? 'pending' : 'open';
+                    
+                    row.innerHTML = `
+                        <td>#${ticket.id}</td>
+                        <td>${ticket.title}</td>
+                        <td><span class="status-badge ${statusClass}">${ticket.status}</span></td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <button onclick="viewTicket(${ticket.id})" class="btn-small">View</button>
+                            <button onclick="deleteTicketConfirm(${ticket.id})" class="btn-small btn-danger">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
                 });
-            }catch(err){ try{ console.warn('Sidebar nav update failed', err); }catch(_){} }
-        })();
-    </script>
 
-    </body>
-    </html>
+            } catch (error) {
+                console.error('Error loading tickets:', error);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Error loading tickets: ${error.message}</td></tr>`;
+            }
+        }
+
+        // ========== VIEW TICKET ==========
+        function viewTicket(ticketId) {
+            window.location.href = `MyTickets.html?id=${ticketId}`;
+        }
+
+        // ========== DELETE TICKET ==========
+        async function deleteTicketConfirm(ticketId) {
+            if (!confirm('Are you sure you want to delete this ticket?')) return;
+
+            try {
+                await ticketsAPI.delete(ticketId);
+                alert('✅ Ticket deleted successfully!');
+                await loadUserTickets(); // Reload tickets
+            } catch (error) {
+                alert(`❌ Failed to delete ticket: ${error.message}`);
+            }
+        }
+
+        // ========== LOGOUT ==========
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            try {
+                await authAPI.logout();
+            } catch (error) {
+                console.warn('Logout API call failed:', error);
+            }
+
+            // Clear local storage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+
+            // Redirect to login
+            window.location.href = '../Main Dashboard/UserLoginPage.html';
+        });
+
+        // Initialize dashboard on page load
+        window.addEventListener('DOMContentLoaded', initDashboard);
+        initDashboard();
+    </script>
+</body>
+</html>
