@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FixBuddy – Admin Helpdesk Dashboard</title>
+    <title>FixBuddy – Admin Dashboard</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,42 +26,6 @@
         .user-dashboard-btn:hover {
             background-color: #45a049;
         }
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-        .btn-action {
-            padding: 6px 10px;
-            font-size: 0.85rem;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .btn-action:hover {
-            opacity: 0.8;
-        }
-        .btn-priority {
-            background-color: #FF9800;
-            color: white;
-        }
-        .btn-status {
-            background-color: #2196F3;
-            color: white;
-        }
-        .btn-close {
-            background-color: #f44336;
-            color: white;
-        }
-        .btn-solve {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .btn-response {
-            background-color: #9C27B0;
-            color: white;
-        }
         .notification-alert {
             position: fixed;
             top: 20px;
@@ -72,14 +36,109 @@
             border-radius: 5px;
             z-index: 9999;
             animation: slideIn 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .notification-alert.error {
+            background-color: #f44336;
+        }
+        .notification-alert.info {
+            background-color: #2196F3;
+        }
+        .notification-alert.warning {
+            background-color: #ff9800;
         }
         @keyframes slideIn {
             from {
                 transform: translateX(400px);
+                opacity: 0;
             }
             to {
                 transform: translateX(0);
+                opacity: 1;
             }
+        }
+        .settings-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #2196F3;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        .settings-toggle:hover {
+            background-color: #1976D2;
+            transform: scale(1.1);
+        }
+        .settings-panel {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 999;
+            display: none;
+            min-width: 280px;
+        }
+        .settings-panel.active {
+            display: block;
+        }
+        .settings-panel h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 10px;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        .setting-item label {
+            margin: 0;
+            color: #333;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .toggle-switch {
+            width: 50px;
+            height: 24px;
+            background-color: #ccc;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-switch.active {
+            background-color: #4CAF50;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+        .toggle-switch.active::after {
+            left: 28px;
         }
     </style>
 </head>
@@ -93,7 +152,7 @@
         <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
             <div class="search-bar">
-                <input type="text" id="searchTickets" placeholder="Search tickets...">
+                <input type="text" id="searchActivities" placeholder="Search activities...">
                 <i class="fa-solid fa-search"></i>
             </div>
             <div class="user-info">
@@ -215,29 +274,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Ticket Management Section -->
-                <div class="tickets-management-container">
-                    <h2>All Tickets (Real-time)</h2>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Ticket ID</th>
-                                    <th>User</th>
-                                    <th>Title</th>
-                                    <th>Priority</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="allTicketsBody">
-                                <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
         </section>
     </main>
@@ -246,43 +282,171 @@
         <span>© <span id="year"></span> <strong>FixBuddy</strong> - Admin Helpdesk System</span>
     </footer>
 
+    <!-- Settings Panel Toggle Button -->
+    <button class="settings-toggle" id="settingsToggleBtn" title="Notification Settings">
+        <i class="fa-solid fa-bell-slash"></i>
+    </button>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <h3>⚙️ Notification Settings</h3>
+        
+        <div class="setting-item">
+            <label for="enableNotifications">Enable Notifications</label>
+            <div class="toggle-switch active" id="enableNotifications" onclick="toggleNotifications()"></div>
+        </div>
+
+        <div class="setting-item">
+            <label for="enableNotificationSound">Notification Sound</label>
+            <div class="toggle-switch active" id="enableNotificationSound" onclick="toggleNotificationSound()"></div>
+        </div>
+
+        <div class="setting-item">
+            <label for="enableToastAlerts">Toast Alerts</label>
+            <div class="toggle-switch active" id="enableToastAlerts" onclick="toggleToastAlerts()"></div>
+        </div>
+
+        <div class="setting-item">
+            <label for="enableBadgeCounter">Badge Counter</label>
+            <div class="toggle-switch active" id="enableBadgeCounter" onclick="toggleBadgeCounter()"></div>
+        </div>
+    </div>
+
     <script src="../js/api-client.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
-        let lastTicketCount = 0;
+        
+        // ========== SETTINGS STATE ==========
         let pollingInterval = null;
+        let lastTicketCount = 0;
+        let hasPlayedNewTicketSound = false;
+
+        // Notification settings (stored in localStorage)
+        let notificationSettings = {
+            enableNotifications: localStorage.getItem('enableNotifications') !== 'false',
+            enableNotificationSound: localStorage.getItem('enableNotificationSound') !== 'false',
+            enableToastAlerts: localStorage.getItem('enableToastAlerts') !== 'false',
+            enableBadgeCounter: localStorage.getItem('enableBadgeCounter') !== 'false'
+        };
+
+        // ========== INITIALIZE SETTINGS UI ==========
+        function initializeSettingsUI() {
+            updateToggleUI('enableNotifications', notificationSettings.enableNotifications);
+            updateToggleUI('enableNotificationSound', notificationSettings.enableNotificationSound);
+            updateToggleUI('enableToastAlerts', notificationSettings.enableToastAlerts);
+            updateToggleUI('enableBadgeCounter', notificationSettings.enableBadgeCounter);
+        }
+
+        // ========== UPDATE TOGGLE UI ==========
+        function updateToggleUI(id, state) {
+            const element = document.getElementById(id);
+            if (state) {
+                element.classList.add('active');
+            } else {
+                element.classList.remove('active');
+            }
+        }
+
+        // ========== TOGGLE NOTIFICATIONS ==========
+        function toggleNotifications() {
+            notificationSettings.enableNotifications = !notificationSettings.enableNotifications;
+            localStorage.setItem('enableNotifications', notificationSettings.enableNotifications);
+            updateToggleUI('enableNotifications', notificationSettings.enableNotifications);
+            showNotification(
+                `Notifications ${notificationSettings.enableNotifications ? 'enabled' : 'disabled'}`,
+                notificationSettings.enableNotifications ? 'success' : 'info'
+            );
+        }
+
+        // ========== TOGGLE NOTIFICATION SOUND ==========
+        function toggleNotificationSound() {
+            notificationSettings.enableNotificationSound = !notificationSettings.enableNotificationSound;
+            localStorage.setItem('enableNotificationSound', notificationSettings.enableNotificationSound);
+            updateToggleUI('enableNotificationSound', notificationSettings.enableNotificationSound);
+            showNotification(
+                `Notification sound ${notificationSettings.enableNotificationSound ? 'enabled' : 'disabled'}`,
+                notificationSettings.enableNotificationSound ? 'success' : 'info'
+            );
+        }
+
+        // ========== TOGGLE TOAST ALERTS ==========
+        function toggleToastAlerts() {
+            notificationSettings.enableToastAlerts = !notificationSettings.enableToastAlerts;
+            localStorage.setItem('enableToastAlerts', notificationSettings.enableToastAlerts);
+            updateToggleUI('enableToastAlerts', notificationSettings.enableToastAlerts);
+            if (notificationSettings.enableToastAlerts) {
+                showNotification('Toast alerts enabled', 'success');
+            }
+        }
+
+        // ========== TOGGLE BADGE COUNTER ==========
+        function toggleBadgeCounter() {
+            notificationSettings.enableBadgeCounter = !notificationSettings.enableBadgeCounter;
+            localStorage.setItem('enableBadgeCounter', notificationSettings.enableBadgeCounter);
+            updateToggleUI('enableBadgeCounter', notificationSettings.enableBadgeCounter);
+            showNotification(
+                `Badge counter ${notificationSettings.enableBadgeCounter ? 'enabled' : 'disabled'}`,
+                notificationSettings.enableBadgeCounter ? 'success' : 'info'
+            );
+            
+            // Update badge visibility
+            if (!notificationSettings.enableBadgeCounter) {
+                document.getElementById('adminNotifCount').style.display = 'none';
+            }
+        }
+
+        // ========== SETTINGS PANEL TOGGLE ==========
+        document.getElementById('settingsToggleBtn').addEventListener('click', () => {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('active');
+        });
+
+        // Close settings panel when clicking outside
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('settingsPanel');
+            const toggle = document.getElementById('settingsToggleBtn');
+            if (!panel.contains(e.target) && !toggle.contains(e.target)) {
+                panel.classList.remove('active');
+            }
+        });
 
         // ========== NOTIFICATION SOUND ==========
         function playNotificationSound() {
-            const audio = document.getElementById('ticketNotificationSound');
-            // Create a simple beep sound using Web Audio API
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.5);
+            if (!notificationSettings.enableNotificationSound) return;
+
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (error) {
+                console.warn('Could not play notification sound:', error);
+            }
         }
 
         // ========== SHOW NOTIFICATION ==========
         function showNotification(message, type = 'success') {
+            if (!notificationSettings.enableToastAlerts) return;
+
             const notification = document.createElement('div');
-            notification.className = 'notification-alert';
+            notification.className = `notification-alert ${type}`;
             notification.textContent = message;
-            notification.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
             document.body.appendChild(notification);
             
             setTimeout(() => {
-                notification.remove();
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
 
@@ -304,22 +468,26 @@
 
             document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
 
+            // Initialize settings UI
+            initializeSettingsUI();
+
             await loadDashboardStats();
-            await loadAllTickets();
             await loadRecentActivities();
             await loadNotifications();
 
-            // Start real-time polling every 5 seconds
+            // Start real-time polling
             startRealTimePolling();
         }
 
         // ========== REAL-TIME POLLING ==========
         function startRealTimePolling() {
             pollingInterval = setInterval(async () => {
-                await loadAllTickets();
-                await loadNotifications();
-                await loadDashboardStats();
-            }, 5000); // Poll every 5 seconds
+                if (notificationSettings.enableNotifications) {
+                    await loadDashboardStats();
+                    await loadRecentActivities();
+                    await loadNotifications();
+                }
+            }, 30000); // Poll every 30 seconds
         }
 
         // ========== LOAD DASHBOARD STATISTICS ==========
@@ -334,132 +502,6 @@
                 document.getElementById('resolvedTodayCount').textContent = stats.resolvedToday || 0;
             } catch (error) {
                 console.error('Error loading dashboard stats:', error);
-            }
-        }
-
-        // ========== LOAD ALL TICKETS WITH ACTIONS ==========
-        async function loadAllTickets() {
-            const tbody = document.getElementById('allTicketsBody');
-
-            try {
-                const response = await helpdeskAPI.getAllTickets();
-                const tickets = response && response.data && Array.isArray(response.data.tickets) ? response.data.tickets : [];
-
-                // Check for new tickets
-                if (tickets.length > lastTicketCount) {
-                    playNotificationSound();
-                    showNotification(`🔔 New ticket submitted! Total: ${tickets.length}`, 'success');
-                }
-                lastTicketCount = tickets.length;
-
-                tbody.innerHTML = '';
-
-                if (tickets.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #4caf50;">✅ No tickets</td></tr>';
-                    return;
-                }
-
-                tickets.slice(0, 20).forEach(ticket => {
-                    const row = document.createElement('tr');
-                    const createdDate = new Date(ticket.created_at || ticket.createdAt).toLocaleDateString();
-                    const priorityClass = ticket.priority === 'critical' ? 'critical' : ticket.priority === 'high' ? 'high' : 'medium';
-                    const statusClass = ticket.status === 'open' ? 'open' : ticket.status === 'in_progress' ? 'pending' : 'solved';
-                    
-                    row.innerHTML = `
-                        <td><strong>#${ticket.id}</strong></td>
-                        <td>${ticket.user_name || ticket.createdBy?.name || 'Unknown'}</td>
-                        <td>${ticket.title}</td>
-                        <td><span class="status-badge ${priorityClass}">${ticket.priority}</span></td>
-                        <td><span class="status-badge ${statusClass}">${ticket.status}</span></td>
-                        <td>${createdDate}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-priority" onclick="changePriority(${ticket.id})">Priority</button>
-                                <button class="btn-action btn-status" onclick="changeStatus(${ticket.id})">Status</button>
-                                <button class="btn-action btn-response" onclick="addResponseModal(${ticket.id})">Respond</button>
-                                <button class="btn-action btn-solve" onclick="solveTicketModal(${ticket.id})">Solve</button>
-                                <button class="btn-action btn-close" onclick="closeTicketConfirm(${ticket.id})">Close</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-            } catch (error) {
-                console.error('Error loading tickets:', error);
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Error loading tickets</td></tr>`;
-            }
-        }
-
-        // ========== CHANGE PRIORITY ==========
-        async function changePriority(ticketId) {
-            const priority = prompt('Enter new priority (low, medium, high, critical):');
-            if (priority && ['low', 'medium', 'high', 'critical'].includes(priority)) {
-                try {
-                    await helpdeskAPI.updateTicketStatus(ticketId, priority);
-                    showNotification('✅ Priority updated successfully!', 'success');
-                    await loadAllTickets();
-                } catch (error) {
-                    showNotification('❌ Failed to update priority', 'error');
-                }
-            }
-        }
-
-        // ========== CHANGE STATUS ==========
-        async function changeStatus(ticketId) {
-            const status = prompt('Enter new status (open, in_progress, closed):');
-            if (status && ['open', 'in_progress', 'closed'].includes(status)) {
-                try {
-                    await helpdeskAPI.updateTicketStatus(ticketId, status);
-                    showNotification('✅ Status updated successfully!', 'success');
-                    await loadAllTickets();
-                } catch (error) {
-                    showNotification('❌ Failed to update status', 'error');
-                }
-            }
-        }
-
-        // ========== ADD RESPONSE ==========
-        async function addResponseModal(ticketId) {
-            const response = prompt('Enter your response:');
-            if (response && response.trim()) {
-                try {
-                    await helpdeskAPI.addResponse(ticketId, response, 'admin');
-                    showNotification('✅ Response added successfully!', 'success');
-                    await loadAllTickets();
-                    await loadRecentActivities();
-                } catch (error) {
-                    showNotification('❌ Failed to add response', 'error');
-                }
-            }
-        }
-
-        // ========== SOLVE TICKET ==========
-        async function solveTicketModal(ticketId) {
-            const solution = prompt('Enter solution description:');
-            if (solution && solution.trim()) {
-                try {
-                    await helpdeskAPI.solveTicket(ticketId, solution);
-                    showNotification('✅ Ticket marked as solved!', 'success');
-                    await loadAllTickets();
-                    await loadDashboardStats();
-                } catch (error) {
-                    showNotification('❌ Failed to solve ticket', 'error');
-                }
-            }
-        }
-
-        // ========== CLOSE TICKET ==========
-        async function closeTicketConfirm(ticketId) {
-            if (confirm('Are you sure you want to close this ticket?')) {
-                try {
-                    await helpdeskAPI.closeTicket(ticketId);
-                    showNotification('✅ Ticket closed successfully!', 'success');
-                    await loadAllTickets();
-                    await loadDashboardStats();
-                } catch (error) {
-                    showNotification('❌ Failed to close ticket', 'error');
-                }
             }
         }
 
@@ -478,7 +520,7 @@
                     return;
                 }
 
-                activities.slice(0, 8).forEach(activity => {
+                activities.slice(0, 10).forEach(activity => {
                     const row = document.createElement('tr');
                     const activityTime = new Date(activity.created_at || activity.createdAt).toLocaleTimeString();
                     
@@ -498,27 +540,45 @@
 
         // ========== LOAD NOTIFICATIONS ==========
         async function loadNotifications() {
+            if (!notificationSettings.enableNotifications) return;
+
             try {
                 const response = await helpdeskAPI.getNotifications();
                 const notifications = response && response.data && Array.isArray(response.data.notifications) ? response.data.notifications : [];
                 const unreadCount = notifications.filter(n => !n.is_read).length;
 
                 const notifCount = document.getElementById('adminNotifCount');
-                if (unreadCount > 0) {
-                    notifCount.textContent = unreadCount;
-                    notifCount.style.display = 'inline-block';
-                } else {
-                    notifCount.style.display = 'none';
+                
+                // Show badge counter only if enabled
+                if (notificationSettings.enableBadgeCounter) {
+                    if (unreadCount > 0) {
+                        notifCount.textContent = unreadCount;
+                        notifCount.style.display = 'inline-block';
+                    } else {
+                        notifCount.style.display = 'none';
+                    }
                 }
+
+                // Play sound only once when new tickets arrive
+                if (unreadCount > lastTicketCount && !hasPlayedNewTicketSound) {
+                    playNotificationSound();
+                    hasPlayedNewTicketSound = true;
+                    if (notificationSettings.enableToastAlerts) {
+                        showNotification(`🔔 ${unreadCount} new notification(s)!`, 'success');
+                    }
+                }
+
+                lastTicketCount = unreadCount;
+
             } catch (error) {
                 console.warn('Error loading notifications:', error);
             }
         }
 
-        // ========== SEARCH TICKETS ==========
-        document.getElementById('searchTickets').addEventListener('keyup', async (e) => {
+        // ========== SEARCH ACTIVITIES ==========
+        document.getElementById('searchActivities').addEventListener('keyup', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#allTicketsBody tr');
+            const rows = document.querySelectorAll('#activitiesTableBody tr');
             
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
