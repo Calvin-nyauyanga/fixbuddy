@@ -164,17 +164,20 @@ export const getRecentActivities = async (req, res) => {
     const activities = await prisma.activity.findMany({
       orderBy: { createdAt: 'desc' },
       take: parseInt(limit),
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
+      select: {
+        id: true,
+        type: true,
+        details: true,
+        createdAt: true,
+        userId: true,
+        ticketId: true,
       },
     });
 
     res.status(200).json({
       success: true,
       data: {
-        activities,
+        activities: activities || [],
       },
     });
   } catch (error) {
@@ -221,10 +224,13 @@ export const addTicketResponse = async (req, res) => {
         userId: req.user.id,
         type: responseType,
       },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, role: true },
-        },
+      select: {
+        id: true,
+        content: true,
+        type: true,
+        userId: true,
+        ticketId: true,
+        createdAt: true,
       },
     });
 
@@ -301,13 +307,14 @@ export const solveTicket = async (req, res) => {
         status: 'closed',
         updatedAt: new Date(),
       },
-      include: {
-        createdBy: {
-          select: { id: true, name: true, email: true },
-        },
-        assignedTo: {
-          select: { id: true, name: true, email: true },
-        },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        priority: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -453,40 +460,37 @@ export const getAllUsers = async (req, res) => {
 // ✅ GET NOTIFICATIONS
 export const getNotifications = async (req, res) => {
   try {
-    // Get unread comments/responses for assigned tickets
-    const assignedTickets = await prisma.ticket.findMany({
+    // Get recent activities related to user
+    const activities = await prisma.activity.findMany({
       where: {
-        assignedToId: req.user.id,
+        OR: [
+          { userId: req.user.id },
+        ],
       },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
       select: {
         id: true,
-        title: true,
-        comments: {
-          select: { id: true, content: true, createdAt: true, type: true },
-          orderBy: { createdAt: 'desc' },
-        },
+        type: true,
+        details: true,
+        ticketId: true,
+        createdAt: true,
       },
     });
 
-    const notifications = assignedTickets
-      .flatMap((ticket) =>
-        ticket.comments.map((comment) => ({
-          id: comment.id,
-          type: 'ticket_response',
-          ticketId: ticket.id,
-          ticketTitle: ticket.title,
-          message: `New response on ticket: ${ticket.title}`,
-          createdAt: comment.createdAt,
-          is_read: false,
-        }))
-      )
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .slice(0, 20); // Limit to 20 notifications
+    const notifications = activities.map((activity) => ({
+      id: activity.id,
+      type: activity.type || 'notification',
+      message: activity.details,
+      ticketId: activity.ticketId,
+      createdAt: activity.createdAt,
+      read: false,
+    }));
 
     res.status(200).json({
       success: true,
       data: {
-        notifications,
+        notifications: notifications || [],
         count: notifications.length,
       },
     });

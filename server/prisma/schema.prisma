@@ -21,6 +21,7 @@ model User {
   ticketsCreated Ticket[] @relation("CreatedBy")
   ticketsAssigned Ticket[] @relation("AssignedTo")
   comments Comment[]
+  activities Activity[]
 
   @@map("users")
 }
