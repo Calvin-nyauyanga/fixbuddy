@@ -10,8 +10,66 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+    <style>
+        .user-dashboard-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 1rem;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        .user-dashboard-btn:hover {
+            background-color: #45a049;
+        }
+        .notification-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        @keyframes slideIn {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+        .action-buttons-cell {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .btn-small-action {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .btn-small-action:hover {
+            opacity: 0.8;
+        }
+        .btn-priority { background-color: #FF9800; }
+        .btn-status { background-color: #2196F3; }
+        .btn-assign { background-color: #9C27B0; }
+    </style>
 </head>
 <body class="admin-dashboard-body">
+    <!-- Audio for notification sound -->
+    <audio id="ticketNotificationSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==" type="audio/wav">
+    </audio>
+
     <header class="topbar dashboard-header">
         <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
@@ -60,6 +118,13 @@
                     <span>Settings</span>
                 </a>
                 <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                
+                <!-- User Dashboard Navigation -->
+                <button class="user-dashboard-btn" onclick="goToUserDashboard()">
+                    <i class="fa-solid fa-user"></i> User Dashboard
+                </button>
+                
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
                 <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link">
                     <i class="fa-solid fa-sign-out-alt"></i>
                     <span>Logout</span>
@@ -70,7 +135,7 @@
         <section class="admin-content">
             <!-- Tickets List View -->
             <div class="tickets-management-container" id="ticketsListSection">
-                <h2>Manage Tickets</h2>
+                <h2>Manage Tickets (Real-time: Updates every 5 seconds)</h2>
                 
                 <!-- Filter Options -->
                 <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -102,7 +167,7 @@
                                 <th>Status</th>
                                 <th>Assigned To</th>
                                 <th>Created</th>
-                                <th>Action</th>
+                                <th>Quick Actions</th>
                             </tr>
                         </thead>
                         <tbody id="ticketsTableBody">
@@ -181,6 +246,8 @@
                             <option value="">-- Assign to Agent --</option>
                         </select>
                         <button onclick="assignToSelectedAgent()" class="btn btn-primary" style="padding: 0.5rem 1rem;">Assign</button>
+                        <button onclick="changePriorityDetail()" class="btn btn-primary" style="padding: 0.5rem 1rem;">Change Priority</button>
+                        <button onclick="changeStatusDetail()" class="btn btn-primary" style="padding: 0.5rem 1rem;">Change Status</button>
                         <button onclick="reloadTicketDetail()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
                             <i class="fa-solid fa-refresh"></i> Refresh
                         </button>
@@ -197,10 +264,50 @@
     <script src="../js/api-client.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+        let lastTicketCount = 0;
+        let pollingInterval = null;
+
+        // ========== NOTIFICATION SOUND ==========
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log('Notification sound played');
+            }
+        }
+
+        // ========== SHOW NOTIFICATION ==========
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification-alert';
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // ========== GO TO USER DASHBOARD ==========
+        function goToUserDashboard() {
+            window.location.href = '../UserDashboard/UserDashboard.html';
+        }
 
         // ========== INITIALIZATION ==========
         async function initManageTickets() {
-            // Check if admin is logged in
             const admin = JSON.parse(localStorage.getItem('admin') || 'null');
             const token = localStorage.getItem('authToken');
             const userRole = localStorage.getItem('userRole');
@@ -212,26 +319,41 @@
 
             document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
 
-            // Load initial data
             await loadAllTickets();
             await loadAgentsForAssignment();
 
-            // Set up event listeners
             document.getElementById('searchTickets').addEventListener('keyup', searchTickets);
             document.getElementById('filterStatus').addEventListener('change', applyFilters);
             document.getElementById('filterPriority').addEventListener('change', applyFilters);
+
+            // Start real-time polling every 5 seconds
+            startRealTimePolling();
+        }
+
+        // ========== REAL-TIME POLLING ==========
+        function startRealTimePolling() {
+            pollingInterval = setInterval(async () => {
+                await loadAllTickets();
+                await loadNotifications();
+            }, 5000);
         }
 
         // ========== LOAD ALL TICKETS ==========
         async function loadAllTickets() {
             const tbody = document.getElementById('ticketsTableBody');
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>';
 
             try {
                 const response = await helpdeskAPI.getAllTickets();
                 const tickets = response && response.data && Array.isArray(response.data.tickets) 
                     ? response.data.tickets 
                     : [];
+
+                // Check for new tickets
+                if (tickets.length > lastTicketCount) {
+                    playNotificationSound();
+                    showNotification(`🔔 New ticket submitted! Total: ${tickets.length}`, 'success');
+                }
+                lastTicketCount = tickets.length;
 
                 tbody.innerHTML = '';
 
@@ -242,7 +364,7 @@
 
                 tickets.forEach(ticket => {
                     const row = document.createElement('tr');
-                    const createdDate = new Date(ticket.createdAt).toLocaleDateString();
+                    const createdDate = new Date(ticket.createdAt || ticket.created_at).toLocaleDateString();
                     const priorityClass = ticket.priority === 'critical' ? 'critical' : 
                                         ticket.priority === 'high' ? 'high' : 
                                         ticket.priority === 'medium' ? 'medium' : 'low';
@@ -258,9 +380,13 @@
                         <td>${ticket.assignedTo?.name || '<em style="color: #999;">Unassigned</em>'}</td>
                         <td>${createdDate}</td>
                         <td>
-                            <button onclick="viewTicketDetail(${ticket.id})" class="btn-small" title="View Details">
-                                <i class="fa-solid fa-eye"></i> View
-                            </button>
+                            <div class="action-buttons-cell">
+                                <button onclick="viewTicketDetail(${ticket.id})" class="btn-small-action" style="background-color: #2196F3;" title="View">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                <button onclick="quickPriority(${ticket.id})" class="btn-small-action btn-priority" title="Priority">P</button>
+                                <button onclick="quickStatus(${ticket.id})" class="btn-small-action btn-status" title="Status">S</button>
+                            </div>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -268,7 +394,42 @@
 
             } catch (error) {
                 console.error('Error loading tickets:', error);
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red; padding: 20px;">Error loading tickets: ${error.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red; padding: 20px;">Error loading tickets</td></tr>`;
+            }
+        }
+
+        // ========== QUICK ACTIONS ==========
+        function quickPriority(ticketId) {
+            const priority = prompt('Enter priority (low, medium, high, critical):');
+            if (priority && ['low', 'medium', 'high', 'critical'].includes(priority)) {
+                updateTicketPriority(ticketId, priority);
+            }
+        }
+
+        function quickStatus(ticketId) {
+            const status = prompt('Enter status (open, in_progress, closed):');
+            if (status && ['open', 'in_progress', 'closed'].includes(status)) {
+                updateTicketStatus(ticketId, status);
+            }
+        }
+
+        async function updateTicketPriority(ticketId, priority) {
+            try {
+                await helpdeskAPI.updateTicketStatus(ticketId, priority);
+                showNotification('✅ Priority updated!', 'success');
+                await loadAllTickets();
+            } catch (error) {
+                showNotification('❌ Failed to update priority', 'error');
+            }
+        }
+
+        async function updateTicketStatus(ticketId, status) {
+            try {
+                await helpdeskAPI.updateTicketStatus(ticketId, status);
+                showNotification('✅ Status updated!', 'success');
+                await loadAllTickets();
+            } catch (error) {
+                showNotification('❌ Failed to update status', 'error');
             }
         }
 
@@ -278,7 +439,6 @@
                 const response = await helpdeskAPI.getTicketDetails(ticketId);
                 const ticket = response.data || {};
 
-                // Display ticket details
                 document.getElementById('detailTicketId').textContent = ticket.id;
                 document.getElementById('detailTicketTitle').textContent = ticket.title;
                 document.getElementById('detailCustomerName').textContent = ticket.createdBy?.name || 'Unknown';
@@ -289,13 +449,10 @@
                 document.getElementById('detailAssignedTo').textContent = ticket.assignedTo?.name || 'Unassigned';
                 document.getElementById('detailDescription').textContent = ticket.description || 'No description provided';
 
-                // Load conversation
                 loadTicketConversation(ticketId);
 
-                // Store current ticket ID
                 window.currentTicketId = ticketId;
 
-                // Show detail view
                 document.getElementById('ticketsListSection').style.display = 'none';
                 document.getElementById('ticketDetailSection').style.display = 'block';
                 window.scrollTo(0, 0);
@@ -317,7 +474,7 @@
                 container.innerHTML = '';
 
                 if (messages.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: #999;">No messages yet. Start the conversation below.</p>';
+                    container.innerHTML = '<p style="text-align: center; color: #999;">No messages yet.</p>';
                     return;
                 }
 
@@ -337,10 +494,9 @@
                     container.appendChild(msgDiv);
                 });
 
-                // Auto-scroll to bottom
                 container.scrollTop = container.scrollHeight;
             } catch (error) {
-                container.innerHTML = `<p style="color: red;">Error loading messages: ${error.message}</p>`;
+                container.innerHTML = `<p style="color: red;">Error loading messages</p>`;
             }
         }
 
@@ -357,27 +513,27 @@
 
             try {
                 await helpdeskAPI.addResponse(ticketId, responseText, 'admin');
-                alert('✅ Response sent to customer!');
+                showNotification('✅ Response sent!', 'success');
                 document.getElementById('responseText').value = '';
                 await loadTicketConversation(ticketId);
             } catch (error) {
-                alert(`❌ Failed to send response: ${error.message}`);
+                showNotification('❌ Failed to send response', 'error');
             }
         }
 
         // ========== MARK AS SOLVED ==========
         async function markTicketSolved() {
             const ticketId = window.currentTicketId;
-            const solution = prompt('Enter the solution/resolution:');
+            const solution = prompt('Enter solution:');
             
             if (!solution) return;
 
             try {
                 await helpdeskAPI.solveTicket(ticketId, solution);
-                alert('✅ Ticket marked as solved!');
+                showNotification('✅ Ticket marked as solved!', 'success');
                 await reloadTicketDetail();
             } catch (error) {
-                alert(`❌ Failed to solve ticket: ${error.message}`);
+                showNotification('❌ Failed to solve ticket', 'error');
             }
         }
 
@@ -389,14 +545,24 @@
 
             try {
                 await helpdeskAPI.closeTicket(ticketId);
-                alert('✅ Ticket closed!');
+                showNotification('✅ Ticket closed!', 'success');
                 closeDetailView();
             } catch (error) {
-                alert(`❌ Failed to close ticket: ${error.message}`);
+                showNotification('❌ Failed to close ticket', 'error');
             }
         }
 
-        // ========== LOAD AGENTS FOR ASSIGNMENT ==========
+        // ========== CHANGE PRIORITY (DETAIL VIEW) ==========
+        function changePriorityDetail() {
+            quickPriority(window.currentTicketId);
+        }
+
+        // ========== CHANGE STATUS (DETAIL VIEW) ==========
+        function changeStatusDetail() {
+            quickStatus(window.currentTicketId);
+        }
+
+        // ========== LOAD AGENTS ==========
         async function loadAgentsForAssignment() {
             try {
                 const response = await helpdeskAPI.getAllUsers();
@@ -418,7 +584,7 @@
             }
         }
 
-        // ========== ASSIGN TO SELECTED AGENT ==========
+        // ========== ASSIGN TICKET ==========
         async function assignToSelectedAgent() {
             const ticketId = window.currentTicketId;
             const agentId = document.getElementById('assignToAgent').value;
@@ -430,15 +596,15 @@
 
             try {
                 await helpdeskAPI.assignTicket(ticketId, agentId);
-                alert('✅ Ticket assigned successfully!');
+                showNotification('✅ Ticket assigned!', 'success');
                 document.getElementById('assignToAgent').value = '';
                 await reloadTicketDetail();
             } catch (error) {
-                alert(`❌ Failed to assign ticket: ${error.message}`);
+                showNotification('❌ Failed to assign ticket', 'error');
             }
         }
 
-        // ========== RELOAD TICKET DETAIL ==========
+        // ========== RELOAD DETAIL ==========
         async function reloadTicketDetail() {
             if (window.currentTicketId) {
                 await viewTicketDetail(window.currentTicketId);
@@ -453,7 +619,7 @@
             loadAllTickets();
         }
 
-        // ========== SEARCH TICKETS ==========
+        // ========== SEARCH ==========
         async function searchTickets(e) {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#ticketsTableBody tr');
@@ -470,18 +636,6 @@
             const priority = document.getElementById('filterPriority').value;
 
             try {
-                let query = '/api/helpdesk/tickets';
-                const params = new URLSearchParams();
-
-                if (status) params.append('status', status);
-                if (priority) params.append('priority', priority);
-
-                if (params.toString()) {
-                    query += '?' + params.toString();
-                }
-
-                // Note: This would require a proper API call with query parameters
-                // For now, we'll reload and filter manually
                 await loadAllTickets();
             } catch (error) {
                 alert(`Error applying filters: ${error.message}`);
@@ -494,6 +648,25 @@
             document.getElementById('filterPriority').value = '';
             document.getElementById('searchTickets').value = '';
             loadAllTickets();
+        }
+
+        // ========== LOAD NOTIFICATIONS ==========
+        async function loadNotifications() {
+            try {
+                const response = await helpdeskAPI.getNotifications();
+                const notifications = response && response.data && Array.isArray(response.data.notifications) ? response.data.notifications : [];
+                const unreadCount = notifications.filter(n => !n.is_read).length;
+
+                const notifCount = document.getElementById('adminNotifCount');
+                if (unreadCount > 0) {
+                    notifCount.textContent = unreadCount;
+                    notifCount.style.display = 'inline-block';
+                } else {
+                    notifCount.style.display = 'none';
+                }
+            } catch (error) {
+                console.warn('Error loading notifications:', error);
+            }
         }
 
         // ========== LOGOUT ==========
@@ -513,22 +686,23 @@
             window.location.href = '../Main Dashboard/AdminLoginPage.html';
         });
 
-        // ========== SETTINGS & PROFILE ICONS ==========
+        // ========== SETTINGS & PROFILE ==========
         document.querySelector('.settings-icon').addEventListener('click', () => {
             window.location.href = 'settings.html';
-        });
-
-        document.getElementById('adminBell').addEventListener('click', () => {
-            window.location.href = 'Notifications.html';
         });
 
         document.querySelector('.admin-profile-icon').addEventListener('click', () => {
             window.location.href = 'settings.html';
         });
 
-        // Initialize on page load
+        // Initialize
         window.addEventListener('DOMContentLoaded', initManageTickets);
         initManageTickets();
+
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (pollingInterval) clearInterval(pollingInterval);
+        });
     </script>
 </body>
 </html>
