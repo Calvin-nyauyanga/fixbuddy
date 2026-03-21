@@ -7,10 +7,6 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 /**
  * Generic API request handler
- * @param {string} endpoint - API endpoint (e.g., '/auth/login')
- * @param {string} method - HTTP method (GET, POST, PATCH, DELETE)
- * @param {Object} body - Request body (optional)
- * @returns {Promise<Object>} - API response
  */
 async function apiRequest(endpoint, method = 'GET', body = null) {
   const options = {
@@ -20,7 +16,6 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     },
   };
 
-  // Include auth token in headers if available
   const token = localStorage.getItem('authToken');
   if (token) {
     options.headers['Authorization'] = `Bearer ${token}`;
@@ -33,7 +28,6 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
 
-    // Handle unauthorized - token expired
     if (response.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
@@ -41,7 +35,6 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
       return null;
     }
 
-    // Handle server errors
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP ${response.status}`);
@@ -71,7 +64,7 @@ const authAPI = {
     apiRequest('/auth/logout', 'POST'),
 
   adminLogin: (email, password) =>
-        apiRequest('/auth/admin-login', 'POST', { email, password }),
+    apiRequest('/auth/admin-login', 'POST', { email, password }),
 };
 
 /**
@@ -99,6 +92,7 @@ const ticketsAPI = {
   assign: (id, agentId) =>
     apiRequest(`/tickets/${id}/assign`, 'PATCH', { assignedTo: agentId }),
 };
+
 /**
  * Admin Auth API endpoints
  */
@@ -117,60 +111,88 @@ const adminAPI = {
 };
 
 /**
- * Helpdesk/Tickets Management API (Admin functions)
+ * Helpdesk/Tickets Management API (20+ Endpoints)
  */
 const helpdeskAPI = {
-  // Get all tickets (admin view)
+  // 1. Get all tickets (admin view)
   getAllTickets: () =>
     apiRequest('/helpdesk/tickets', 'GET'),
 
-  // Get ticket by ID with full details
+  // 2. Get ticket by ID with full details
   getTicketDetails: (id) =>
     apiRequest(`/helpdesk/tickets/${id}`, 'GET'),
 
-  // Assign ticket to agent
+  // 3. Assign ticket to agent
   assignTicket: (ticketId, agentId) =>
     apiRequest(`/helpdesk/tickets/${ticketId}/assign`, 'PATCH', { assignedTo: agentId }),
 
-  // Update ticket status
+  // 4. Update ticket status
   updateTicketStatus: (ticketId, status) =>
     apiRequest(`/helpdesk/tickets/${ticketId}/status`, 'PATCH', { status }),
 
-  // Add response to ticket
+  // 5. Add response to ticket
   addResponse: (ticketId, response, responseType = 'admin') =>
     apiRequest(`/helpdesk/tickets/${ticketId}/response`, 'POST', { response, responseType }),
 
-  // Mark ticket as solved
+  // 6. Mark ticket as solved
   solveTicket: (ticketId, solution) =>
     apiRequest(`/helpdesk/tickets/${ticketId}/solve`, 'POST', { solution }),
 
-  // Close ticket
+  // 7. Close ticket
   closeTicket: (ticketId) =>
     apiRequest(`/helpdesk/tickets/${ticketId}/close`, 'PATCH'),
 
-  // Get all users (admin view)
+  // 8. Get all users (admin view)
   getAllUsers: () =>
     apiRequest('/helpdesk/users', 'GET'),
 
-  // Get user details
+  // 9. Get user details
   getUserDetails: (userId) =>
     apiRequest(`/helpdesk/users/${userId}`, 'GET'),
 
-  // Get recent activities
+  // 10. Get recent activities
   getRecentActivities: () =>
     apiRequest('/helpdesk/activities', 'GET'),
 
-  // Get dashboard statistics
+  // 11. Get dashboard statistics
   getDashboardStats: () =>
     apiRequest('/helpdesk/stats', 'GET'),
 
-  // Get notifications
+  // 12. Get notifications
   getNotifications: () =>
     apiRequest('/helpdesk/notifications', 'GET'),
 
-  // Mark notifications as read
+  // 13. Mark notifications as read
   markNotificationsRead: (notificationIds) =>
     apiRequest('/helpdesk/notifications/read', 'PATCH', { notificationIds }),
+
+  // 14. Change ticket priority
+  changePriority: (ticketId, priority) =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/status`, 'PATCH', { priority }),
+
+  // 15. Get ticket history
+  getTicketHistory: (ticketId) =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/history`, 'GET'),
+
+  // 16. Search tickets
+  searchTickets: (query, filters = {}) =>
+    apiRequest('/helpdesk/tickets/search', 'POST', { query, ...filters }),
+
+  // 17. Get ticket comments
+  getTicketComments: (ticketId) =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/comments`, 'GET'),
+
+  // 18. Add ticket comment
+  addTicketComment: (ticketId, content) =>
+    apiRequest(`/helpdesk/tickets/${ticketId}/comments`, 'POST', { content }),
+
+  // 19. Export tickets
+  exportTickets: (format = 'csv') =>
+    apiRequest(`/helpdesk/tickets/export?format=${format}`, 'GET'),
+
+  // 20. Get ticket analytics
+  getTicketAnalytics: () =>
+    apiRequest('/helpdesk/analytics', 'GET'),
 };
 
 // Export for use in HTML files
@@ -179,8 +201,3 @@ window.authAPI = authAPI;
 window.adminAPI = adminAPI;
 window.ticketsAPI = ticketsAPI;
 window.helpdeskAPI = helpdeskAPI;
-
-// Export for use in HTML files
-window.apiRequest = apiRequest;
-window.authAPI = authAPI;
-window.ticketsAPI = ticketsAPI;
