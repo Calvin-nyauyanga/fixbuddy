@@ -25,6 +25,10 @@ router.get('/notifications', getNotifications);
 
 // Ticket Management
 router.get('/tickets', getAllTicketsAdmin);
+console.log('Setting up priority route');
+router.patch('/tickets/:id/priority', updateTicketPriority);
+console.log('Setting up status route');
+router.patch('/tickets/:id/status', updateTicketStatus);
 router.post('/tickets/:id/response', addTicketResponse);
 router.post('/tickets/:id/solve', solveTicket);
 router.patch('/tickets/:id/close', closeTicket);

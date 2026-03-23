@@ -19,6 +19,12 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
+
 //Test Prisma connection
 app.get('/test-prisma', async (req, res) => {
     try {

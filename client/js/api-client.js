@@ -63,8 +63,8 @@ const authAPI = {
   logout: () =>
     apiRequest('/auth/logout', 'POST'),
 
-  adminLogin: (email, password) =>
-    apiRequest('/auth/admin-login', 'POST', { email, password }),
+  adminLogin: (email, password, adminCode) =>
+    apiRequest('/auth/admin-login', 'POST', { email, password, adminCode }),
 };
 
 /**

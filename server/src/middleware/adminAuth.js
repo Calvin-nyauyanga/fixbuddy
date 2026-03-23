@@ -6,6 +6,7 @@
 import jwt from 'jsonwebtoken';
 
 export const adminAuthMiddleware = async (req, res, next) => {
+  console.log('Admin auth middleware called for:', req.path);
   try {
     // Get token from header
     const token = req.headers.authorization?.split(' ')[1];

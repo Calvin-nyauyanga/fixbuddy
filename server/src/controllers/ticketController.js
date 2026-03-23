@@ -337,10 +337,24 @@ export const deleteTicket = async (req, res) => {
       });
     }
 
-    // Delete ticket (comments will be deleted due to CASCADE in schema)
-    await prisma.ticket.delete({
-      where: { id: parseInt(id) },
-    });
+   // Log deletion before deleting
+try {
+  await prisma.activity.create({
+    data: {
+      type: 'ticket_deleted',
+      userId: req.user.id,
+      ticketId: parseInt(id),
+      details: `Deleted ticket: "${ticket.title}"`,
+    },
+  });
+} catch (err) {
+  console.warn('Could not log deletion activity:', err);
+}
+
+// Delete ticket (comments will be deleted due to CASCADE in schema)
+await prisma.ticket.delete({
+  where: { id: parseInt(id) },
+});
 
     res.status(200).json({
       success: true,

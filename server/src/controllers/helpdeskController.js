@@ -168,6 +168,8 @@ export const getRecentActivities = async (req, res) => {
         id: true,
         type: true,
         details: true,
+        oldValue: true,
+        newValue: true,
         createdAt: true,
         userId: true,
         ticketId: true,
@@ -505,6 +507,7 @@ export const getNotifications = async (req, res) => {
 }; 
 // ✅ UPDATE TICKET PRIORITY
 export const updateTicketPriority = async (req, res) => {
+  console.log('updateTicketPriority called with id:', req.params.id, 'priority:', req.body.priority);
   try {
     const { id } = req.params;
     const { priority } = req.body;
@@ -544,21 +547,21 @@ export const updateTicketPriority = async (req, res) => {
       },
     });
 
-    // Log activity
-    try {
-      await prisma.activity.create({
-        data: {
-          type: 'priority_changed',
-          userId: req.user.id,
-          ticketId: parseInt(id),
-          details: `Priority changed from ${oldTicket.priority} to ${priority}`,
-          oldValue: oldTicket.priority,
-          newValue: priority,
-        },
-      });
-    } catch (err) {
-      console.warn('Could not log activity:', err);
+    // Log activity BEFORE sending response
+    console.log('Creating priority_changed activity for ticket', id, 'user', req.user.id);
+    if (!req.user || !req.user.id) {
+      throw new Error('User not authenticated for activity logging');
     }
+    const activity = await prisma.activity.create({
+      data: {
+        type: 'priority_changed',
+        userId: req.user.id,
+        details: `Priority changed from ${oldTicket.priority} to ${priority}`,
+        oldValue: oldTicket.priority,
+        newValue: priority,
+      },
+    });
+    console.log('Priority activity created:', activity.id);
 
     res.status(200).json({
       success: true,
@@ -616,21 +619,18 @@ export const updateTicketStatus = async (req, res) => {
       },
     });
 
-    // Log activity
-    try {
-      await prisma.activity.create({
-        data: {
-          type: 'status_changed',
-          userId: req.user.id,
-          ticketId: parseInt(id),
-          details: `Status changed from ${oldTicket.status} to ${status}`,
-          oldValue: oldTicket.status,
-          newValue: status,
-        },
-      });
-    } catch (err) {
-      console.warn('Could not log activity:', err);
-    }
+    // Log activity BEFORE sending response
+    console.log('Creating status_changed activity for ticket', id, 'user', req.user.id);
+    await prisma.activity.create({
+      data: {
+        type: 'status_changed',
+        userId: req.user.id,
+        details: `Status changed from ${oldTicket.status} to ${status}`,
+        oldValue: oldTicket.status,
+        newValue: status,
+      },
+    });
+    console.log('Status activity created');
 
     res.status(200).json({
       success: true,

@@ -87,7 +87,7 @@
 
             try {
                 // Call backend admin login endpoint
-                const response = await adminAPI.login(email, password, adminCode);
+                const response = await adminAPI.adminLogin(email, password, adminCode);
 
                 // Store auth token
                 if (response.token) {
