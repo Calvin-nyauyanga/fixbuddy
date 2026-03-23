@@ -55,6 +55,19 @@ export const createTicket = async (req, res) => {
         },
       },
     });
+            // Log activity
+        try {
+          await prisma.activity.create({
+            data: {
+              type: 'ticket_created',
+              userId: req.user.id,
+              ticketId: ticket.id,
+              details: `Ticket created: "${title}"`,
+            },
+          });
+        } catch (err) {
+          console.warn('Could not log activity:', err);
+        }
 
     res.status(201).json({
       success: true,
@@ -450,6 +463,21 @@ export const assignTicket = async (req, res) => {
         },
       },
     });
+            // Log activity
+      try {
+        await prisma.activity.create({
+          data: {
+            type: 'ticket_assigned',
+            userId: req.user.id,
+            ticketId: parseInt(id),
+            details: `Ticket assigned to ${agent.name}`,
+            oldValue: ticket.assignedToId ? `User ${ticket.assignedToId}` : 'Unassigned',
+            newValue: `${agent.name} (ID: ${agent.id})`,
+          },
+        });
+      } catch (err) {
+        console.warn('Could not log activity:', err);
+      }
 
     res.status(200).json({
       success: true,
