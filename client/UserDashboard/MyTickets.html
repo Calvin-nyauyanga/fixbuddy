@@ -192,6 +192,32 @@
             localStorage.removeItem('user');
             window.location.href = '../Main Dashboard/UserLoginPage.html';
         });
-    </script>
-</body>
-</html>
+                // AUTO-REFRESH POLLING - Refresh every 10 seconds
+                let autoRefreshInterval = null;
+
+                function startAutoRefresh() {
+                autoRefreshInterval = setInterval(() => {
+                    console.log('Auto-refreshing tickets...');
+                    loadAllTickets();
+                }, 10000); // 10 seconds
+                }
+
+                function stopAutoRefresh() {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                }
+
+                // Start auto-refresh when page loads
+                window.addEventListener('DOMContentLoaded', () => {
+                startAutoRefresh();
+                });
+
+                // Stop auto-refresh when leaving page
+                window.addEventListener('beforeunload', () => {
+                stopAutoRefresh();
+                });
+         </script>
+    </body>
+ </html>

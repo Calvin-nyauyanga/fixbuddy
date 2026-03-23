@@ -8,6 +8,8 @@ import {
   closeTicket,
   getAllUsers,
   getNotifications,
+  updateTicketPriority,
+  updateTicketStatus,
 } from '../controllers/helpdeskController.js';
 import { adminAuthMiddleware } from '../middleware/adminAuth.js';
 
@@ -15,7 +17,7 @@ const router = express.Router();
 
 // All helpdesk routes require admin authentication
 router.use(adminAuthMiddleware);
-
+  
 // Dashboard & Statistics
 router.get('/stats', getDashboardStats);
 router.get('/activities', getRecentActivities);

@@ -193,6 +193,15 @@ const helpdeskAPI = {
   // 20. Get ticket analytics
   getTicketAnalytics: () =>
     apiRequest('/helpdesk/analytics', 'GET'),
+
+  // 21. Update ticket priority (ADMIN ONLY)
+updateTicketPriority: (ticketId, priority) =>
+  apiRequest(`/helpdesk/tickets/${ticketId}/priority`, 'PATCH', { priority }),
+
+// 22. Update ticket status (ADMIN ONLY)
+updateTicketStatus: (ticketId, status) =>
+  apiRequest(`/helpdesk/tickets/${ticketId}/status`, 'PATCH', { status }),
+
 };
 
 // Export for use in HTML files

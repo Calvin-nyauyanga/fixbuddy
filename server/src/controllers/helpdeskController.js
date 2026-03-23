@@ -502,6 +502,149 @@ export const getNotifications = async (req, res) => {
       error: error.message,
     });
   }
+}; 
+// ✅ UPDATE TICKET PRIORITY
+export const updateTicketPriority = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { priority } = req.body;
+
+    // Validate priority
+    const validPriorities = ['low', 'medium', 'high', 'critical'];
+    if (!validPriorities.includes(priority)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid priority value',
+      });
+    }
+
+    // Get old priority before updating
+    const oldTicket = await prisma.ticket.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!oldTicket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found',
+      });
+    }
+
+    // Update ticket
+    const updatedTicket = await prisma.ticket.update({
+      where: { id: parseInt(id) },
+      data: { priority },
+      include: {
+        createdBy: {
+          select: { id: true, name: true, email: true },
+        },
+        assignedTo: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    // Log activity
+    try {
+      await prisma.activity.create({
+        data: {
+          type: 'priority_changed',
+          userId: req.user.id,
+          ticketId: parseInt(id),
+          details: `Priority changed from ${oldTicket.priority} to ${priority}`,
+          oldValue: oldTicket.priority,
+          newValue: priority,
+        },
+      });
+    } catch (err) {
+      console.warn('Could not log activity:', err);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Priority updated successfully',
+      data: updatedTicket,
+    });
+  } catch (error) {
+    console.error('Update Priority Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating priority',
+      error: error.message,
+    });
+  }
+};
+
+// ✅ UPDATE TICKET STATUS
+export const updateTicketStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    const validStatuses = ['open', 'in_progress', 'closed', 'on_hold'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value',
+      });
+    }
+
+    // Get old status before updating
+    const oldTicket = await prisma.ticket.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!oldTicket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found',
+      });
+    }
+
+    // Update ticket
+    const updatedTicket = await prisma.ticket.update({
+      where: { id: parseInt(id) },
+      data: { status },
+      include: {
+        createdBy: {
+          select: { id: true, name: true, email: true },
+        },
+        assignedTo: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    // Log activity
+    try {
+      await prisma.activity.create({
+        data: {
+          type: 'status_changed',
+          userId: req.user.id,
+          ticketId: parseInt(id),
+          details: `Status changed from ${oldTicket.status} to ${status}`,
+          oldValue: oldTicket.status,
+          newValue: status,
+        },
+      });
+    } catch (err) {
+      console.warn('Could not log activity:', err);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Status updated successfully',
+      data: updatedTicket,
+    });
+  } catch (error) {
+    console.error('Update Status Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating status',
+      error: error.message,
+    });
+  }
 };
 
 // ============================================

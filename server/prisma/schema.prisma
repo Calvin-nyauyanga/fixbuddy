@@ -69,6 +69,8 @@ model Activity {
   id                Int       @id @default(autoincrement())
   type              String    // ticket_created, ticket_assigned, ticket_solved, admin_login, etc
   details           String    @db.Text
+  oldValue          String?   
+  newValue          String?
   createdAt         DateTime  @default(now())
 
   // Relations
