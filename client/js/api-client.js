@@ -100,6 +100,10 @@ const adminAPI = {
   login: (email, password, adminCode) =>
     apiRequest('/auth/admin-login', 'POST', { email, password, adminCode }),
 
+  // alias for UI naming consistency
+  adminLogin: (email, password, adminCode) =>
+    apiRequest('/auth/admin-login', 'POST', { email, password, adminCode }),
+
   getProfile: () =>
     apiRequest('/auth/admin/profile', 'GET'),
 
