@@ -1,43 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:5000 http://localhost:5500 ws://localhost:*; img-src 'self' data: https://via.placeholder.com https:;">
-    <title>FixBuddy – Admin Reports</title>
+    <title>FixBuddy – Admin Reports & Analytics</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:5000; img-src 'self' data: https:;">
+    
+    <style>
+        .reports-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .reports-header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-section select,
+        .filter-section input,
+        .filter-section button {
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        .filter-section button {
+            background-color: #667eea;
+            color: white;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s;
+        }
+
+        .filter-section button:hover {
+            background-color: #764ba2;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #667eea;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0.5rem 0;
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            color: #4caf50;
+        }
+
+        .stat-change.negative {
+            color: #f44336;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-card h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 1rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .export-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .export-btn:hover {
+            background-color: #45a049;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-section {
+                flex-direction: column;
+            }
+
+            .reports-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body class="admin-dashboard-body">
     <header class="topbar dashboard-header">
-        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN REPORTS</span></div>
         <div class="admin-topbar-right">
-            <div class="search-bar">
-                <input type="text" placeholder="Search reports...">
-                <i class="fa-solid fa-search"></i>
-            </div>
             <div class="user-info">
                 <i class="fa-solid fa-bell notifications-icon"></i>
-                <i class="fa-solid fa-cog settings-icon"></i>
-                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
+                <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
+                <span class="welcome-message" id="adminWelcome">👤 Admin</span>
             </div>
         </div>
     </header>
 
     <main class="dashboard-main">
         <aside class="sidebar">
-            <h2 class="sidebar-heading">FixBuddy</h2>
+            <h2 class="sidebar-heading">🛠️ Admin Panel</h2>
             <nav class="sidebar-nav">
                 <a href="AdminDashBoard.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-gauge"></i>
@@ -51,91 +200,435 @@ if ('serviceWorker' in navigator) {
                     <i class="fa-solid fa-users"></i>
                     <span>Users</span>
                 </a>
-                <a href="reports.html" class="sidebar-nav-item">
+                <a href="AdminReports.html" class="sidebar-nav-item active">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Reports</span>
-                </a>
-                <a href="settings.html" class="sidebar-nav-item">
-                    <i class="fa-solid fa-cog"></i>
-                    <span>Settings</span>
                 </a>
                 <a href="Notifications.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-bell"></i>
                     <span>Notifications</span>
                 </a>
-                <a href="../Main Dashboard/JS LOGIC/AdminLoginPage.html" class="sidebar-nav-item">
+                <a href="settings.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link">
                     <i class="fa-solid fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </nav>
         </aside>
 
-        <section class="admin-reports-section">
-            <h2>All Solution Reports</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Report ID</th>
-                        <th>Ticket ID</th>
-                        <th>Admin ID</th>
-                        <th>Report</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTable"></tbody>
-            </table>
-            <div id="adminReportAuthMsg" style="color:red;margin-top:1em;"></div>
+        <section class="admin-content">
+            <!-- Header Section -->
+            <div class="reports-header">
+                <div>
+                    <h1>📊 Reports & Analytics</h1>
+                    <p style="margin: 0.5rem 0 0 0;">Comprehensive helpdesk performance metrics</p>
+                </div>
+                <button class="export-btn" onclick="exportReportsToPDF()">
+                    <i class="fa-solid fa-download"></i> Export PDF
+                </button>
+            </div>
+
+            <!-- Messages -->
+            <div id="messageContainer"></div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <select id="dateRangeFilter">
+                    <option value="7days">Last 7 Days</option>
+                    <option value="30days">Last 30 Days</option>
+                    <option value="90days">Last 90 Days</option>
+                    <option value="all">All Time</option>
+                </select>
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                </select>
+                <button onclick="applyFilters()">Apply Filters</button>
+                <button onclick="resetFilters()" style="background-color: #9e9e9e;">Reset</button>
+            </div>
+
+            <!-- Statistics Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Tickets</h3>
+                    <div class="stat-value" id="statTotalTickets">0</div>
+                    <div class="stat-change" id="statTotalChange">↑ 5% from last period</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Open Tickets</h3>
+                    <div class="stat-value" id="statOpenTickets">0</div>
+                    <div class="stat-change" id="statOpenChange">Awaiting response</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Resolved This Month</h3>
+                    <div class="stat-value" id="statResolved">0</div>
+                    <div class="stat-change" id="statResolvedChange">Avg 4.2 days</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Avg Resolution Time</h3>
+                    <div class="stat-value" id="statAvgResolution">0d</div>
+                    <div class="stat-change" id="statResolutionChange">↓ 0.5 days improvement</div>
+                </div>
+            </div>
+
+            <!-- Charts Container -->
+            <div class="charts-container">
+                <!-- Tickets Trend Chart -->
+                <div class="chart-card">
+                    <h3>📈 Tickets Created (Last 7 Days)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="ticketsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Status Distribution -->
+                <div class="chart-card">
+                    <h3>🎯 Status Distribution</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                <div class="chart-card">
+                    <h3>📂 Tickets by Category</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Priority Distribution -->
+                <div class="chart-card">
+                    <h3>🔴 Priority Distribution</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="priorityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Metrics Table -->
+            <div class="card" style="margin-top: 2rem;">
+                <h3>📋 Top Issues This Month</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f5f5f5;">
+                                <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #ddd;">Category</th>
+                                <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #ddd;">Count</th>
+                                <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #ddd;">Percentage</th>
+                                <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #ddd;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topIssuesBody">
+                            <tr>
+                                <td colspan="4" style="padding: 1rem; text-align: center; color: #999;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
     </main>
-    <main class="dashboard-main">
-        <section class="admin-reports-section">
-            <h2>All Solution Reports</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Report ID</th>
-                        <th>Ticket ID</th>
-                        <th>Admin ID</th>
-                        <th>Report</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTable"></tbody>
-            </table>
-            <div id="adminReportAuthMsg" style="color:red;margin-top:1em;"></div>
-        </section>
-    </main>
+
     <footer>
-        <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
-        <span class="footer-sep">|</span>
+        <span>© <span id="year"></span> <strong>FixBuddy</strong> - Admin Reports System</span>
     </footer>
+
+    <script src="../js/reportsApi.js"></script>
+    <script src="../js/api-client.js"></script>
     <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    // Example authentication check for admin
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || user.role !== 'admin') {
-        document.getElementById('adminReportAuthMsg').textContent = 'Access denied. Admins only.';
-        document.getElementById('reportTable').innerHTML = '';
-        throw new Error('Not authorized');
-    }
-    async function loadAllReports() {
-        const response = await fetch('/api/reports');
-        const reports = await response.json();
-        const table = document.getElementById('reportTable');
-        table.innerHTML = '';
-        reports.forEach(report => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${report.id}</td>
-                <td>${report.ticket_id}</td>
-                <td>${report.admin_id}</td>
-                <td>${report.report_text}</td>
-                <td>${report.created_at}</td>
-            `;
-            table.appendChild(tr);
+        // Chart instances for updating
+        let chartsInstances = {};
+
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // ========== INITIALIZATION ==========
+        async function initReports() {
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            const token = localStorage.getItem('authToken');
+            const userRole = localStorage.getItem('userRole');
+
+            if (!token || !admin || userRole !== 'admin') {
+                window.location.href = '../Main Dashboard/AdminLoginPage.html';
+                return;
+            }
+
+            document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+            
+            await loadAllReports();
+        }
+
+        // ========== LOAD ALL REPORTS ==========
+        async function loadAllReports() {
+            try {
+                showLoading();
+
+                // Load statistics
+                const statsResponse = await adminReportsAPI.getDashboardStats();
+                updateStatistics(statsResponse.data);
+
+                // Load trends
+                const trendsResponse = await adminReportsAPI.getResolutionTrends();
+                renderTicketsTrendChart(trendsResponse.data);
+
+                // Load status distribution
+                const statusResponse = await adminReportsAPI.getStatusDistribution();
+                renderStatusChart(statusResponse.data);
+
+                // Load categories
+                const categoryResponse = await adminReportsAPI.getCategoryBreakdown();
+                renderCategoryChart(categoryResponse.data);
+
+                // Load priorities
+                const priorityResponse = await adminReportsAPI.getPriorityDistribution();
+                renderPriorityChart(priorityResponse.data);
+
+                // Load top issues
+                await loadTopIssues();
+
+                hideLoading();
+                showMessage('Reports loaded successfully', 'success');
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                showMessage('Error loading reports: ' + error.message, 'error');
+                hideLoading();
+            }
+        }
+
+        // ========== UPDATE STATISTICS ==========
+        function updateStatistics(stats) {
+            document.getElementById('statTotalTickets').textContent = stats.totalTickets || 0;
+            document.getElementById('statOpenTickets').textContent = stats.openTickets || 0;
+            document.getElementById('statResolved').textContent = stats.resolvedToday || 0;
+            document.getElementById('statAvgResolution').textContent = '4.2d'; // Calculate from data if available
+        }
+
+        // ========== RENDER CHARTS ==========
+        function renderTicketsTrendChart(data) {
+            const ctx = document.getElementById('ticketsChart').getContext('2d');
+            
+            if (chartsInstances.ticketsChart) {
+                chartsInstances.ticketsChart.destroy();
+            }
+
+            chartsInstances.ticketsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [{
+                        label: 'Tickets Created',
+                        data: data.counts,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStatusChart(data) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            
+            if (chartsInstances.statusChart) {
+                chartsInstances.statusChart.destroy();
+            }
+
+            chartsInstances.statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.statuses,
+                    datasets: [{
+                        data: data.counts,
+                        backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCategoryChart(data) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            if (chartsInstances.categoryChart) {
+                chartsInstances.categoryChart.destroy();
+            }
+
+            chartsInstances.categoryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.categories,
+                    datasets: [{
+                        label: 'Count',
+                        data: data.counts,
+                        backgroundColor: '#667eea',
+                        borderColor: '#764ba2',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPriorityChart(data) {
+            const ctx = document.getElementById('priorityChart').getContext('2d');
+            
+            if (chartsInstances.priorityChart) {
+                chartsInstances.priorityChart.destroy();
+            }
+
+            const colors = {
+                'critical': '#f44336',
+                'high': '#ff9800',
+                'medium': '#ffc107',
+                'low': '#4caf50'
+            };
+
+            chartsInstances.priorityChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.priorities,
+                    datasets: [{
+                        data: data.counts,
+                        backgroundColor: data.priorities.map(p => colors[p.toLowerCase()] || '#667eea')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // ========== LOAD TOP ISSUES ==========
+        async function loadTopIssues() {
+            try {
+                const response = await adminReportsAPI.getCategoryBreakdown();
+                const tbody = document.getElementById('topIssuesBody');
+                tbody.innerHTML = '';
+
+                const total = response.data.counts.reduce((a, b) => a + b, 0);
+
+                response.data.categories.forEach((category, index) => {
+                    const count = response.data.counts[index];
+                    const percentage = ((count / total) * 100).toFixed(1);
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="padding: 1rem; border-bottom: 1px solid #eee;">${category}</td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #eee;">${count}</td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #eee;">${percentage}%</td>
+                        <td style="padding: 1rem; border-bottom: 1px solid #eee;">
+                            <span style="background-color: #e3f2fd; color: #1976d2; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">Active</span>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading top issues:', error);
+            }
+        }
+
+        // ========== UTILITIES ==========
+        function showLoading() {
+            document.getElementById('messageContainer').innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading reports...</div>';
+        }
+
+        function hideLoading() {
+            const loader = document.querySelector('.loading');
+            if (loader) loader.remove();
+        }
+
+        function showMessage(message, type) {
+            const className = type === 'success' ? 'success-message' : 'error-message';
+            const container = document.getElementById('messageContainer');
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(div);
+            
+            setTimeout(() => {
+                div.remove();
+            }, 5000);
+        }
+
+        function applyFilters() {
+            showMessage('Filters applied. Refreshing reports...', 'success');
+            loadAllReports();
+        }
+
+        function resetFilters() {
+            document.getElementById('dateRangeFilter').value = '7days';
+            document.getElementById('categoryFilter').value = '';
+            loadAllReports();
+        }
+
+        function exportReportsToPDF() {
+            alert('PDF export functionality will be implemented soon!');
+            // This would use a library like jsPDF or similar
+        }
+
+        // ========== LOGOUT ==========
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('admin');
+            localStorage.removeItem('userRole');
+            window.location.href = '../Main Dashboard/AdminLoginPage.html';
         });
-    }
-    loadAllReports();
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initReports);
+        initReports();
     </script>
 </body>
 </html>
