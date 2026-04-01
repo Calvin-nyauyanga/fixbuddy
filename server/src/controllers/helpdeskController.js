@@ -556,6 +556,7 @@ export const updateTicketPriority = async (req, res) => {
       data: {
         type: 'priority_changed',
         userId: req.user.id,
+        ticketId: parseInt(id),
         details: `Priority changed from ${oldTicket.priority} to ${priority}`,
         oldValue: oldTicket.priority,
         newValue: priority,
@@ -625,6 +626,7 @@ export const updateTicketStatus = async (req, res) => {
       data: {
         type: 'status_changed',
         userId: req.user.id,
+        ticketId: parseInt(id),
         details: `Status changed from ${oldTicket.status} to ${status}`,
         oldValue: oldTicket.status,
         newValue: status,
@@ -642,6 +644,246 @@ export const updateTicketStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error while updating status',
+      error: error.message,
+    });
+  }
+};
+// ✅ GET TICKET DETAILS BY ID
+export const getTicketDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        createdBy: {
+          select: { id: true, name: true, email: true },
+        },
+        assignedTo: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+        comments: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, role: true },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: ticket,
+    });
+  } catch (error) {
+    console.error('Get Ticket Details Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching ticket',
+      error: error.message,
+    });
+  }
+};
+
+// ✅ DELETE TICKET
+export const deleteTicket = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find ticket first
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found',
+      });
+    }
+
+    // Delete all comments (responses) first
+    await prisma.comment.deleteMany({
+      where: { ticketId: parseInt(id) },
+    });
+
+    // Delete all activities related to this ticket
+    await prisma.activity.deleteMany({
+      where: { ticketId: parseInt(id) },
+    });
+
+    // Delete the ticket
+    await prisma.ticket.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // Log activity for deletion
+    try {
+      await prisma.activity.create({
+        data: {
+          type: 'ticket_deleted',
+          userId: req.user.id,
+          details: `Ticket #${id} deleted`,
+          createdAt: new Date(),
+        },
+      });
+    } catch (err) {
+      console.warn('Could not log deletion activity:', err);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Ticket deleted successfully',
+      data: { deletedTicketId: id },
+    });
+  } catch (error) {
+    console.error('Delete Ticket Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting ticket',
+      error: error.message,
+    });
+  }
+};
+
+// ✅ ASSIGN TICKET TO AGENT
+export const assignTicket = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { assignedTo } = req.body;
+
+    // Find ticket
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found',
+      });
+    }
+
+    // Update ticket
+    const updatedTicket = await prisma.ticket.update({
+      where: { id: parseInt(id) },
+      data: {
+        assignedTo: parseInt(assignedTo),
+        updatedAt: new Date(),
+      },
+      include: {
+        createdBy: {
+          select: { id: true, name: true, email: true },
+        },
+        assignedTo: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+      },
+    });
+
+    // Log activity
+    try {
+      await prisma.activity.create({
+        data: {
+          type: 'ticket_assigned',
+          userId: req.user.id,
+          ticketId: parseInt(id),
+          details: `Ticket #${id} assigned to agent ${updatedTicket.assignedTo?.name}`,
+        },
+      });
+    } catch (err) {
+      console.warn('Could not log activity:', err);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Ticket assigned successfully',
+      data: updatedTicket,
+    });
+  } catch (error) {
+    console.error('Assign Ticket Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while assigning ticket',
+      error: error.message,
+    });
+  }
+};
+
+// ✅ GET TICKET ANALYTICS
+export const getTicketAnalytics = async (req, res) => {
+  try {
+    const now = new Date();
+    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Total tickets created
+    const totalTickets = await prisma.ticket.count();
+
+    // Tickets by status
+    const byStatus = await prisma.ticket.groupBy({
+      by: ['status'],
+      _count: true,
+    });
+
+    // Tickets by priority
+    const byPriority = await prisma.ticket.groupBy({
+      by: ['priority'],
+      _count: true,
+    });
+
+    // Tickets created in last 7 days
+    const ticketsLast7Days = await prisma.ticket.count({
+      where: {
+        createdAt: {
+          gte: last7Days,
+        },
+      },
+    });
+
+    // Average resolution time (in hours)
+    const solvedTickets = await prisma.ticket.findMany({
+      where: {
+        status: 'closed',
+      },
+      select: {
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    let avgResolutionTime = 0;
+    if (solvedTickets.length > 0) {
+      const totalHours = solvedTickets.reduce((sum, ticket) => {
+        const hours = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60 * 60);
+        return sum + hours;
+      }, 0);
+      avgResolutionTime = Math.round((totalHours / solvedTickets.length) * 100) / 100;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalTickets,
+        ticketsLast7Days,
+        avgResolutionTime,
+        byStatus: byStatus.map(item => ({ status: item.status, count: item._count })),
+        byPriority: byPriority.map(item => ({ priority: item.priority, count: item._count })),
+      },
+    });
+  } catch (error) {
+    console.error('Get Analytics Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching analytics',
       error: error.message,
     });
   }

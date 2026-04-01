@@ -10,6 +10,10 @@ import {
   getNotifications,
   updateTicketPriority,
   updateTicketStatus,
+  deleteTicket,  
+  getTicketDetails,  
+  assignTicket,
+  getTicketAnalytics,  
 } from '../controllers/helpdeskController.js';
 import { adminAuthMiddleware } from '../middleware/adminAuth.js';
 
@@ -20,15 +24,19 @@ router.use(adminAuthMiddleware);
   
 // Dashboard & Statistics
 router.get('/stats', getDashboardStats);
+router.get('/analytics', getTicketAnalytics);
 router.get('/activities', getRecentActivities);
 router.get('/notifications', getNotifications);
 
 // Ticket Management
 router.get('/tickets', getAllTicketsAdmin);
+router.get('/tickets/:id', getTicketDetails);  
 console.log('Setting up priority route');
 router.patch('/tickets/:id/priority', updateTicketPriority);
 console.log('Setting up status route');
 router.patch('/tickets/:id/status', updateTicketStatus);
+router.delete('/tickets/:id', deleteTicket);  
+router.patch('/tickets/:id/assign', assignTicket);  
 router.post('/tickets/:id/response', addTicketResponse);
 router.post('/tickets/:id/solve', solveTicket);
 router.patch('/tickets/:id/close', closeTicket);

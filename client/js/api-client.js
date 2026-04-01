@@ -194,17 +194,53 @@ const helpdeskAPI = {
   exportTickets: (format = 'csv') =>
     apiRequest(`/helpdesk/tickets/export?format=${format}`, 'GET'),
 
-  // 20. Get ticket analytics
-  getTicketAnalytics: () =>
-    apiRequest('/helpdesk/analytics', 'GET'),
+         // 20. Get ticket analytics
+        getTicketAnalytics: () =>
+            apiRequest('/helpdesk/analytics', 'GET'),
 
-  // 21. Update ticket priority (ADMIN ONLY)
-updateTicketPriority: (ticketId, priority) =>
-  apiRequest(`/helpdesk/tickets/${ticketId}/priority`, 'PATCH', { priority }),
+        // 21. Update ticket priority (ADMIN ONLY)
+        updateTicketPriority: (ticketId, priority) =>
+            apiRequest(`/helpdesk/tickets/${ticketId}/priority`, 'PATCH', { priority }),
 
-// 22. Update ticket status (ADMIN ONLY)
-updateTicketStatus: (ticketId, status) =>
-  apiRequest(`/helpdesk/tickets/${ticketId}/status`, 'PATCH', { status }),
+        // 22. Update ticket status (ADMIN ONLY)
+        updateTicketStatus: (ticketId, status) =>
+            apiRequest(`/helpdesk/tickets/${ticketId}/status`, 'PATCH', { status }),
+
+        // 23. DELETE ticket (ADMIN ONLY) 🆕
+        deleteTicket: (ticketId) =>
+            apiRequest(`/helpdesk/tickets/${ticketId}`, 'DELETE'),
+
+        // 24. Get ticket details 🆕
+        getTicketDetails: (ticketId) =>
+            apiRequest(`/helpdesk/tickets/${ticketId}`, 'GET'),
+
+        // 25. Get all tickets 🆕
+        getAllTickets: () =>
+            apiRequest('/helpdesk/tickets', 'GET'),
+
+        // 26. Assign ticket 🆕
+        assignTicket: (ticketId, agentId) =>
+            apiRequest(`/helpdesk/tickets/${ticketId}/assign`, 'PATCH', { assignedTo: agentId }),
+
+        // 27. Close ticket 🆕
+        closeTicket: (ticketId) =>
+            apiRequest(`/helpdesk/tickets/${ticketId}/close`, 'PATCH'),
+
+        // 28. Add response 🆕
+        addResponse: (ticketId, response, responseType) =>
+            apiRequest(`/helpdesk/tickets/${ticketId}/response`, 'POST', { response, responseType }),
+
+        // 29. Solve ticket 🆕
+        solveTicket: (ticketId, solution) =>
+            apiRequest(`/helpdesk/tickets/${ticketId}/solve`, 'POST', { solution }),
+
+        // 30. Get all users 🆕
+        getAllUsers: () =>
+            apiRequest('/helpdesk/users', 'GET'),
+
+        // 31. Get notifications 🆕
+        getNotifications: () =>
+            apiRequest('/helpdesk/notifications', 'GET'),
 
 };
 
