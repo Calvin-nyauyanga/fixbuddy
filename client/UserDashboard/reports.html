@@ -226,20 +226,19 @@
     document.addEventListener('DOMContentLoaded', async () => {
         const token = localStorage.getItem('authToken');
         const user = JSON.parse(localStorage.getItem('user') || 'null');
-        const userRole = localStorage.getItem('userRole');
 
-        // Redirect if not logged in or not a user
-        if (!token || !user || userRole !== 'user') {
-            window.location.href = '../Main Dashboard/UserLoginPage.html';
-            return;
+        // Redirect if not logged in ✅ REMOVED userRole check
+        if (!token || !user) {
+          window.location.href = '../Main Dashboard/UserLoginPage.html';
+         return;
         }
 
         // Set welcome message
         document.getElementById('userWelcome').textContent = `👋 Hi, ${user.name || 'User'}`;
-        document.getElementById('year').textContent = new Date().getFullYear();
+         document.getElementById('year').textContent = new Date().getFullYear();
 
         // Load all reports data
-        await loadAllReports();
+     await loadAllReports();
     });
 
     // ==========================================
