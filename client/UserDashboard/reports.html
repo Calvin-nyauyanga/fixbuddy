@@ -298,6 +298,112 @@
             showError(`Failed to load reports: ${error.message}`);
         }
     }
+        // ==========================================
+// 👂 LISTEN FOR TICKET EVENTS FROM MyTickets.html
+// ==========================================
+
+// Event Listener 1: localStorage Changes (cross-tab communication)
+window.addEventListener('storage', async (event) => {
+    if (event.key === 'lastTicketEvent') {
+        try {
+            const eventData = JSON.parse(event.newValue);
+            console.log('🔔 Ticket event received:', eventData.type, eventData);
+            
+            // Refresh reports immediately when activity is detected
+            await loadAllReports();
+            
+            // Show visual notification
+            showActivityNotification(eventData);
+        } catch (error) {
+            console.error('Error parsing ticket event:', error);
+        }
+    }
+});
+
+// Event Listener 2: CustomEvent (same window communication)
+document.addEventListener('ticketActivityEvent', async (event) => {
+    const eventData = event.detail;
+    console.log('🔔 Ticket activity detected:', eventData.type);
+    
+    // Refresh reports
+    await loadAllReports();
+    
+    // Show notification
+    showActivityNotification(eventData);
+});
+
+// ==========================================
+// ACTIVITY NOTIFICATION
+// ==========================================
+function showActivityNotification(eventData) {
+    const notificationDiv = document.createElement('div');
+    notificationDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 5px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 10000;
+        font-weight: 600;
+        animation: slideIn 0.3s ease-in-out;
+    `;
+    
+    let message = '';
+    let icon = '';
+    
+    switch(eventData.type) {
+        case 'updated':
+            icon = '✏️';
+            message = `Ticket #${eventData.ticket.id} status changed to ${eventData.ticket.status}`;
+            break;
+        case 'deleted':
+            icon = '🗑️';
+            message = `Ticket #${eventData.ticket.id} has been deleted`;
+            break;
+        case 'viewed':
+            icon = '👁️';
+            message = `Ticket viewed: ${eventData.ticket.title}`;
+            break;
+        case 'created':
+            icon = '✨';
+            message = `New ticket created: ${eventData.ticket.title}`;
+            break;
+        default:
+            icon = '📢';
+            message = `Activity: ${eventData.type}`;
+    }
+    
+    notificationDiv.innerHTML = `${icon} ${message}`;
+    document.body.appendChild(notificationDiv);
+    
+    // Remove notification after 4 seconds
+    setTimeout(() => {
+        notificationDiv.style.opacity = '0';
+        notificationDiv.style.transition = 'opacity 0.3s ease-in-out';
+        setTimeout(() => notificationDiv.remove(), 300);
+    }, 4000);
+}
+
+// ==========================================
+// ADD CSS ANIMATION
+// ==========================================
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
 
     // ==========================================
     // UPDATE METRIC CARDS

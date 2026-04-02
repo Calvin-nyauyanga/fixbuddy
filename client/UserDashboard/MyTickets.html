@@ -218,6 +218,93 @@
                 window.addEventListener('beforeunload', () => {
                 stopAutoRefresh();
                 });
+                
+            // ==========================================
+            // 📡 BROADCAST TICKET EVENTS TO REPORTS PAGE
+            // ==========================================
+
+        function broadcastTicketEvent(eventType, ticketData) {
+       // Method 1: Using localStorage (works across tabs)
+             const eventLog = {
+          type: eventType,  // 'created', 'updated', 'deleted', 'status_changed'
+             ticket: ticketData,
+                timestamp: new Date().toISOString(),
+          userId: JSON.parse(localStorage.getItem('user') || '{}').id
+         };
+    
+        localStorage.setItem('lastTicketEvent', JSON.stringify(eventLog));
+    
+         // Method 2: Using CustomEvent (works on same page)
+           document.dispatchEvent(new CustomEvent('ticketActivityEvent', {
+             detail: eventLog
+         }));
+    
+    console.log('📡 Broadcasted event:', eventType, ticketData);
+}
+
+// ==========================================
+// UPDATE TICKET - Broadcast Event
+// ==========================================
+async function editTicket(ticketId) {
+    const newStatus = prompt('Enter new status (open, in_progress, closed, on_hold):');
+    if (!newStatus) return;
+
+    try {
+        const response = await ticketsAPI.update(ticketId, { status: newStatus });
+        
+        // 🔥 BROADCAST THE UPDATE
+        broadcastTicketEvent('updated', {
+            id: ticketId,
+            status: newStatus,
+            action: 'status_changed',
+            oldStatus: allTickets.find(t => t.id === ticketId)?.status
+        });
+        
+        alert('✅ Ticket updated!');
+        await loadAllTickets();
+    } catch (error) {
+        alert(`❌ Failed to update ticket: ${error.message}`);
+    }
+}
+
+// ==========================================
+// DELETE TICKET - Broadcast Event
+// ==========================================
+async function deleteTicket(ticketId) {
+    if (!confirm('Are you sure you want to delete this ticket?')) return;
+
+    try {
+        await ticketsAPI.delete(ticketId);
+        
+        // 🔥 BROADCAST THE DELETION
+        broadcastTicketEvent('deleted', {
+            id: ticketId,
+            action: 'ticket_deleted'
+        });
+        
+        alert('✅ Ticket deleted!');
+        await loadAllTickets();
+    } catch (error) {
+        alert(`❌ Failed to delete ticket: ${error.message}`);
+    }
+}
+
+// ==========================================
+// VIEW TICKET DETAILS - Log Event
+// ==========================================
+function viewTicketDetails(ticketId) {
+    const ticket = allTickets.find(t => t.id === ticketId);
+    
+    // 🔥 BROADCAST THE VIEW
+    broadcastTicketEvent('viewed', {
+        id: ticketId,
+        action: 'ticket_viewed',
+        title: ticket?.title
+    });
+    
+    // Show ticket details
+    alert(`Viewing ticket #${ticketId}: ${ticket?.title}`);
+}
          </script>
     </body>
  </html>

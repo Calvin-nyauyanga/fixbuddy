@@ -393,6 +393,19 @@ export const getUserDashboardStats = async (req, res) => {
     const inProgress = userTickets.filter(
       (t) => t.status === 'in_progress'
     ).length;
+    // In getUserDashboardStats function, add tracking:
+    try {
+       // Log that user viewed their reports
+       await prisma.activity.create({
+            data: {
+               type: 'user_viewed_reports',
+               userId: req.user.id,
+               details: `User accessed reports page`
+           }
+        });
+    } catch (err) {
+       console.warn('Could not log report view:', err);
+    }
 
     let avgResolutionTime = 0;
     let resolvedCount = 0;
