@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:5000 http://localhost:5500 ws://localhost:*; img-src 'self' data: https://via.placeholder.com https:;">    <title>FixBuddy – User Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixBuddy – User Management</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:5000 http://localhost:5500 ws://localhost:*; img-src 'self' data: https://via.placeholder.com https:;">
     <style>
         .page-header-actions {
             display: flex;
@@ -16,6 +17,7 @@
             align-items: center;
             margin-bottom: 2rem;
             flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .user-status-badge {
@@ -26,50 +28,244 @@
             color: #fff;
         }
 
-        .user-status-badge.active { background-color: var(--success-color); }
-        .user-status-badge.suspended { background-color: var(--danger-color); }
+        .user-status-badge.active { 
+            background-color: #28a745;
+        }
+        
+        .user-status-badge.suspended { 
+            background-color: #dc3545;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 0.5rem;
+        }
 
         .action-icons a {
             font-size: 1.25rem;
-            color: var(--secondary-color);
+            color: #6c757d;
             transition: color 0.3s ease;
-            margin-right: 1rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
         }
-        .action-icons a:last-child {
-            margin-right: 0;
-        }
+
         .action-icons a:hover {
-            color: var(--primary-color);
+            color: #007bff;
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background-color: #333;
+            color: white;
+            border-radius: 4px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+
+        .notification-alert.success {
+            background-color: #28a745;
+        }
+
+        .notification-alert.error {
+            background-color: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background-color: #f8f9fa;
+        }
+
+        table th,
+        table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            font-weight: 600;
+            color: #333;
+        }
+
+        table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .welcome-message {
+            margin-left: 1rem;
+            color: #333;
+            font-weight: 500;
         }
     </style>
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker registered:', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-}
-</script>
 </head>
 <body class="admin-dashboard-body">
 
     <header class="topbar dashboard-header">
-        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
             <div class="search-bar">
-                <input type="text" placeholder="Search users...">
+                <input type="text" id="searchInput" placeholder="Search users...">
                 <i class="fa-solid fa-search"></i>
             </div>
             <div class="user-info">
-                <i class="fa-solid fa-bell notifications-icon"></i>
-                <i class="fa-solid fa-cog settings-icon"></i>
-                <i class="fa-solid fa-user-circle admin-profile-icon"></i>
+                <span style="position:relative;">
+                    <i class="fa-solid fa-bell notifications-icon" id="adminBell" style="cursor: pointer;"></i>
+                    <span id="adminNotifCount" style="position:absolute;top:-8px;right:-8px;background:red;color:white;border-radius:50%;padding:2px 6px;font-size:0.8em;display:none;">0</span>
+                </span>
+                <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
+                <span class="welcome-message" id="adminWelcome">👤 Admin</span>
+                <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
             </div>
         </div>
     </header>
 
     <main class="dashboard-main">
         <aside class="sidebar">
-            <h2 class="sidebar-heading">FixBuddy</h2>
+            <h2 class="sidebar-heading">🛠️ Fixbuddy Admin</h2>
             <nav class="sidebar-nav">
                 <a href="AdminDashBoard.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-gauge"></i>
@@ -83,15 +279,20 @@ if ('serviceWorker' in navigator) {
                     <i class="fa-solid fa-users"></i>
                     <span>Users</span>
                 </a>
-                <a href="reports.html" class="sidebar-nav-item">
+                <a href="AdminReports.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Reports</span>
+                </a>
+                <a href="Notifications.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notifications</span>
                 </a>
                 <a href="settings.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-cog"></i>
                     <span>Settings</span>
                 </a>
-                <a href="../Main Dashboard/JS LOGIC/AdminLoginPage.html" class="sidebar-nav-item">
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link">
                     <i class="fa-solid fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -103,75 +304,473 @@ if ('serviceWorker' in navigator) {
                 <div class="tickets-management-container">
                     <div class="page-header-actions">
                         <h2>User Management</h2>
-                        <a href="#" class="btn btn-primary">➕ Add New User</a>
+                        <button onclick="openAddUserModal()" class="btn btn-primary">➕ Add New User</button>
                     </div>
                     
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>User ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#U101</td>
-                                    <td>John Doe</td>
-                                    <td>john.doe@example.com</td>
-                                    <td>Admin</td>
-                                    <td><span class="user-status-badge active">Active</span></td>
-                                    <td class="action-icons">
-                                        <a href="#" title="Edit User"><i class="fa-solid fa-pen-to-square"></i></a>
-                                        <a href="#" title="Suspend User"><i class="fa-solid fa-lock"></i></a>
-                                        <a href="#" title="Remove User"><i class="fa-solid fa-user-times"></i></a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#U102</td>
-                                    <td>Jane Smith</td>
-                                    <td>jane.s@example.com</td>
-                                    <td>Staff</td>
-                                    <td><span class="user-status-badge active">Active</span></td>
-                                    <td class="action-icons">
-                                        <a href="#" title="Edit User"><i class="fa-solid fa-pen-to-square"></i></a>
-                                        <a href="#" title="Suspend User"><i class="fa-solid fa-lock"></i></a>
-                                        <a href="#" title="Remove User"><i class="fa-solid fa-user-times"></i></a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#U103</td>
-                                    <td>Mark T.</td>
-                                    <td>mark.t@example.com</td>
-                                    <td>User</td>
-                                    <td><span class="user-status-badge suspended">Suspended</span></td>
-                                    <td class="action-icons">
-                                        <a href="#" title="Edit User"><i class="fa-solid fa-pen-to-square"></i></a>
-                                        <a href="#" title="Suspend User"><i class="fa-solid fa-lock"></i></a>
-                                        <a href="#" title="Remove User"><i class="fa-solid fa-user-times"></i></a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div id="usersListContainer">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading users...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
+    <!-- ADD USER MODAL -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Add New User</div>
+            
+            <form id="userForm" onsubmit="submitUserForm(event)">
+                <div class="form-group">
+                    <label for="userName">Name *</label>
+                    <input type="text" id="userName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="userEmail">Email *</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="userPassword">Password *</label>
+                    <input type="password" id="userPassword" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="userRole">Role *</label>
+                    <select id="userRole" required>
+                        <option value="">-- Select Role --</option>
+                        <option value="user">User</option>
+                        <option value="staff">Staff/Agent</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="closeUserModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT USER MODAL -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Edit User</div>
+            
+            <form id="editUserForm" onsubmit="submitEditUserForm(event)">
+                <input type="hidden" id="editUserId">
+
+                <div class="form-group">
+                    <label for="editUserName">Name *</label>
+                    <input type="text" id="editUserName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editUserEmail">Email *</label>
+                    <input type="email" id="editUserEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editUserRole">Role *</label>
+                    <select id="editUserRole" required>
+                        <option value="user">User</option>
+                        <option value="staff">Staff/Agent</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="closeEditUserModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <footer>
-        <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
-        <span class="footer-sep">|</span>
-    
+        <span>© <span id="year"></span> <strong>FixBuddy</strong> - Admin Helpdesk System</span>
     </footer>
 
-    <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
+    <script src="../js/api-client.js"></script>
     <script src="../js/usersApi.js"></script>
+    <script>
+        let allUsers = [];
+        let searchTimeout;
+
+        // ========== INITIALIZATION ==========
+        async function initUsersPage() {
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            const token = localStorage.getItem('authToken');
+            const userRole = localStorage.getItem('userRole');
+
+            // Check authentication
+            if (!token || !admin || userRole !== 'admin') {
+                window.location.href = '../Main Dashboard/AdminLoginPage.html';
+                return;
+            }
+
+            // Display admin welcome message
+            document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+            document.getElementById('year').textContent = new Date().getFullYear();
+
+            // Load users
+            await loadAllUsers();
+
+            // Setup event listeners
+            setupIconListeners();
+        }
+
+        // ========== SETUP ICON LISTENERS ==========
+        function setupIconListeners() {
+            // Settings icon
+            document.querySelector('.settings-icon').addEventListener('click', () => {
+                window.location.href = 'settings.html';
+            });
+
+            // Notifications bell
+            document.getElementById('adminBell').addEventListener('click', () => {
+                window.location.href = 'Notifications.html';
+            });
+
+            // Profile icon
+            document.querySelector('.admin-profile-icon').addEventListener('click', () => {
+                window.location.href = 'settings.html';
+            });
+
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                logout();
+            });
+        }
+
+        // ========== LOGOUT ==========
+        async function logout() {
+            try {
+                await adminAPI.logout();
+            } catch (error) {
+                console.warn('Logout API call failed:', error);
+            }
+
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('admin');
+            localStorage.removeItem('userRole');
+
+            window.location.href = '../Main Dashboard/AdminLoginPage.html';
+        }
+
+        // ========== LOAD ALL USERS ==========
+        async function loadAllUsers() {
+            try {
+                const container = document.getElementById('usersListContainer');
+                container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading users...</p></div>';
+
+                const response = await loadUsers();
+                allUsers = response || [];
+                displayUsers(allUsers);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showNotification(`❌ Failed to load users: ${error.message}`, 'error');
+                document.getElementById('usersListContainer').innerHTML = 
+                    '<p style="text-align: center; color: red;">Failed to load users. Please try again.</p>';
+            }
+        }
+
+        // ========== DISPLAY USERS TABLE ==========
+        function displayUsers(users) {
+            const container = document.getElementById('usersListContainer');
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<p style="text-align: center;">No users found.</p>';
+                return;
+            }
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            users.forEach(user => {
+                const isActive = user.status !== 'suspended' && user.status !== 'inactive';
+                const statusBadge = isActive 
+                    ? '<span class="user-status-badge active">Active</span>'
+                    : '<span class="user-status-badge suspended">Suspended</span>';
+                
+                const createdDate = new Date(user.createdAt).toLocaleDateString();
+
+                html += `
+                    <tr>
+                        <td>#U${String(user.id).padStart(3, '0')}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><span style="text-transform: capitalize;">${user.role}</span></td>
+                        <td>${statusBadge}</td>
+                        <td>${createdDate}</td>
+                        <td class="action-icons">
+                            <a href="#" onclick="return false;" title="Edit User" onclick="openEditUserModal(${user.id}); return false;">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            ${isActive 
+                                ? `<a href="#" onclick="return false;" title="Suspend User" onclick="confirmSuspendUser(${user.id}); return false;">
+                                    <i class="fa-solid fa-ban"></i>
+                                </a>` 
+                                : `<a href="#" onclick="return false;" title="Activate User" onclick="confirmActivateUser(${user.id}); return false;">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </a>`
+                            }
+                            <a href="#" onclick="return false;" title="Delete User" onclick="confirmDeleteUser(${user.id}); return false;">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // ========== OPEN ADD USER MODAL ==========
+        function openAddUserModal() {
+            document.getElementById('userForm').reset();
+            document.getElementById('userModal').classList.add('show');
+        }
+
+        // ========== CLOSE ADD USER MODAL ==========
+        function closeUserModal() {
+            document.getElementById('userModal').classList.remove('show');
+        }
+
+        // ========== SUBMIT ADD USER FORM ==========
+        async function submitUserForm(event) {
+            event.preventDefault();
+
+            const userData = {
+                name: document.getElementById('userName').value,
+                email: document.getElementById('userEmail').value,
+                password: document.getElementById('userPassword').value,
+                role: document.getElementById('userRole').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to create user');
+                }
+
+                showNotification('✅ User created successfully!', 'success');
+                closeUserModal();
+                await loadAllUsers();
+            } catch (error) {
+                showNotification(`❌ Failed to create user: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== OPEN EDIT USER MODAL ==========
+        async function openEditUserModal(userId) {
+            try {
+                const user = allUsers.find(u => u.id === userId);
+                if (!user) throw new Error('User not found');
+
+                document.getElementById('editUserId').value = user.id;
+                document.getElementById('editUserName').value = user.name;
+                document.getElementById('editUserEmail').value = user.email;
+                document.getElementById('editUserRole').value = user.role;
+
+                document.getElementById('editUserModal').classList.add('show');
+            } catch (error) {
+                showNotification(`❌ Failed to load user: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== CLOSE EDIT USER MODAL ==========
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').classList.remove('show');
+        }
+
+        // ========== SUBMIT EDIT USER FORM ==========
+        async function submitEditUserForm(event) {
+            event.preventDefault();
+
+            const userId = document.getElementById('editUserId').value;
+            const userData = {
+                name: document.getElementById('editUserName').value,
+                email: document.getElementById('editUserEmail').value,
+                role: document.getElementById('editUserRole').value
+            };
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update user');
+                }
+
+                showNotification('✅ User updated successfully!', 'success');
+                closeEditUserModal();
+                await loadAllUsers();
+            } catch (error) {
+                showNotification(`❌ Failed to update user: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== SUSPEND USER ==========
+        async function confirmSuspendUser(userId) {
+            if (!confirm('Are you sure you want to suspend this user?')) return;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${userId}/suspend`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to suspend user');
+                }
+
+                showNotification('✅ User suspended successfully!', 'success');
+                await loadAllUsers();
+            } catch (error) {
+                showNotification(`❌ Failed to suspend user: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== ACTIVATE USER ==========
+        async function confirmActivateUser(userId) {
+            if (!confirm('Are you sure you want to activate this user?')) return;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${userId}/activate`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to activate user');
+                }
+
+                showNotification('✅ User activated successfully!', 'success');
+                await loadAllUsers();
+            } catch (error) {
+                showNotification(`❌ Failed to activate user: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== DELETE USER ==========
+        async function confirmDeleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to delete user');
+                }
+
+                showNotification('✅ User deleted successfully!', 'success');
+                await loadAllUsers();
+            } catch (error) {
+                showNotification(`❌ Failed to delete user: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== SEARCH USERS ==========
+        document.getElementById('searchInput').addEventListener('input', debounceSearch);
+
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            const query = document.getElementById('searchInput').value.trim();
+
+            if (!query) {
+                displayUsers(allUsers);
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/users/search?q=${encodeURIComponent(query)}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Search failed');
+                    
+                    const result = await response.json();
+                    const results = result.data?.users || result.data || [];
+                    displayUsers(results);
+                } catch (error) {
+                    showNotification(`❌ Search failed: ${error.message}`, 'error');
+                }
+            }, 300);
+        }
+
+        // ========== SHOW NOTIFICATION ==========
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification-alert ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // ========== INITIALIZE PAGE ==========
+        document.addEventListener('DOMContentLoaded', initUsersPage);
+    </script>
 </body>
 </html>
