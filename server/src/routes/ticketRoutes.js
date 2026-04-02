@@ -21,19 +21,23 @@ const router = express.Router();
 // All ticket routes require authentication
 router.use(authMiddleware);
 
-// Ticket CRUD operations
-router.post('/', createTicket); // Create ticket
-router.get('/', getAllTickets); // Get all tickets (with filters)
-router.get('/my-tickets', getUserTickets); // Get user's own tickets
-router.get('/:id', getTicketById); // Get single ticket
-router.patch('/:id', updateTicket); // Update ticket
-router.delete('/:id', deleteTicket); // Delete ticket
-router.patch('/:id/assign', assignTicket); // Assign ticket to agent
+// ==========================================
+// TICKET CRUD OPERATIONS
+// ==========================================
+router.post('/', createTicket);              // Create ticket
+router.get('/', getAllTickets);              // Get all tickets (with filters)
+router.get('/my-tickets', getUserTickets);   // Get user's own tickets
+router.get('/:id', getTicketById);           // Get single ticket
+router.patch('/:id', updateTicket);          // Update ticket
+router.delete('/:id', deleteTicket);         // Delete ticket
+router.patch('/:id/assign', assignTicket);   // Assign ticket to agent
 
-// User Reports Routes
-router.get('/reports/stats', getMyStats); // Get user stats
-router.get('/reports/trends', getSubmissionTrends); // Get submission trends
-router.get('/reports/status', getMyStatusBreakdown); // Get status breakdown
-router.get('/reports/categories', getMyCategories); // Get categories
+// ==========================================
+// USER REPORTS ROUTES - /api/tickets/reports/...
+// ==========================================
+router.get('/reports/stats', getMyStats);           // GET /api/tickets/reports/stats
+router.get('/reports/trends', getSubmissionTrends); // GET /api/tickets/reports/trends
+router.get('/reports/status', getMyStatusBreakdown); // GET /api/tickets/reports/status
+router.get('/reports/categories', getMyCategories);  // GET /api/tickets/reports/categories
 
 export default router;

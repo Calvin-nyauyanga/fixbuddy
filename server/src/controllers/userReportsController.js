@@ -1,13 +1,11 @@
-// server/src/controllers/userReportsController.js
+import { PrismaClient } from '@prisma/client';
 
-import prisma from '../config/database.js';
+const prisma = new PrismaClient();
 
 // ✅ GET USER STATS - Get statistics for user's tickets
 export const getMyStats = async (req, res) => {
   try {
     const userId = req.user.id;
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     // Total tickets created by user
     const totalTickets = await prisma.ticket.count({
@@ -30,7 +28,7 @@ export const getMyStats = async (req, res) => {
       },
     });
 
-    // Resolved tickets
+    // Resolved/Closed tickets
     const resolved = await prisma.ticket.count({
       where: {
         createdById: userId,
@@ -50,14 +48,13 @@ export const getMyStats = async (req, res) => {
       },
     });
 
-    let avgResolutionTime = '0d';
+    let avgResolutionTime = 0;
     if (closedTickets.length > 0) {
       const totalDays = closedTickets.reduce((sum, ticket) => {
         const days = (ticket.updatedAt.getTime() - ticket.createdAt.getTime()) / (1000 * 60 * 60 * 24);
         return sum + days;
       }, 0);
-      const avg = Math.round(totalDays / closedTickets.length);
-      avgResolutionTime = `${avg}d`;
+      avgResolutionTime = Math.round(totalDays / closedTickets.length);
     }
 
     res.status(200).json({
@@ -118,13 +115,13 @@ export const getSubmissionTrends = async (req, res) => {
       }
     });
 
-    const counts = dateArray.map((date) => trendsMap[date]);
+    const counts = dateArray.map(date => trendsMap[date] || 0);
 
     res.status(200).json({
       success: true,
       data: {
         dates: dateArray,
-        counts,
+        counts: counts,
       },
     });
   } catch (error) {
@@ -137,24 +134,19 @@ export const getSubmissionTrends = async (req, res) => {
   }
 };
 
-// ✅ GET STATUS BREAKDOWN - Get breakdown of ticket statuses
+// ✅ GET STATUS BREAKDOWN - Get ticket status distribution
 export const getMyStatusBreakdown = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const statusCounts = await prisma.ticket.groupBy({
+    const statusBreakdown = await prisma.ticket.groupBy({
       by: ['status'],
       where: { createdById: userId },
       _count: true,
     });
 
-    const statuses = [];
-    const counts = [];
-
-    statusCounts.forEach((item) => {
-      statuses.push(item.status || 'Unknown');
-      counts.push(item._count);
-    });
+    const statuses = statusBreakdown.map(item => item.status || 'unknown');
+    const counts = statusBreakdown.map(item => item._count);
 
     res.status(200).json({
       success: true,
@@ -173,24 +165,19 @@ export const getMyStatusBreakdown = async (req, res) => {
   }
 };
 
-// ✅ GET CATEGORIES - Get ticket categories breakdown
+// ✅ GET CATEGORIES - Get ticket category distribution
 export const getMyCategories = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const categoryCounts = await prisma.ticket.groupBy({
+    const categoryBreakdown = await prisma.ticket.groupBy({
       by: ['category'],
       where: { createdById: userId },
       _count: true,
     });
 
-    const categories = [];
-    const counts = [];
-
-    categoryCounts.forEach((item) => {
-      categories.push(item.category || 'Uncategorized');
-      counts.push(item._count);
-    });
+    const categories = categoryBreakdown.map(item => item.category || 'Uncategorized');
+    const counts = categoryBreakdown.map(item => item._count);
 
     res.status(200).json({
       success: true,
