@@ -214,136 +214,248 @@
 
     <script src="../js/reportsApi.js"></script>
     <script src="../js/api-client.js"></script>
-    <script>
-        let chartInstances = {};
+   <script>
+    // ==========================================
+    // USER REPORTS - CHART & DATA MANAGEMENT
+    // ==========================================
+    
+    const API_BASE_URL = 'http://localhost:5000/api/reports';
+    let chartInstances = {};
+
+    // Initialize page on load
+    document.addEventListener('DOMContentLoaded', async () => {
+        const token = localStorage.getItem('authToken');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        const userRole = localStorage.getItem('userRole');
+
+        // Redirect if not logged in or not a user
+        if (!token || !user || userRole !== 'user') {
+            window.location.href = '../Main Dashboard/UserLoginPage.html';
+            return;
+        }
+
+        // Set welcome message
+        document.getElementById('userWelcome').textContent = `👋 Hi, ${user.name || 'User'}`;
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        async function initUserReports() {
-            const token = localStorage.getItem('authToken');
-            const user = JSON.parse(localStorage.getItem('user') || 'null');
-            const userRole = localStorage.getItem('userRole');
+        // Load all reports data
+        await loadAllReports();
+    });
 
-            if (!token || !user || userRole !== 'user') {
-                window.location.href = '../Main Dashboard/UserLoginPage.html';
-                return;
+    // ==========================================
+    // LOAD ALL REPORTS DATA
+    // ==========================================
+    async function loadAllReports() {
+        try {
+            console.log('Loading user reports...');
+            
+            // Fetch all data in parallel for performance
+            const [statsRes, trendsRes, statusRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/user/stats`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                }),
+                fetch(`${API_BASE_URL}/user/tickets/trends`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                }),
+                fetch(`${API_BASE_URL}/user/tickets/status`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                })
+            ]);
+
+            // Check if responses are ok
+            if (!statsRes.ok || !trendsRes.ok || !statusRes.ok) {
+                throw new Error('Failed to fetch reports data');
             }
 
-            document.getElementById('userWelcome').textContent = `👋 Hi, ${user.name || 'User'}`;
+            const statsData = await statsRes.json();
+            const trendsData = await trendsRes.json();
+            const statusData = await statusRes.json();
 
-            await loadUserReports();
+            // Update metrics
+            updateMetrics(statsData.data);
+
+            // Render charts
+            renderSubmissionChart(trendsData.data);
+            renderStatusChart(statusData.data);
+
+            // Update summary
+            updateSummary(statsData.data);
+
+        } catch (error) {
+            console.error('Error loading reports:', error);
+            showError('Failed to load reports. Please refresh the page.');
+        }
+    }
+
+    // ==========================================
+    // UPDATE METRIC CARDS
+    // ==========================================
+    function updateMetrics(data) {
+        console.log('Updating metrics:', data);
+        
+        // Total Tickets
+        document.getElementById('metricTotal').textContent = data.totalTickets || 0;
+
+        // Open Tickets
+        document.getElementById('metricOpen').textContent = data.openTickets || 0;
+
+        // Resolved Tickets
+        document.getElementById('metricResolved').textContent = data.resolved || 0;
+
+        // Average Resolution Time
+        const avgTime = data.avgResolutionTime || '0 days';
+        document.getElementById('metricAvg').textContent = avgTime;
+    }
+
+    // ==========================================
+    // RENDER SUBMISSION CHART (LINE CHART)
+    // ==========================================
+    function renderSubmissionChart(data) {
+        console.log('Rendering submission chart:', data);
+        
+        const ctx = document.getElementById('submissionChart');
+        if (!ctx) {
+            console.warn('submissionChart canvas not found');
+            return;
         }
 
-        async function loadUserReports() {
-            try {
-                // Load stats
-                const statsResponse = await userReportsAPI.getMyStats();
-                updateMetrics(statsResponse.data);
+        // Destroy existing chart if it exists
+        if (chartInstances.submission) {
+            chartInstances.submission.destroy();
+        }
 
-                // Load submission trends
-                const trendsResponse = await userReportsAPI.getSubmissionTrends();
-                renderSubmissionChart(trendsResponse.data);
-
-                // Load status breakdown
-                const statusResponse = await userReportsAPI.getMyStatusBreakdown();
-                renderStatusChart(statusResponse.data);
-
-                // Load categories
-                const categoryResponse = await userReportsAPI.getMyCategories();
-                renderCategoryChart(categoryResponse.data);
-
-            } catch (error) {
-                console.error('Error loading user reports:', error);
+        chartInstances.submission = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates || [],
+                datasets: [{
+                    label: 'Tickets Submitted',
+                    data: data.counts || [],
+                    borderColor: '#4caf50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#4caf50',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
             }
-        }
-
-        function updateMetrics(data) {
-            document.getElementById('metricTotal').textContent = data.totalTickets;
-            document.getElementById('metricOpen').textContent = data.openTickets;
-            document.getElementById('metricResolved').textContent = data.resolved;
-            document.getElementById('metricAvg').textContent = data.avgResolutionTime;
-            
-            document.getElementById('summaryInProgress').textContent = data.inProgress;
-            document.getElementById('summaryPending').textContent = data.openTickets;
-            document.getElementById('summaryResponseRate').textContent = '85%'; // Calculate if needed
-        }
-
-        function renderSubmissionChart(data) {
-            const ctx = document.getElementById('submissionChart').getContext('2d');
-            
-            if (chartInstances.submission) chartInstances.submission.destroy();
-
-            chartInstances.submission = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.dates,
-                    datasets: [{
-                        label: 'Tickets Submitted',
-                        data: data.counts,
-                        backgroundColor: '#4caf50',
-                        borderColor: '#388e3c',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
-
-        function renderStatusChart(data) {
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            
-            if (chartInstances.status) chartInstances.status.destroy();
-
-            chartInstances.status = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.statuses,
-                    datasets: [{
-                        data: data.counts,
-                        backgroundColor: ['#4caf50', '#ff9800', '#f44336', '#2196f3']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-
-        function renderCategoryChart(data) {
-            const ctx = document.getElementById('categoryChart').getContext('2d');
-            
-            if (chartInstances.category) chartInstances.category.destroy();
-
-            chartInstances.category = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: data.categories,
-                    datasets: [{
-                        data: data.counts,
-                        backgroundColor: ['#4caf50', '#ff9800', '#2196f3', '#9c27b0', '#f44336']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-
-        document.querySelector('.logout-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-            localStorage.removeItem('userRole');
-            window.location.href = '../Main Dashboard/UserLoginPage.html';
         });
+    }
 
-        window.addEventListener('DOMContentLoaded', initUserReports);
-        initUserReports();
-    </script>
+    // ==========================================
+    // RENDER STATUS CHART (PIE/DOUGHNUT)
+    // ==========================================
+    function renderStatusChart(data) {
+        console.log('Rendering status chart:', data);
+        
+        const ctx = document.getElementById('statusChart');
+        if (!ctx) {
+            console.warn('statusChart canvas not found');
+            return;
+        }
+
+        // Destroy existing chart if it exists
+        if (chartInstances.status) {
+            chartInstances.status.destroy();
+        }
+
+        const statusColors = {
+            'open': '#ff9800',
+            'in_progress': '#2196f3',
+            'closed': '#4caf50',
+            'on_hold': '#f44336',
+            'pending': '#ff5722'
+        };
+
+        const colors = data.statuses.map(status => statusColors[status] || '#999');
+
+        chartInstances.status = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.statuses || [],
+                datasets: [{
+                    data: data.counts || [],
+                    backgroundColor: colors,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    }
+
+    // ==========================================
+    // UPDATE SUMMARY SECTION
+    // ==========================================
+    function updateSummary(data) {
+        console.log('Updating summary:', data);
+        
+        document.getElementById('summaryInProgress').textContent = data.inProgress || 0;
+        document.getElementById('summaryPending').textContent = data.openTickets || 0;
+        
+        // Calculate response rate (resolved / total)
+        const responseRate = data.totalTickets > 0 
+            ? Math.round((data.resolved / data.totalTickets) * 100) 
+            : 0;
+        document.getElementById('summaryResponseRate').textContent = `${responseRate}%`;
+        
+        // Update last updated time
+        const now = new Date();
+        document.getElementById('summaryLastUpdate').textContent = now.toLocaleTimeString();
+    }
+
+    // ==========================================
+    // ERROR HANDLING
+    // ==========================================
+    function showError(message) {
+        const metricsSection = document.querySelector('.metrics-grid');
+        if (metricsSection) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                grid-column: 1 / -1;
+                background: #ffebee;
+                color: #c62828;
+                padding: 1rem;
+                border-radius: 4px;
+                border-left: 4px solid #c62828;
+            `;
+            errorDiv.textContent = message;
+            metricsSection.insertAdjacentElement('afterend', errorDiv);
+        }
+    }
+
+    // ==========================================
+    // AUTO-REFRESH (OPTIONAL)
+    // ==========================================
+    // Uncomment to auto-refresh every 30 seconds
+    // setInterval(loadAllReports, 30000);
+</script>
 </body>
 </html>

@@ -7,6 +7,7 @@ import helpdeskRoutes from './routes/helpdeskRoutes.js';
 import reportsRoutes from './routes/reportsRoutes.js';
 import prisma from './config/prisma.js';
 
+
 const app = express();
 
 // Middleware

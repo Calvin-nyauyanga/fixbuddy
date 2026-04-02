@@ -50,5 +50,7 @@ router.get('/user/stats', getUserDashboardStats);
 router.get('/user/analytics', getUserTicketsAnalytics);
 router.get('/user/tickets/status', getUserTicketsByStatus);
 router.get('/user/tickets/trends', getUserTicketsSubmissionTrends);
+router.get('/user/status-distribution', authMiddleware, getUserTicketsByStatus);
+router.get('/user/submission-trends', authMiddleware, getUserTicketsSubmissionTrends);
 
 export default router;

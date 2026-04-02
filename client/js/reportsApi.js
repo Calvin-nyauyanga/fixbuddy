@@ -226,6 +226,7 @@ const userReportsAPI = {
 
     /**
      * Get user ticket statistics
+     * Keeps client-side processing for compatibility
      */
     getMyStats: async () => {
         try {
@@ -272,6 +273,8 @@ const userReportsAPI = {
 
     /**
      * Get user's ticket categories breakdown
+     * DEPRECATED: Use getMyStatsOptimized() for better performance
+     * Kept for backwards compatibility
      */
     getMyCategories: async () => {
         try {
@@ -299,6 +302,8 @@ const userReportsAPI = {
 
     /**
      * Get user's ticket status breakdown
+     * DEPRECATED: Use getMyStatusBreakdownOptimized() for better performance
+     * Kept for backwards compatibility
      */
     getMyStatusBreakdown: async () => {
         try {
@@ -326,6 +331,8 @@ const userReportsAPI = {
 
     /**
      * Get user's tickets submitted over time (last 7 days)
+     * DEPRECATED: Use getSubmissionTrendsOptimized() for better performance
+     * Kept for backwards compatibility
      */
     getSubmissionTrends: async () => {
         try {
@@ -364,6 +371,102 @@ const userReportsAPI = {
         } catch (error) {
             console.error('Error getting submission trends:', error);
             return { success: false, error: error.message };
+        }
+    },
+
+    // ============================================
+    // OPTIMIZED SERVER-BASED METHODS
+    // ============================================
+    // These methods call new server endpoints for better performance
+    // Use these in new code instead of the deprecated client-side methods
+
+    /**
+     * Get user's ticket categories breakdown (OPTIMIZED)
+     * Calls server endpoint instead of processing client-side
+     * Much faster and more efficient
+     */
+    getMyStatsOptimized: async () => {
+        try {
+            return authenticatedFetch('/tickets/reports/stats');
+        } catch (error) {
+            console.error('Error getting optimized user stats:', error);
+            // Fallback to client-side processing
+            return userReportsAPI.getMyStats();
+        }
+    },
+
+    /**
+     * Get user's ticket categories breakdown (OPTIMIZED)
+     * Calls server endpoint instead of processing client-side
+     * Much faster and more efficient for large datasets
+     */
+    getMyStatsOptimized: async () => {
+        try {
+            return authenticatedFetch('/tickets/reports/stats');
+        } catch (error) {
+            console.error('Error getting optimized user stats:', error);
+            // Fallback to client-side processing
+            return userReportsAPI.getMyStats();
+        }
+    },
+
+    /**
+     * Get user's ticket categories breakdown (OPTIMIZED)
+     * Calls server endpoint instead of processing client-side
+     * Much faster and more efficient for large datasets
+     * 
+     * @returns {Promise} Response with categories and counts
+     * @example
+     * const result = await userReportsAPI.getMyCategoriesOptimized();
+     * // result.data = { categories: ['Bug', 'Feature'], counts: [5, 3] }
+     */
+    getMyCategoriesOptimized: async () => {
+        try {
+            return authenticatedFetch('/tickets/reports/categories');
+        } catch (error) {
+            console.error('Error getting optimized categories:', error);
+            // Fallback to client-side processing
+            return userReportsAPI.getMyCategories();
+        }
+    },
+
+    /**
+     * Get user's ticket status breakdown (OPTIMIZED)
+     * Calls server endpoint instead of processing client-side
+     * Much faster and more efficient for large datasets
+     * 
+     * @returns {Promise} Response with statuses and counts
+     * @example
+     * const result = await userReportsAPI.getMyStatusBreakdownOptimized();
+     * // result.data = { statuses: ['Open', 'In Progress', 'Closed'], counts: [2, 3, 5] }
+     */
+    getMyStatusBreakdownOptimized: async () => {
+        try {
+            return authenticatedFetch('/tickets/reports/status');
+        } catch (error) {
+            console.error('Error getting optimized status breakdown:', error);
+            // Fallback to client-side processing
+            return userReportsAPI.getMyStatusBreakdown();
+        }
+    },
+
+    /**
+     * Get user's tickets submitted over time - Last 7 days (OPTIMIZED)
+     * Calls server endpoint instead of processing client-side
+     * Much faster and more efficient for large datasets
+     * 
+     * @returns {Promise} Response with dates and submission counts
+     * @example
+     * const result = await userReportsAPI.getSubmissionTrendsOptimized();
+     * // result.data = { dates: ['2024-03-25', '2024-03-26'], counts: [2, 5] }
+     */
+    getSubmissionTrendsOptimized: async () => {
+        try {
+            return authenticatedFetch('/tickets/reports/trends');
+        } catch (error) {
+            console.error('Error getting optimized submission trends:', error);
+            // Fallback to client-side processing
+            return userReportsAPI.getSubmissionTrends();
         }
     }
 };

@@ -8,6 +8,12 @@ import {
   assignTicket,
   getUserTickets,
 } from '../controllers/ticketController.js';
+import {
+  getMyStats,
+  getSubmissionTrends,
+  getMyStatusBreakdown,
+  getMyCategories,
+} from '../controllers/userReportsController.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -23,5 +29,11 @@ router.get('/:id', getTicketById); // Get single ticket
 router.patch('/:id', updateTicket); // Update ticket
 router.delete('/:id', deleteTicket); // Delete ticket
 router.patch('/:id/assign', assignTicket); // Assign ticket to agent
+
+// User Reports Routes
+router.get('/reports/stats', getMyStats); // Get user stats
+router.get('/reports/trends', getSubmissionTrends); // Get submission trends
+router.get('/reports/status', getMyStatusBreakdown); // Get status breakdown
+router.get('/reports/categories', getMyCategories); // Get categories
 
 export default router;
