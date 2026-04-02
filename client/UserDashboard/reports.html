@@ -219,7 +219,7 @@
     // USER REPORTS - CHART & DATA MANAGEMENT
     // ==========================================
     
-    const API_BASE_URL = 'http://localhost:5000/api/reports';
+    const API_BASE_URL = 'http://localhost:5000/api'; // Updated base URL
     let chartInstances = {};
 
     // Initialize page on load
@@ -249,27 +249,39 @@
         try {
             console.log('Loading user reports...');
             
+            const token = localStorage.getItem('authToken');
+            
             // Fetch all data in parallel for performance
             const [statsRes, trendsRes, statusRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/user/stats`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                fetch(`${API_BASE_URL}/reports/user/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch(`${API_BASE_URL}/user/tickets/trends`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                fetch(`${API_BASE_URL}/reports/user/tickets/trends`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch(`${API_BASE_URL}/user/tickets/status`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+                fetch(`${API_BASE_URL}/reports/user/tickets/status`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
 
             // Check if responses are ok
-            if (!statsRes.ok || !trendsRes.ok || !statusRes.ok) {
-                throw new Error('Failed to fetch reports data');
+            if (!statsRes.ok) {
+                throw new Error(`Stats API failed: ${statsRes.status} ${statsRes.statusText}`);
+            }
+            if (!trendsRes.ok) {
+                throw new Error(`Trends API failed: ${trendsRes.status} ${trendsRes.statusText}`);
+            }
+            if (!statusRes.ok) {
+                throw new Error(`Status API failed: ${statusRes.status} ${statusRes.statusText}`);
             }
 
             const statsData = await statsRes.json();
             const trendsData = await trendsRes.json();
             const statusData = await statusRes.json();
+
+            console.log('Stats data:', statsData);
+            console.log('Trends data:', trendsData);
+            console.log('Status data:', statusData);
 
             // Update metrics
             updateMetrics(statsData.data);
@@ -283,7 +295,7 @@
 
         } catch (error) {
             console.error('Error loading reports:', error);
-            showError('Failed to load reports. Please refresh the page.');
+            showError(`Failed to load reports: ${error.message}`);
         }
     }
 
@@ -303,7 +315,9 @@
         document.getElementById('metricResolved').textContent = data.resolved || 0;
 
         // Average Resolution Time
-        const avgTime = data.avgResolutionTime || '0 days';
+        const avgTime = data.avgResolutionTime 
+            ? `${Math.round(data.avgResolutionTime)}d` 
+            : '0d';
         document.getElementById('metricAvg').textContent = avgTime;
     }
 
@@ -386,7 +400,7 @@
             'pending': '#ff5722'
         };
 
-        const colors = data.statuses.map(status => statusColors[status] || '#999');
+        const colors = (data.statuses || []).map(status => statusColors[status] || '#999');
 
         chartInstances.status = new Chart(ctx, {
             type: 'doughnut',
@@ -445,8 +459,9 @@
                 padding: 1rem;
                 border-radius: 4px;
                 border-left: 4px solid #c62828;
+                margin-bottom: 1rem;
             `;
-            errorDiv.textContent = message;
+            errorDiv.textContent = '❌ ' + message;
             metricsSection.insertAdjacentElement('afterend', errorDiv);
         }
     }
