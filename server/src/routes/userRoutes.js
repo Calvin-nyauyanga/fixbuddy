@@ -9,7 +9,8 @@ import {
     activateUser,
     deleteUser,
     changeUserRole,
-    getUserStats
+    getUserStats,
+    createUser,
 } from '../controllers/userController.js';
 import { adminAuthMiddleware } from '../middleware/adminAuth.js';
 
@@ -29,6 +30,13 @@ router.get('/search', searchUsers);
 
 // GET single user
 router.get('/:id', getUserById);
+
+router.post('/', [
+    body('name').notEmpty().withMessage('Name is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('role').optional().isIn(['user', 'staff', 'admin']).withMessage('Invalid role')
+], createUser);
 
 // UPDATE user (edit name, email)
 router.put('/:id', [

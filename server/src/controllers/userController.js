@@ -364,3 +364,58 @@ export const getUserStats = async (req, res) => {
         });
     }
 };
+export const createUser = async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, email, and password are required'
+      });
+    }
+
+    // Check if user exists
+    const existing = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create user (in production, hash the password!)
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password,
+        role: role || 'user'
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Create User Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
