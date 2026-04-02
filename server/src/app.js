@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import helpdeskRoutes from './routes/helpdeskRoutes.js';
 import reportsRoutes from './routes/reportsRoutes.js';
 import prisma from './config/prisma.js';
+import userRoutes from './routes/userRoutes.js';
 
 
 const app = express();
@@ -45,6 +46,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/helpdesk', helpdeskRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/users', userRoutes);
 //Root endpoint
 app.get('/', (req, res) => {
     res.json({ message: 'Fixbuddy API is running' });

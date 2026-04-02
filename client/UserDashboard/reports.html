@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FixBuddy – My Reports & Analytics</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:5000 https://cdn.jsdelivr.net; img-src 'self' data: https:;">
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link rel="stylesheet" href="../../node_modules/@fontsource/poppins/index.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:5000; img-src 'self' data: https:;">
-    
+   
     <style>
         .user-reports-header {
             background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
@@ -219,7 +219,6 @@
     // USER REPORTS - CHART & DATA MANAGEMENT
     // ==========================================
     
-    const API_BASE_URL = 'http://localhost:5000/api'; // Updated base URL
     let chartInstances = {};
 
     // Initialize page on load
@@ -250,19 +249,21 @@
             
             const token = localStorage.getItem('authToken');
             
-            // Fetch all data in parallel for performance
-            const [statsRes, trendsRes, statusRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/reports/user/stats`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${API_BASE_URL}/reports/user/tickets/trends`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${API_BASE_URL}/reports/user/tickets/status`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-            ]);
-
+             // Fetch all data in parallel for performance
+        const [statsRes, trendsRes, statusRes, categoriesRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/tickets/reports/stats`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+         fetch(`${API_BASE_URL}/tickets/reports/trends`, {
+               headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${API_BASE_URL}/tickets/reports/status`, {
+               headers: { 'Authorization': `Bearer ${token}` }
+         }),
+           fetch(`${API_BASE_URL}/tickets/reports/categories`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+         })
+        ]);
             // Check if responses are ok
             if (!statsRes.ok) {
                 throw new Error(`Stats API failed: ${statsRes.status} ${statsRes.statusText}`);
@@ -273,14 +274,19 @@
             if (!statusRes.ok) {
                 throw new Error(`Status API failed: ${statusRes.status} ${statusRes.statusText}`);
             }
+            if (!categoriesRes.ok) {
+                 throw new Error(`Categories API failed: ${categoriesRes.status} ${categoriesRes.statusText}`);
+            }
 
             const statsData = await statsRes.json();
             const trendsData = await trendsRes.json();
             const statusData = await statusRes.json();
+            const categoriesData = await categoriesRes.json();
 
             console.log('Stats data:', statsData);
             console.log('Trends data:', trendsData);
             console.log('Status data:', statusData);
+            console.log('Categories data:', categoriesData);
 
             // Update metrics
             updateMetrics(statsData.data);
@@ -288,6 +294,7 @@
             // Render charts
             renderSubmissionChart(trendsData.data);
             renderStatusChart(statusData.data);
+            renderCategoryChart(categoriesData.data);
 
             // Update summary
             updateSummary(statsData.data);
@@ -529,6 +536,47 @@ document.head.appendChild(style);
             }
         });
     }
+    // ==========================================
+// RENDER CATEGORY CHART (BAR)
+// ==========================================
+function renderCategoryChart(data) {
+    console.log('Rendering category chart:', data);
+    
+    const ctx = document.getElementById('categoryChart');
+    if (!ctx) {
+        console.warn('categoryChart canvas not found');
+        return;
+    }
+
+    if (chartInstances.category) {
+        chartInstances.category.destroy();
+    }
+
+    chartInstances.category = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.categories || [],
+            datasets: [{
+                label: 'Tickets',
+                data: data.counts || [],
+                backgroundColor: '#4caf50',
+                borderColor: '#45a049',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+}
 
     // ==========================================
     // UPDATE SUMMARY SECTION
