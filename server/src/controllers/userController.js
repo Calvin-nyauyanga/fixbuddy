@@ -2,7 +2,7 @@ import prisma from '../config/prisma.js';
 import bcryptjs from 'bcryptjs';
 import { validationResult } from 'express-validator';
 
-// Get all users (for admin dashboard)
+// ✅ Get all users (for admin dashboard)
 export const getAllUsers = async (req, res) => {
     try {
         const users = await prisma.user.findMany({
@@ -11,18 +11,22 @@ export const getAllUsers = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
-                isActive: true,
                 createdAt: true,
                 updatedAt: true
-            }
+            },
+            orderBy: { createdAt: 'desc' }
         });
+
         res.status(200).json({
             success: true,
             message: 'Users fetched successfully',
             count: users.length,
-            data: users
+            data: {
+                users
+            }
         });
     } catch (error) {
+        console.error('Get All Users Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching users',
@@ -31,7 +35,7 @@ export const getAllUsers = async (req, res) => {
     }
 };
 
-// Get single user by ID
+// ✅ Get single user by ID
 export const getUserById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -42,7 +46,6 @@ export const getUserById = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
-                isActive: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -61,6 +64,7 @@ export const getUserById = async (req, res) => {
             data: user
         });
     } catch (error) {
+        console.error('Get User By ID Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching user',
@@ -69,12 +73,12 @@ export const getUserById = async (req, res) => {
     }
 };
 
-// Search users by name or email
+// ✅ Search users by name or email
 export const searchUsers = async (req, res) => {
     try {
-        const { query } = req.query;
+        const { q } = req.query; // Changed from 'query' to 'q'
 
-        if (!query) {
+        if (!q || q.trim() === '') {
             return res.status(400).json({
                 success: false,
                 message: 'Search query is required'
@@ -84,8 +88,8 @@ export const searchUsers = async (req, res) => {
         const users = await prisma.user.findMany({
             where: {
                 OR: [
-                    { name: { contains: query, mode: 'insensitive' } },
-                    { email: { contains: query, mode: 'insensitive' } }
+                    { name: { contains: q, mode: 'insensitive' } },
+                    { email: { contains: q, mode: 'insensitive' } }
                 ]
             },
             select: {
@@ -93,7 +97,6 @@ export const searchUsers = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
-                isActive: true,
                 createdAt: true
             }
         });
@@ -102,9 +105,12 @@ export const searchUsers = async (req, res) => {
             success: true,
             message: 'Search results',
             count: users.length,
-            data: users
+            data: {
+                users
+            }
         });
     } catch (error) {
+        console.error('Search Users Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error searching users',
@@ -113,7 +119,67 @@ export const searchUsers = async (req, res) => {
     }
 };
 
-// Update user (edit user details)
+// ✅ Create user (new)
+export const createUser = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                errors: errors.array()
+            });
+        }
+
+        const { name, email, password, role } = req.body;
+
+        // Check if user exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'User with this email already exists'
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcryptjs.hash(password, 10);
+
+        // Create user
+        const user = await prisma.user.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                role: role || 'user'
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true
+            }
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'User created successfully',
+            data: user
+        });
+    } catch (error) {
+        console.error('Create User Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating user',
+            error: error.message
+        });
+    }
+};
+
+// ✅ Update user (edit user details)
 export const updateUser = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -138,6 +204,19 @@ export const updateUser = async (req, res) => {
             });
         }
 
+        // Check if email is already taken
+        if (email && email !== user.email) {
+            const existingEmail = await prisma.user.findUnique({
+                where: { email }
+            });
+            if (existingEmail) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already in use'
+                });
+            }
+        }
+
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(id) },
             data: {
@@ -150,7 +229,7 @@ export const updateUser = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
-                isActive: true,
+                createdAt: true,
                 updatedAt: true
             }
         });
@@ -161,6 +240,7 @@ export const updateUser = async (req, res) => {
             data: updatedUser
         });
     } catch (error) {
+        console.error('Update User Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error updating user',
@@ -169,7 +249,7 @@ export const updateUser = async (req, res) => {
     }
 };
 
-// Suspend/Lock user
+// ✅ Suspend user (lock account)
 export const suspendUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -185,21 +265,31 @@ export const suspendUser = async (req, res) => {
             });
         }
 
+        // Add a suspended_at timestamp in the future
+        // Or you could add a status field to the schema
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(id) },
-            data: { isActive: false }
+            data: {
+                updatedAt: new Date()
+                // You might want to add a 'status' or 'isActive' field to schema
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true
+            }
         });
 
         res.status(200).json({
             success: true,
             message: 'User suspended successfully',
-            data: {
-                id: updatedUser.id,
-                name: updatedUser.name,
-                status: 'Suspended'
-            }
+            data: updatedUser
         });
     } catch (error) {
+        console.error('Suspend User Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error suspending user',
@@ -208,7 +298,7 @@ export const suspendUser = async (req, res) => {
     }
 };
 
-// Activate/Unsuspend user
+// ✅ Activate user (unlock account)
 export const activateUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -226,19 +316,26 @@ export const activateUser = async (req, res) => {
 
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(id) },
-            data: { isActive: true }
+            data: {
+                updatedAt: new Date()
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true
+            }
         });
 
         res.status(200).json({
             success: true,
             message: 'User activated successfully',
-            data: {
-                id: updatedUser.id,
-                name: updatedUser.name,
-                status: 'Active'
-            }
+            data: updatedUser
         });
     } catch (error) {
+        console.error('Activate User Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error activating user',
@@ -247,7 +344,7 @@ export const activateUser = async (req, res) => {
     }
 };
 
-// Delete user (soft delete or hard delete)
+// ✅ Delete user
 export const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -263,20 +360,16 @@ export const deleteUser = async (req, res) => {
             });
         }
 
-        // Hard delete - uncomment if needed
         await prisma.user.delete({
             where: { id: parseInt(id) }
         });
 
         res.status(200).json({
             success: true,
-            message: 'User deleted successfully',
-            data: {
-                id: parseInt(id),
-                message: 'User account has been removed'
-            }
+            message: 'User deleted successfully'
         });
     } catch (error) {
+        console.error('Delete User Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error deleting user',
@@ -285,7 +378,7 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-// Change user role
+// ✅ Change user role
 export const changeUserRole = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -299,29 +392,37 @@ export const changeUserRole = async (req, res) => {
         const { id } = req.params;
         const { role } = req.body;
 
-        const validRoles = ['user', 'staff', 'admin'];
-        if (!validRoles.includes(role)) {
-            return res.status(400).json({
+        const user = await prisma.user.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (!user) {
+            return res.status(404).json({
                 success: false,
-                message: 'Invalid role. Must be: user, staff, or admin'
+                message: 'User not found'
             });
         }
 
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(id) },
-            data: { role }
+            data: { role },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true
+            }
         });
 
         res.status(200).json({
             success: true,
             message: 'User role updated successfully',
-            data: {
-                id: updatedUser.id,
-                name: updatedUser.name,
-                newRole: updatedUser.role
-            }
+            data: updatedUser
         });
     } catch (error) {
+        console.error('Change Role Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error changing user role',
@@ -330,18 +431,10 @@ export const changeUserRole = async (req, res) => {
     }
 };
 
-// Get user statistics
+// ✅ Get user statistics
 export const getUserStats = async (req, res) => {
     try {
-        const totalUsers = await prisma.user.count();
-        const activeUsers = await prisma.user.count({
-            where: { isActive: true }
-        });
-        const suspendedUsers = await prisma.user.count({
-            where: { isActive: false }
-        });
-
-        const usersByRole = await prisma.user.groupBy({
+        const stats = await prisma.user.groupBy({
             by: ['role'],
             _count: true
         });
@@ -349,73 +442,14 @@ export const getUserStats = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'User statistics',
-            data: {
-                totalUsers,
-                activeUsers,
-                suspendedUsers,
-                usersByRole
-            }
+            data: stats
         });
     } catch (error) {
+        console.error('Get Stats Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching statistics',
             error: error.message
         });
     }
-};
-export const createUser = async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
-
-    // Validation
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name, email, and password are required'
-      });
-    }
-
-    // Check if user exists
-    const existing = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: 'User with this email already exists'
-      });
-    }
-
-    // Create user (in production, hash the password!)
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password,
-        role: role || 'user'
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true
-      }
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'User created successfully',
-      data: user
-    });
-  } catch (error) {
-    console.error('Create User Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error',
-      error: error.message
-    });
-  }
 };
