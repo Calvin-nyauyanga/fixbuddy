@@ -401,28 +401,55 @@
         let allUsers = [];
         let searchTimeout;
 
-        // ========== INITIALIZATION ==========
-        async function initUsersPage() {
-            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
-            const token = localStorage.getItem('authToken');
-            const userRole = localStorage.getItem('userRole');
+        // ==========================================
+        // LOAD USERS FROM API
+      // ==========================================
+      async function loadUsers() {
+           try {
+                const token = localStorage.getItem('authToken');
+               const response = await fetch('http://localhost:5000/api/users', {
+                   method: 'GET',
+                    headers: {
+                     'Authorization': `Bearer ${token}`
+                  }
+             });
 
-            // Check authentication
-            if (!token || !admin || userRole !== 'admin') {
-                window.location.href = '../Main Dashboard/AdminLoginPage.html';
-                return;
-            }
+                if (!response.ok) {
+                   throw new Error(`Failed to load users: ${response.status}`);
+              }
 
-            // Display admin welcome message
-            document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
-            document.getElementById('year').textContent = new Date().getFullYear();
+              const result = await response.json();
+                return result.data?.users || result.data || [];
+            } catch (error) {
+                console.error('Error loading users:', error);
+                throw error;
+          }
+      }
 
-            // Load users
-            await loadAllUsers();
+     // ==========================================
+    // INITIALIZATION
+    // ==========================================
+    async function initUsersPage() {
+        const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+        const token = localStorage.getItem('authToken');
+        const userRole = localStorage.getItem('userRole');
 
-            // Setup event listeners
-            setupIconListeners();
+        // Check authentication
+        if (!token || !admin || userRole !== 'admin') {
+            window.location.href = '../Main Dashboard/AdminLoginPage.html';
+            return;
         }
+
+        // Display admin welcome message
+        document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Load users
+        await loadAllUsers();
+
+        // Setup event listeners
+        setupIconListeners();
+    }
 
         // ========== SETUP ICON LISTENERS ==========
         function setupIconListeners() {
