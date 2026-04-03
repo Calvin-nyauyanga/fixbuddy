@@ -6,7 +6,6 @@ import {
   addTicketResponse,
   solveTicket,
   closeTicket,
-  getAllUsers,
   getNotifications,
   updateTicketPriority,
   updateTicketStatus,
@@ -15,6 +14,7 @@ import {
   assignTicket,
   getTicketAnalytics,  
 } from '../controllers/helpdeskController.js';
+import { getAllUsers } from '../controllers/userController.js';
 import { adminAuthMiddleware } from '../middleware/adminAuth.js';
 
 const router = express.Router();

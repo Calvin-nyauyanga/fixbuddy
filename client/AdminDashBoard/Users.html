@@ -247,8 +247,8 @@
     <header class="topbar dashboard-header">
         <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="Search users...">
+           <div class="search-bar">
+                <input type="text" id="searchInput" name="searchInput" placeholder="Search users..." autocomplete="off">
                 <i class="fa-solid fa-search"></i>
             </div>
             <div class="user-info">
@@ -318,86 +318,85 @@
         </section>
     </main>
 
-    <!-- ADD USER MODAL -->
-    <div id="userModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">Add New User</div>
-            
-            <form id="userForm" onsubmit="submitUserForm(event)">
-                <div class="form-group">
-                    <label for="userName">Name *</label>
-                    <input type="text" id="userName" required>
-                </div>
+  <!-- ADD USER MODAL -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">Add New User</div>
+        
+        <form id="userForm" onsubmit="submitUserForm(event)">
+            <div class="form-group">
+                <label for="userName">Name *</label>
+                <input type="text" id="userName" name="userName" autocomplete="name" required>
+            </div>
 
-                <div class="form-group">
-                    <label for="userEmail">Email *</label>
-                    <input type="email" id="userEmail" required>
-                </div>
+            <div class="form-group">
+                <label for="userEmail">Email *</label>
+                <input type="email" id="userEmail" name="userEmail" autocomplete="email" required>
+            </div>
 
-                <div class="form-group">
-                    <label for="userPassword">Password *</label>
-                    <input type="password" id="userPassword" required>
-                </div>
+            <div class="form-group">
+                <label for="userPassword">Password *</label>
+                <input type="password" id="userPassword" name="userPassword" autocomplete="new-password" required>
+            </div>
 
-                <div class="form-group">
-                    <label for="userRole">Role *</label>
-                    <select id="userRole" required>
-                        <option value="">-- Select Role --</option>
-                        <option value="user">User</option>
-                        <option value="staff">Staff/Agent</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label for="userRole">Role *</label>
+                <select id="userRole" name="userRole" autocomplete="off" required>
+                    <option value="">-- Select Role --</option>
+                    <option value="user">User</option>
+                    <option value="staff">Staff/Agent</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
 
-                <div class="modal-footer">
-                    <button type="button" onclick="closeUserModal()" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save User</button>
-                </div>
-            </form>
-        </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeUserModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save User</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <!-- EDIT USER MODAL -->
-    <div id="editUserModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">Edit User</div>
-            
-            <form id="editUserForm" onsubmit="submitEditUserForm(event)">
-                <input type="hidden" id="editUserId">
+  <!-- EDIT USER MODAL -->
+<div id="editUserModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">Edit User</div>
+        
+        <form id="editUserForm" onsubmit="submitEditUserForm(event)">
+            <input type="hidden" id="editUserId">
 
-                <div class="form-group">
-                    <label for="editUserName">Name *</label>
-                    <input type="text" id="editUserName" required>
-                </div>
+            <div class="form-group">
+                <label for="editUserName">Name *</label>
+                <input type="text" id="editUserName" name="editUserName" autocomplete="name" required>
+            </div>
 
-                <div class="form-group">
-                    <label for="editUserEmail">Email *</label>
-                    <input type="email" id="editUserEmail" required>
-                </div>
+            <div class="form-group">
+                <label for="editUserEmail">Email *</label>
+                <input type="email" id="editUserEmail" name="editUserEmail" autocomplete="email" required>
+            </div>
 
-                <div class="form-group">
-                    <label for="editUserRole">Role *</label>
-                    <select id="editUserRole" required>
-                        <option value="user">User</option>
-                        <option value="staff">Staff/Agent</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label for="editUserRole">Role *</label>
+                <select id="editUserRole" name="editUserRole" autocomplete="off" required>
+                    <option value="user">User</option>
+                    <option value="staff">Staff/Agent</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
 
-                <div class="modal-footer">
-                    <button type="button" onclick="closeEditUserModal()" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditUserModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <footer>
         <span>© <span id="year"></span> <strong>FixBuddy</strong> - Admin Helpdesk System</span>
     </footer>
 
     <script src="../js/api-client.js"></script>
-    <script src="../js/usersApi.js"></script>
     <script>
         let allUsers = [];
         let searchTimeout;

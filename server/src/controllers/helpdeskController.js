@@ -414,51 +414,6 @@ export const closeTicket = async (req, res) => {
   }
 };
 
-// ✅ GET ALL USERS (For assigning tickets)
-export const getAllUsers = async (req, res) => {
-  try {
-    const { role, search, limit = 50 } = req.query;
-
-    const filters = {
-      role: role || { in: ['agent', 'admin'] }, // Only show agents and admins
-    };
-
-    if (search) {
-      filters.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    const users = await prisma.user.findMany({
-      where: filters,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      },
-      take: parseInt(limit),
-      orderBy: { name: 'asc' },
-    });
-
-    res.status(200).json({
-      success: true,
-      data: {
-        users,
-      },
-    });
-  } catch (error) {
-    console.error('Get Users Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while fetching users',
-      error: error.message,
-    });
-  }
-};
-
 // ✅ GET NOTIFICATIONS
 export const getNotifications = async (req, res) => {
   try {
