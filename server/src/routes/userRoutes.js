@@ -13,12 +13,18 @@ import {
     createUser,
 } from '../controllers/userController.js';
 import { adminAuthMiddleware } from '../middleware/adminAuth.js';
+import { checkSuspension } from '../middleware/checkSuspension.js';
 
 const router = express.Router();
 
 // quick health route in userRoutes
 router.get('/__test_route__', (req, res) => {
   return res.status(200).json({ success: true, message: 'userRoutes test route hit' });
+});
+
+// 🔒 Example protected route with suspension check
+router.get('/protected-route', checkSuspension, (req, res) => {
+  return res.status(200).json({ success: true, message: 'Protected route access granted' });
 });
 
 // ✅ GET all users - public endpoint (protected by checking in controller if needed)

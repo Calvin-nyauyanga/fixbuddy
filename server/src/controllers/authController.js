@@ -87,7 +87,7 @@ export const signup = async (req, res) => {
   }
 };
 
-// LOGIN
+// LOGIN - WITH SUSPENSION CHECK
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -115,6 +115,14 @@ export const login = async (req, res) => {
       });
     }
 
+    // ✅ CHECK IF USER IS SUSPENDED
+    if (user.status === 'suspended') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been suspended. Please contact support.',
+      });
+    }
+
     // Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -136,6 +144,7 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        status: user.status,  // ✅ INCLUDE STATUS
       },
       token,
     });
@@ -202,7 +211,7 @@ export const logout = async (req, res) => {
 // ADMIN AUTHENTICATION FUNCTIONS
 // ============================================
 
-// ADMIN LOGIN WITH 2FA
+// ADMIN LOGIN WITH 2FA - WITH SUSPENSION CHECK
 export const adminLogin = async (req, res) => {
   try {
     const { email, password, adminCode } = req.body;
@@ -245,6 +254,14 @@ export const adminLogin = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Only admin users can access this endpoint',
+      });
+    }
+
+    // ✅ CHECK IF ADMIN IS SUSPENDED
+    if (admin.status === 'suspended') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your admin account has been suspended. Please contact support.',
       });
     }
 
@@ -295,6 +312,7 @@ export const adminLogin = async (req, res) => {
         name: admin.name,
         email: admin.email,
         role: admin.role,
+        status: admin.status,  // ✅ INCLUDE STATUS
       },
       token,
     });
