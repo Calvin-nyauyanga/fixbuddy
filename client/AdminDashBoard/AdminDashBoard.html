@@ -156,10 +156,6 @@
                 <i class="fa-solid fa-search"></i>
             </div>
             <div class="user-info">
-                <span style="position:relative;">
-                    <i class="fa-solid fa-bell notifications-icon" id="adminBell" style="cursor: pointer;"></i>
-                    <span id="adminNotifCount" style="position:absolute;top:-8px;right:-8px;background:red;color:white;border-radius:50%;padding:2px 6px;font-size:0.8em;display:none;">0</span>
-                </span>
                 <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
                 <span class="welcome-message" id="adminWelcome" style="margin-left: 1rem;">👤 Admin</span>
                 <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
@@ -186,10 +182,6 @@
                 <a href="AdminReports.html" class="sidebar-nav-item">
                      <i class="fa-solid fa-chart-line"></i>
                      <span>Reports</span>
-                </a>
-                <a href="Notifications.html" class="sidebar-nav-item">
-                    <i class="fa-solid fa-bell"></i>
-                    <span>Notifications</span>
                 </a>
                 <a href="settings.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-cog"></i>
@@ -606,11 +598,6 @@
         // ========== SETTINGS ICON ==========
         document.querySelector('.settings-icon').addEventListener('click', () => {
             window.location.href = 'settings.html';
-        });
-
-        // ========== NOTIFICATIONS BELL ==========
-        document.getElementById('adminBell').addEventListener('click', () => {
-            window.location.href = 'Notifications.html';
         });
 
         // ========== PROFILE ICON ==========

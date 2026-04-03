@@ -8,6 +8,7 @@ import reportsRoutes from './routes/reportsRoutes.js';
 import fs from 'fs';
 import prisma from './config/prisma.js';
 import userRoutes from './routes/userRoutes.js';
+import settingsRoutes from './src/routes/settingsRoutes.js';
 
 
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/helpdesk', helpdeskRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Temporary test route to verify routing (placed before userRoutes mounting)
 app.get('/api/users/test-route', (req, res) => {
