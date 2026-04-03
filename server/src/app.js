@@ -8,7 +8,8 @@ import reportsRoutes from './routes/reportsRoutes.js';
 import fs from 'fs';
 import prisma from './config/prisma.js';
 import userRoutes from './routes/userRoutes.js';
-import settingsRoutes from './src/routes/settingsRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
+import { loadSystemSettings } from './middleware/settingsMiddleware.js';
 
 
 const app = express();
@@ -23,6 +24,7 @@ app.use(cors({
 }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(loadSystemSettings);
 
 // Request logging middleware
 app.use((req, res, next) => {
