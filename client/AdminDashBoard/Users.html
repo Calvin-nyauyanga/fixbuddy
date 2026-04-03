@@ -550,18 +550,18 @@
                         <td>${statusBadge}</td>
                         <td>${createdDate}</td>
                         <td class="action-icons">
-                            <a href="#" onclick="return false;" title="Edit User" onclick="openEditUserModal(${user.id}); return false;">
+                            <a href="#" title="Edit User" onclick="openEditUserModal(${user.id}); return false;">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
                             ${isActive 
-                                ? `<a href="#" onclick="return false;" title="Suspend User" onclick="confirmSuspendUser(${user.id}); return false;">
+                                ? `<a href="#" title="Suspend User" onclick="confirmSuspendUser(${user.id}); return false;">
                                     <i class="fa-solid fa-ban"></i>
                                 </a>` 
-                                : `<a href="#" onclick="return false;" title="Activate User" onclick="confirmActivateUser(${user.id}); return false;">
+                                : `<a href="#" title="Activate User" onclick="confirmActivateUser(${user.id}); return false;">
                                     <i class="fa-solid fa-circle-check"></i>
                                 </a>`
                             }
-                            <a href="#" onclick="return false;" title="Delete User" onclick="confirmDeleteUser(${user.id}); return false;">
+                            <a href="#" title="Delete User" onclick="confirmDeleteUser(${user.id}); return false;">
                                 <i class="fa-solid fa-trash"></i>
                             </a>
                         </td>

@@ -11,6 +11,7 @@ export const getAllUsers = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
+                status: true,
                 createdAt: true,
                 updatedAt: true
             },
@@ -46,6 +47,7 @@ export const getUserById = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
+                status: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -97,6 +99,7 @@ export const searchUsers = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
+                status: true,
                 createdAt: true
             }
         });
@@ -160,6 +163,7 @@ export const createUser = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
+                status: true,
                 createdAt: true
             }
         });
@@ -229,6 +233,7 @@ export const updateUser = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
+                status: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -270,6 +275,7 @@ export const suspendUser = async (req, res) => {
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(id) },
             data: {
+                status: 'suspended',
                 updatedAt: new Date()
                 // You might want to add a 'status' or 'isActive' field to schema
             },
@@ -278,6 +284,7 @@ export const suspendUser = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
+                status: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -317,6 +324,7 @@ export const activateUser = async (req, res) => {
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(id) },
             data: {
+                status: 'active',
                 updatedAt: new Date()
             },
             select: {
@@ -324,6 +332,7 @@ export const activateUser = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
+                status: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -411,6 +420,7 @@ export const changeUserRole = async (req, res) => {
                 name: true,
                 email: true,
                 role: true,
+                status: true,
                 createdAt: true,
                 updatedAt: true
             }
