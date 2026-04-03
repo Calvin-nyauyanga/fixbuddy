@@ -5,6 +5,7 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import helmet from 'helmet';
 import helpdeskRoutes from './routes/helpdeskRoutes.js';
 import reportsRoutes from './routes/reportsRoutes.js';
+import fs from 'fs';
 import prisma from './config/prisma.js';
 import userRoutes from './routes/userRoutes.js';
 
@@ -24,7 +25,13 @@ app.use(express.json());
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+  const logLine = `${new Date().toISOString()} - ${req.method} ${req.originalUrl} - auth=${req.headers.authorization || 'none'}\n`;
+  console.log(logLine.trim());
+  try {
+    fs.appendFileSync('app.log', logLine);
+  } catch (e) {
+    console.error('Failed to write app log', e);
+  }
   next();
 });
 
@@ -46,7 +53,17 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/helpdesk', helpdeskRoutes);
 app.use('/api/reports', reportsRoutes);
+
+// Temporary test route to verify routing (placed before userRoutes mounting)
+app.get('/api/users/test-route', (req, res) => {
+    console.log('app-level /api/users/test-route handler');
+    res.json({ success: true, message: 'App-level test route reached' });
+});
+
 app.use('/api/users', userRoutes);
+
+
+
 //Root endpoint
 app.get('/', (req, res) => {
     res.json({ message: 'Fixbuddy API is running' });

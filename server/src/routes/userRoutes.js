@@ -16,47 +16,50 @@ import { adminAuthMiddleware } from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
-// Protect all user routes with admin authentication
-router.use(adminAuthMiddleware);
+// quick health route in userRoutes
+router.get('/__test_route__', (req, res) => {
+  return res.status(200).json({ success: true, message: 'userRoutes test route hit' });
+});
 
-// GET all users
+// ✅ GET all users - public endpoint (protected by checking in controller if needed)
 router.get('/', getAllUsers);
 
-// GET user statistics
-router.get('/stats/overview', getUserStats);
+// ✅ GET user statistics - protected
+router.get('/stats/overview', adminAuthMiddleware, getUserStats);
 
-// SEARCH users
+// ✅ SEARCH users - public
 router.get('/search', searchUsers);
 
-// GET single user
+// ✅ GET single user - public
 router.get('/:id', getUserById);
 
-router.post('/', [
+// ✅ CREATE user - protected
+router.post('/', adminAuthMiddleware, [
     body('name').notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('role').optional().isIn(['user', 'staff', 'admin']).withMessage('Invalid role')
 ], createUser);
 
-// UPDATE user (edit name, email)
-router.put('/:id', [
+// ✅ UPDATE user - protected
+router.put('/:id', adminAuthMiddleware, [
     body('name').optional().trim().notEmpty().withMessage('Name is required'),
     body('email').optional().isEmail().withMessage('Valid email is required')
 ], updateUser);
 
-// SUSPEND user (lock account)
-router.patch('/:id/suspend', suspendUser);
+// ✅ SUSPEND user - protected
+router.patch('/:id/suspend', adminAuthMiddleware, suspendUser);
 
-// ACTIVATE user (unlock account)
-router.patch('/:id/activate', activateUser);
+// ✅ ACTIVATE user - protected
+router.patch('/:id/activate', adminAuthMiddleware, activateUser);
 
-// CHANGE user role
-router.patch('/:id/role', [
+// ✅ CHANGE user role - protected
+router.patch('/:id/role', adminAuthMiddleware, [
     body('role').notEmpty().withMessage('Role is required'),
     body('role').isIn(['user', 'staff', 'admin']).withMessage('Invalid role')
 ], changeUserRole);
 
-// DELETE user
-router.delete('/:id', deleteUser);
+// ✅ DELETE user - protected
+router.delete('/:id', adminAuthMiddleware, deleteUser);
 
 export default router;
