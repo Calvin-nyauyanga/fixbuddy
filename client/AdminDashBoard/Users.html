@@ -534,7 +534,8 @@
             `;
 
             users.forEach(user => {
-                const isActive = user.status !== 'suspended' && user.status !== 'inactive';
+                // ✅ CHECK STATUS FIELD CORRECTLY
+                const isActive = user.status === 'active' || (!user.status);
                 const statusBadge = isActive 
                     ? '<span class="user-status-badge active">Active</span>'
                     : '<span class="user-status-badge suspended">Suspended</span>';
@@ -696,8 +697,17 @@
                     throw new Error(error.message || 'Failed to suspend user');
                 }
 
+                // ✅ RELOAD DATA FROM SERVER
+                const result = await response.json();
+                
+                // ✅ UPDATE LOCAL USER IN allUsers ARRAY
+                const userIndex = allUsers.findIndex(u => u.id === userId);
+                if (userIndex !== -1) {
+                    allUsers[userIndex] = result.data;
+                }
+
                 showNotification('✅ User suspended successfully!', 'success');
-                await loadAllUsers();
+                displayUsers(allUsers);
             } catch (error) {
                 showNotification(`❌ Failed to suspend user: ${error.message}`, 'error');
             }
@@ -720,8 +730,17 @@
                     throw new Error(error.message || 'Failed to activate user');
                 }
 
+                // ✅ RELOAD DATA FROM SERVER
+                const result = await response.json();
+                
+                // ✅ UPDATE LOCAL USER IN allUsers ARRAY
+                const userIndex = allUsers.findIndex(u => u.id === userId);
+                if (userIndex !== -1) {
+                    allUsers[userIndex] = result.data;
+                }
+
                 showNotification('✅ User activated successfully!', 'success');
-                await loadAllUsers();
+                displayUsers(allUsers);
             } catch (error) {
                 showNotification(`❌ Failed to activate user: ${error.message}`, 'error');
             }

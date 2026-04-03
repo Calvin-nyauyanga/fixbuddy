@@ -290,10 +290,16 @@ export const suspendUser = async (req, res) => {
             }
         });
 
+        // Ensure status is included in response
+        const responseData = {
+            ...updatedUser,
+            status: 'suspended' // Explicitly set status
+        };
+
         res.status(200).json({
             success: true,
             message: 'User suspended successfully',
-            data: updatedUser
+            data: responseData
         });
     } catch (error) {
         console.error('Suspend User Error:', error);
@@ -338,10 +344,16 @@ export const activateUser = async (req, res) => {
             }
         });
 
+        // Ensure status is included in response
+        const responseData = {
+            ...updatedUser,
+            status: 'active' // Explicitly set status
+        };
+
         res.status(200).json({
             success: true,
             message: 'User activated successfully',
-            data: updatedUser
+            data: responseData
         });
     } catch (error) {
         console.error('Activate User Error:', error);
