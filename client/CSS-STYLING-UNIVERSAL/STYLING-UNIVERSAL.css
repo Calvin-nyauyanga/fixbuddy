@@ -128,8 +128,17 @@ body {
     left: 0;
     height: 100vh;
     overflow-y: auto;
+    transition: transform 0.3s ease, width 0.3s ease, margin-left 0.3s ease;
 }
 
+.sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 0;
+    padding: 0;
+    margin-left: -250px;
+}
+
+/* ========== SIDEBAR TOGGLE BUTTON ========== */
 .sidebar-nav {
     display: flex;
     flex-direction: column;
@@ -1554,6 +1563,18 @@ th, td {
         grid-template-columns: 1fr;
     }
 }
+
+body.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+    width: 0;
+    overflow: hidden;
+}
+
+body.sidebar-collapsed .admin-content,
+body.sidebar-collapsed .dashboard-main {
+    margin-left: 0;
+}
+
 /* ==========================================
    FORGOT PASSWORD PAGE STYLES (merged)
 ========================================== */

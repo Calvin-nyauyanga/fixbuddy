@@ -448,12 +448,12 @@
                             <h3>System Information</h3>
                             <div class="form-group">
                                 <label for="systemName">System Name</label>
-                                <input type="text" id="systemName" name="systemName" placeholder="e.g., FixBuddy Helpdesk">
+                                <input type="text" id="systemName" name="systemName" placeholder="e.g., FixBuddy Helpdesk" autocomplete="off">
                                 <p class="form-help">The name displayed throughout your system</p>
                             </div>
                             <div class="form-group">
                                 <label for="systemDescription">System Description</label>
-                                <textarea id="systemDescription" name="systemDescription" placeholder="Brief description of your helpdesk system"></textarea>
+                                <textarea id="systemDescription" name="systemDescription" placeholder="Brief description of your helpdesk system" autocomplete="off"></textarea>
                                 <p class="form-help">This appears on login and welcome pages</p>
                             </div>
                         </div>
@@ -462,7 +462,7 @@
                             <h3>Time & Region</h3>
                             <div class="form-group">
                                 <label for="timezone">Timezone</label>
-                                <select id="timezone">
+                                <select id="timezone" autocomplete="off">
                                     <option value="UTC">UTC (Coordinated Universal Time)</option>
                                     <option value="EST">EST (Eastern Standard Time)</option>
                                     <option value="CST">CST (Central Standard Time)</option>
@@ -472,7 +472,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="dateFormat">Date Format</label>
-                                <select id="dateFormat">
+                                <select id="dateFormat" autocomplete="off">
                                     <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                                     <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                                     <option value="YYYY-MM-DD">YYYY-MM-DD</option>
@@ -499,21 +499,21 @@
                             <h3>SMTP Configuration</h3>
                             <div class="form-group">
                                 <label for="smtpHost">SMTP Host</label>
-                                <input type="text" id="smtpHost" placeholder="e.g., smtp.gmail.com">
+                                <input type="text" id="smtpHost" placeholder="e.g., smtp.gmail.com" autocomplete="off">
                                 <p class="form-help">Your email provider's SMTP server address</p>
                             </div>
                             <div class="form-group">
                                 <label for="smtpPort">SMTP Port</label>
-                                <input type="number" id="smtpPort" placeholder="587" value="587">
+                                <input type="number" id="smtpPort" placeholder="587" value="587" autocomplete="off">
                                 <p class="form-help">Usually 587 (TLS) or 465 (SSL)</p>
                             </div>
                             <div class="form-group">
                                 <label for="smtpUser">Email Address</label>
-                                <input type="email" id="smtpUser" placeholder="your-email@gmail.com">
+                                <input type="email" id="smtpUser" placeholder="your-email@gmail.com" autocomplete="email">
                             </div>
                             <div class="form-group">
                                 <label for="smtpPassword">Email Password</label>
-                                <input type="password" id="smtpPassword" placeholder="Enter email password">
+                                <input type="password" id="smtpPassword" placeholder="Enter email password" autocomplete="new-password">
                                 <p class="form-help">Use app-specific passwords for Gmail</p>
                             </div>
                         </div>
@@ -522,11 +522,11 @@
                             <h3>Email Templates</h3>
                             <div class="form-group">
                                 <label for="emailFrom">From Name</label>
-                                <input type="text" id="emailFrom" placeholder="e.g., FixBuddy Support">
+                                <input type="text" id="emailFrom" placeholder="e.g., FixBuddy Support" autocomplete="off">
                             </div>
                             <div class="form-group">
                                 <label for="emailSubjectPrefix">Subject Prefix</label>
-                                <input type="text" id="emailSubjectPrefix" placeholder="e.g., [FixBuddy]">
+                                <input type="text" id="emailSubjectPrefix" placeholder="e.g., [FixBuddy]" autocomplete="off">
                                 <p class="form-help">Added to the beginning of all email subjects</p>
                             </div>
                         </div>
@@ -706,16 +706,16 @@
                             <h3>Account Information</h3>
                             <div class="form-group">
                                 <label for="fullName">Full Name</label>
-                                <input type="text" id="fullName" placeholder="Your full name">
+                                <input type="text" id="fullName" placeholder="Your full name" autocomplete="name">
                             </div>
                             <div class="form-group">
                                 <label for="email">Email Address</label>
-                                <input type="email" id="email" placeholder="your-email@example.com">
+                                <input type="email" id="email" placeholder="your-email@example.com" autocomplete="email">
                                 <p class="form-help">This is your login email</p>
                             </div>
                             <div class="form-group">
                                 <label for="phone">Phone Number</label>
-                                <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
+                                <input type="tel" id="phone" placeholder="+1 (555) 123-4567" autocomplete="tel">
                             </div>
                         </div>
 
@@ -723,15 +723,15 @@
                             <h3>Change Password</h3>
                             <div class="form-group">
                                 <label for="currentPassword">Current Password</label>
-                                <input type="password" id="currentPassword" placeholder="Enter current password">
+                                <input type="password" id="currentPassword" placeholder="Enter current password" autocomplete="current-password">
                             </div>
                             <div class="form-group">
                                 <label for="newPassword">New Password</label>
-                                <input type="password" id="newPassword" placeholder="Enter new password">
+                                <input type="password" id="newPassword" placeholder="Enter new password" autocomplete="new-password">
                             </div>
                             <div class="form-group">
                                 <label for="confirmPassword">Confirm Password</label>
-                                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                                <input type="password" id="confirmPassword" placeholder="Confirm new password" autocomplete="new-password">
                             </div>
                         </div>
 
@@ -893,17 +893,20 @@
         async function saveSettings(section) {
             try {
                 const token = localStorage.getItem('authToken');
-                const data = {};
+                let data = {};
+                let endpoint = '';
 
                 if (section === 'general') {
-                    data.general = {
+                    endpoint = 'general';
+                    data = {
                         systemName: document.getElementById('systemName').value,
                         systemDescription: document.getElementById('systemDescription').value,
                         timezone: document.getElementById('timezone').value,
                         dateFormat: document.getElementById('dateFormat').value
                     };
                 } else if (section === 'email') {
-                    data.email = {
+                    endpoint = 'email';
+                    data = {
                         smtpHost: document.getElementById('smtpHost').value,
                         smtpPort: document.getElementById('smtpPort').value,
                         smtpUser: document.getElementById('smtpUser').value,
@@ -912,7 +915,8 @@
                         emailSubjectPrefix: document.getElementById('emailSubjectPrefix').value
                     };
                 } else if (section === 'security') {
-                    data.security = {
+                    endpoint = 'security';
+                    data = {
                         minPasswordLength: parseInt(document.getElementById('minPasswordLength').value),
                         requireUppercase: document.getElementById('requireUppercase').checked,
                         requireNumbers: document.getElementById('requireNumbers').checked,
@@ -921,7 +925,8 @@
                         enableTwoFactor: document.getElementById('enableTwoFactor').checked
                     };
                 } else if (section === 'notification') {
-                    data.notifications = {
+                    endpoint = 'notifications';
+                    data = {
                         notifyNewTickets: document.getElementById('notifyNewTickets').checked,
                         notifyTicketUpdates: document.getElementById('notifyTicketUpdates').checked,
                         notifyNewUsers: document.getElementById('notifyNewUsers').checked,
@@ -929,7 +934,8 @@
                         digestFrequency: document.getElementById('digestFrequency').value
                     };
                 } else if (section === 'appearance') {
-                    data.appearance = {
+                    endpoint = 'appearance';
+                    data = {
                         darkMode: document.getElementById('darkMode').checked,
                         compactMenu: document.getElementById('compactMenu').checked,
                         showAnimations: document.getElementById('showAnimations').checked,
@@ -937,7 +943,8 @@
                     };
                 }
 
-                const response = await fetch('http://localhost:5000/api/settings', {
+                const url = `http://localhost:5000/api/settings/${endpoint}`;
+                const response = await fetch(url, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -949,7 +956,8 @@
                 if (response.ok) {
                     showNotification('✅ Settings saved successfully!', 'success');
                 } else {
-                    showNotification('❌ Failed to save settings', 'error');
+                    const error = await response.json();
+                    showNotification(`❌ Failed to save settings: ${error.message}`, 'error');
                 }
             } catch (error) {
                 showNotification(`❌ Error: ${error.message}`, 'error');
@@ -989,7 +997,7 @@
                     data.newPassword = newPassword;
                 }
 
-                const response = await fetch(`http://localhost:5000/api/admin/profile/${currentAdmin.id}`, {
+                const response = await fetch(`http://localhost:5000/api/settings/admin/profile/${currentAdmin.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

@@ -628,11 +628,13 @@
                 const unreadCount = notifications.filter(n => !n.is_read).length;
 
                 const notifCount = document.getElementById('adminNotifCount');
-                if (unreadCount > 0) {
-                    notifCount.textContent = unreadCount;
-                    notifCount.style.display = 'inline-block';
-                } else {
-                    notifCount.style.display = 'none';
+                if (notifCount) {
+                    if (unreadCount > 0) {
+                        notifCount.textContent = unreadCount;
+                        notifCount.style.display = 'inline-block';
+                    } else {
+                        notifCount.style.display = 'none';
+                    }
                 }
             } catch (error) {
                 console.warn('Error loading notifications:', error);

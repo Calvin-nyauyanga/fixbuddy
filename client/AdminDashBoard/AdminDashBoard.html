@@ -143,10 +143,8 @@
     </style>
 </head>
 <body class="admin-dashboard-body">
-    <!-- Audio element for notification sound -->
-    <audio id="ticketNotificationSound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==" type="audio/wav">
-    </audio>
+    <!-- Audio element for notification sound (using external file to comply with CSP) -->
+    <!-- Audio element disabled: using data URI violates CSP. Replace with external file if needed. -->
 
     <header class="topbar dashboard-header">
         <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
@@ -227,21 +225,109 @@
                 </div>
             </div>
 
-            <!-- Charts Row -->
-            <div class="charts-row">
-                <div class="chart-card line-chart">
-                    <h3>Tickets Created Per Day (Last 7 Days)</h3>
-                    <div class="chart-placeholder">
-                        <canvas id="ticketsTrendChart" style="max-height: 250px;"></canvas>
+<!-- Charts Row -->
+<div class="charts-row">
+    <!-- Live Queue Status Grid -->
+    <div class="chart-card line-chart">
+        <h3>📋 Live Queue Status</h3>
+        <div class="chart-placeholder">
+            <div id="queueStatus" style="padding: 12px;">
+                <!-- Queue Grid Layout (2 columns) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <!-- Queue 1: General Support -->
+                    <div style="padding: 12px; background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); border-radius: 6px; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 12px; opacity: 0.9; margin-bottom: 6px;">General Support</div>
+                        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px;">
+                            <span style="font-size: 24px; font-weight: bold;" id="generalQueue">0</span>
+                            <span style="font-size: 11px; opacity: 0.9;">waiting</span>
+                        </div>
+                        <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px;">
+                            <div style="width: 0%; height: 100%; background: rgba(255,255,255,0.9); border-radius: 3px; transition: width 0.3s;" id="generalQueueBar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Queue 2: Technical Issues -->
+                    <div style="padding: 12px; background: linear-gradient(135deg, #ff9800 0%, #fb8c00 100%); border-radius: 6px; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 12px; opacity: 0.9; margin-bottom: 6px;">Technical Issues</div>
+                        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px;">
+                            <span style="font-size: 24px; font-weight: bold;" id="technicalQueue">0</span>
+                            <span style="font-size: 11px; opacity: 0.9;">waiting</span>
+                        </div>
+                        <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px;">
+                            <div style="width: 0%; height: 100%; background: rgba(255,255,255,0.9); border-radius: 3px; transition: width 0.3s;" id="technicalQueueBar"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="chart-card pie-chart">
-                    <h3>Ticket Status Distribution</h3>
-                    <div class="chart-placeholder">
-                        <canvas id="statusDistributionChart" style="max-height: 250px;"></canvas>
+
+                <!-- Second Row: Billing & Account -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <!-- Queue 3: Billing & Account -->
+                    <div style="padding: 12px; background: linear-gradient(135deg, #f44336 0%, #e53935 100%); border-radius: 6px; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 12px; opacity: 0.9; margin-bottom: 6px;">Billing & Account</div>
+                        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px;">
+                            <span style="font-size: 24px; font-weight: bold;" id="billingQueue">0</span>
+                            <span style="font-size: 11px; opacity: 0.9;">waiting</span>
+                        </div>
+                        <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px;">
+                            <div style="width: 0%; height: 100%; background: rgba(255,255,255,0.9); border-radius: 3px; transition: width 0.3s;" id="billingQueueBar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Total Queue Summary -->
+                    <div style="padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 6px; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 12px; opacity: 0.9; margin-bottom: 6px;">Total Queue</div>
+                        <div style="display: flex; align-items: baseline; gap: 6px;">
+                            <span style="font-size: 24px; font-weight: bold;" id="totalQueued">0</span>
+                            <span style="font-size: 11px; opacity: 0.9;">tickets</span>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Team Availability -->
+    <div class="chart-card pie-chart">
+        <h3>👥 Team Status</h3>
+        <div class="chart-placeholder">
+            <div id="teamStatus" style="padding: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 12px; height: 12px; background: #4caf50; border-radius: 50%; margin-right: 8px;"></div>
+                    <span>Available</span>
+                    <strong style="margin-left: auto; color: #4caf50;" id="agentsAvailable">0</strong>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 12px; height: 12px; background: #ffc107; border-radius: 50%; margin-right: 8px;"></div>
+                    <span>On Break</span>
+                    <strong style="margin-left: auto; color: #ffc107;" id="agentsBreak">0</strong>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 12px; height: 12px; background: #f44336; border-radius: 50%; margin-right: 8px;"></div>
+                    <span>Away</span>
+                    <strong style="margin-left: auto; color: #f44336;" id="agentsAway">0</strong>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <div style="width: 12px; height: 12px; background: #9e9e9e; border-radius: 50%; margin-right: 8px;"></div>
+                    <span>Offline</span>
+                    <strong style="margin-left: auto; color: #9e9e9e;" id="agentsOffline">0</strong>
+                </div>
+
+                <div style="border-top: 1px solid #eee; padding-top: 15px;">
+                    <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                        <strong>Capacity Usage</strong>
+                    </div>
+                    <div style="width: 100%; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden; display: flex;">
+                        <div style="flex: 0; background: linear-gradient(to right, #4caf50, #ff9800); border-radius: 10px 0 0 10px;" id="capacityUsageBar"></div>
+                        <div style="flex: 0; background: #e0e0e0; border-radius: 0 10px 10px 0;" id="capacityBufferBar"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #999; margin-top: 6px;">
+                        <span id="capacityPercentage">0</span>% utilized | <span id="bufferPercentage">0</span>% buffer
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- Main Content Row -->
             <div class="content-row full-width">
@@ -284,30 +370,38 @@
         <h3>⚙️ Notification Settings</h3>
         
         <div class="setting-item">
-            <label for="enableNotifications">Enable Notifications</label>
-            <div class="toggle-switch active" id="enableNotifications" onclick="toggleNotifications()"></div>
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span>Enable Notifications</span>
+                <div class="toggle-switch active" id="enableNotifications" onclick="toggleNotifications()" role="switch" aria-checked="true"></div>
+            </label>
         </div>
 
         <div class="setting-item">
-            <label for="enableNotificationSound">Notification Sound</label>
-            <div class="toggle-switch active" id="enableNotificationSound" onclick="toggleNotificationSound()"></div>
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span>Notification Sound</span>
+                <div class="toggle-switch active" id="enableNotificationSound" onclick="toggleNotificationSound()" role="switch" aria-checked="true"></div>
+            </label>
         </div>
 
         <div class="setting-item">
-            <label for="enableToastAlerts">Toast Alerts</label>
-            <div class="toggle-switch active" id="enableToastAlerts" onclick="toggleToastAlerts()"></div>
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span>Toast Alerts</span>
+                <div class="toggle-switch active" id="enableToastAlerts" onclick="toggleToastAlerts()" role="switch" aria-checked="true"></div>
+            </label>
         </div>
 
         <div class="setting-item">
-            <label for="enableBadgeCounter">Badge Counter</label>
-            <div class="toggle-switch active" id="enableBadgeCounter" onclick="toggleBadgeCounter()"></div>
+            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <span>Badge Counter</span>
+                <div class="toggle-switch active" id="enableBadgeCounter" onclick="toggleBadgeCounter()" role="switch" aria-checked="true"></div>
+            </label>
         </div>
     </div>
 
     <script src="../js/api-client.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
-        
+
         // ========== SETTINGS STATE ==========
         let pollingInterval = null;
         let lastTicketCount = 0;
@@ -466,6 +560,7 @@
             await loadDashboardStats();
             await loadRecentActivities();
             await loadNotifications();
+            await loadDashboardWidgets();
 
             // Start real-time polling
             startRealTimePolling();
@@ -474,9 +569,10 @@
         // ========== REAL-TIME POLLING ==========
         function startRealTimePolling() {
             pollingInterval = setInterval(async () => {
+                await loadDashboardStats();
+                await loadRecentActivities();
+                await loadDashboardWidgets();
                 if (notificationSettings.enableNotifications) {
-                    await loadDashboardStats();
-                    await loadRecentActivities();
                     await loadNotifications();
                 }
             }, 30000); // Poll every 30 seconds
@@ -497,7 +593,126 @@
             }
         }
 
-        // ========== LOAD RECENT ACTIVITIES ==========
+// ========== LOAD QUEUE STATUS ==========
+async function loadQueueStatus() {
+    try {
+        const response = await fetch('http://localhost:5000/api/dashboard/queue-status', {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.status === 304) {
+            console.warn('Queue status not modified (304), skipping update.');
+            return;
+        }
+
+        if (!response.ok) throw new Error('Failed to fetch queue status');
+
+        const data = await response.json();
+        const queueData = data.data;
+
+        // Update queue displays
+        document.getElementById('generalQueue').textContent = queueData.general || 0;
+        document.getElementById('technicalQueue').textContent = queueData.technical || 0;
+        document.getElementById('billingQueue').textContent = queueData.billing || 0;
+        document.getElementById('totalQueued').textContent = queueData.total || 0;
+
+        // Update queue bars (percentage based on maximum queue)
+        const maxQueueSize = Math.max(queueData.general, queueData.technical, queueData.billing, 1);
+        const generalPercent = (queueData.general / maxQueueSize) * 100;
+        const technicalPercent = (queueData.technical / maxQueueSize) * 100;
+        const billingPercent = (queueData.billing / maxQueueSize) * 100;
+
+        document.getElementById('generalQueueBar').style.width = generalPercent + '%';
+        document.getElementById('technicalQueueBar').style.width = technicalPercent + '%';
+        document.getElementById('billingQueueBar').style.width = billingPercent + '%';
+
+    } catch (error) {
+        console.error('Error loading queue status:', error);
+    }
+}
+
+// ========== LOAD TEAM STATUS ==========
+async function loadTeamStatus() {
+    try {
+        const response = await fetch('http://localhost:5000/api/dashboard/team-status', {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.status === 304) {
+            console.warn('Team status not modified (304), skipping update.');
+            return;
+        }
+
+        if (!response.ok) throw new Error('Failed to fetch team status');
+
+        const data = await response.json();
+        if (!data || !data.data) {
+            console.warn('Team status response has no data payload', data);
+            return;
+        }
+
+        const teamData = data.data;
+
+        // Update agent status counts
+        const availableEl = document.getElementById('agentsAvailable');
+        const breakEl = document.getElementById('agentsBreak');
+        const awayEl = document.getElementById('agentsAway');
+        const offlineEl = document.getElementById('agentsOffline');
+        const usageEl = document.getElementById('capacityUsageBar');
+        const bufferEl = document.getElementById('capacityBufferBar');
+        const usagePctEl = document.getElementById('capacityPercentage');
+        const bufferPctEl = document.getElementById('bufferPercentage');
+
+        if (!availableEl || !breakEl || !awayEl || !offlineEl || !usageEl || !bufferEl || !usagePctEl || !bufferPctEl) {
+            console.warn('Missing team dashboard DOM node(s), cannot render team status.', {
+                availableEl, breakEl, awayEl, offlineEl, usageEl, bufferEl, usagePctEl, bufferPctEl
+            });
+            return;
+        }
+
+        availableEl.textContent = teamData.agentsAvailable ?? 0;
+        breakEl.textContent = teamData.agentsBreak ?? 0;
+        awayEl.textContent = teamData.agentsAway ?? 0;
+        offlineEl.textContent = teamData.agentsOffline ?? 0;
+
+        // Update capacity bars
+        const capacityUsage = Number(teamData.capacityUsage) || 0;
+        const buffer = Number(teamData.buffer) || 0;
+
+        usageEl.style.flex = `${capacityUsage}`;
+        bufferEl.style.flex = `${buffer}`;
+        usagePctEl.textContent = capacityUsage;
+        bufferPctEl.textContent = buffer;
+
+        document.getElementById('capacityUsageBar').style.flex = capacityUsage;
+        document.getElementById('capacityBufferBar').style.flex = buffer;
+        document.getElementById('capacityPercentage').textContent = capacityUsage;
+        document.getElementById('bufferPercentage').textContent = buffer;
+
+    } catch (error) {
+        console.error('Error loading team status:', error);
+    }
+}
+
+// ========== LOAD DASHBOARD DATA (Both Queue + Team) ==========
+async function loadDashboardWidgets() {
+    await Promise.all([
+        loadQueueStatus(),
+        loadTeamStatus(),
+    ]);
+}
+
+// ========== LOAD RECENT ACTIVITIES ==========
         async function loadRecentActivities() {
             const tbody = document.getElementById('activitiesTableBody');
 

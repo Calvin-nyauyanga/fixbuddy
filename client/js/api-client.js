@@ -244,9 +244,54 @@ const helpdeskAPI = {
 
 };
 
+// ========== DASHBOARD API ==========
+const dashboardAPI = {
+  getQueueStatus: async () => {
+    return fetch(`${API_BASE_URL}/dashboard/queue-status`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json',
+      },
+    }).then(res => res.json());
+  },
+
+  getTeamStatus: async () => {
+    return fetch(`${API_BASE_URL}/dashboard/team-status`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json',
+      },
+    }).then(res => res.json());
+  },
+
+  updateAgentStatus: async (agentId, status) => {
+    return fetch(`${API_BASE_URL}/dashboard/agent-status/${agentId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    }).then(res => res.json());
+  },
+
+  getDashboardData: async () => {
+    return fetch(`${API_BASE_URL}/dashboard/data`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        'Content-Type': 'application/json',
+      },
+    }).then(res => res.json());
+  },
+};
+
 // Export for use in HTML files
 window.apiRequest = apiRequest;
 window.authAPI = authAPI;
 window.adminAPI = adminAPI;
 window.ticketsAPI = ticketsAPI;
 window.helpdeskAPI = helpdeskAPI;
+window.dashboardAPI = dashboardAPI;

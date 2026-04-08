@@ -732,7 +732,7 @@ export const assignTicket = async (req, res) => {
     const updatedTicket = await prisma.ticket.update({
       where: { id: parseInt(id) },
       data: {
-        assignedTo: parseInt(assignedTo),
+        assignedToId: parseInt(assignedTo),
         updatedAt: new Date(),
       },
       include: {

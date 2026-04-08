@@ -10,6 +10,7 @@ import prisma from './config/prisma.js';
 import userRoutes from './routes/userRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import { loadSystemSettings } from './middleware/settingsMiddleware.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 
 const app = express();
@@ -20,7 +21,7 @@ app.use(cors({
   origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires']
 }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -57,6 +58,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/helpdesk', helpdeskRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Temporary test route to verify routing (placed before userRoutes mounting)
 app.get('/api/users/test-route', (req, res) => {
