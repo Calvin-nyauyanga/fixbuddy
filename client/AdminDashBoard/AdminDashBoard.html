@@ -398,16 +398,13 @@
         </div>
     </div>
 
+       <script src="../js/dashboardModule.js"></script>
+    <script src="../js/dashboardWidgets.js"></script>
     <script src="../js/api-client.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
         // ========== SETTINGS STATE ==========
-        let pollingInterval = null;
-        let lastTicketCount = 0;
-        let hasPlayedNewTicketSound = false;
-
-        // Notification settings (stored in localStorage)
         let notificationSettings = {
             enableNotifications: localStorage.getItem('enableNotifications') !== 'false',
             enableNotificationSound: localStorage.getItem('enableNotificationSound') !== 'false',
@@ -474,11 +471,6 @@
                 `Badge counter ${notificationSettings.enableBadgeCounter ? 'enabled' : 'disabled'}`,
                 notificationSettings.enableBadgeCounter ? 'success' : 'info'
             );
-            
-            // Update badge visibility
-            if (!notificationSettings.enableBadgeCounter) {
-                document.getElementById('adminNotifCount').style.display = 'none';
-            }
         }
 
         // ========== SETTINGS PANEL TOGGLE ==========
@@ -553,29 +545,27 @@
             }
 
             document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
-
-            // Initialize settings UI
             initializeSettingsUI();
+
+            // Initialize Dashboard Module
+            await dashboardModule.initialize({
+                autoRefresh: true,
+                refreshInterval: 30000
+            });
+
+            // Listen for queue updates and render
+            dashboardModule.onQueueStatusUpdated((queueData) => {
+                DashboardWidgets.renderQueueStatus('queueStatus', queueData);
+            });
+
+            // Listen for team updates and render
+            dashboardModule.onTeamStatusUpdated((teamData) => {
+                DashboardWidgets.renderTeamStatus('teamStatus', teamData);
+            });
 
             await loadDashboardStats();
             await loadRecentActivities();
             await loadNotifications();
-            await loadDashboardWidgets();
-
-            // Start real-time polling
-            startRealTimePolling();
-        }
-
-        // ========== REAL-TIME POLLING ==========
-        function startRealTimePolling() {
-            pollingInterval = setInterval(async () => {
-                await loadDashboardStats();
-                await loadRecentActivities();
-                await loadDashboardWidgets();
-                if (notificationSettings.enableNotifications) {
-                    await loadNotifications();
-                }
-            }, 30000); // Poll every 30 seconds
         }
 
         // ========== LOAD DASHBOARD STATISTICS ==========
@@ -593,124 +583,113 @@
             }
         }
 
-// ========== LOAD QUEUE STATUS ==========
-async function loadQueueStatus() {
-    try {
-        const response = await fetch('http://localhost:5000/api/dashboard/queue-status', {
-            method: 'GET',
-            cache: 'no-store',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                'Content-Type': 'application/json',
-            },
-        });
+        // ========== LOAD RECENT ACTIVITIES ==========
+        async function loadRecentActivities() {
+            const tbody = document.getElementById('activitiesTableBody');
 
-        if (response.status === 304) {
-            console.warn('Queue status not modified (304), skipping update.');
-            return;
+            try {
+                const response = await helpdeskAPI.getRecentActivities();
+                const activities = response && response.data && Array.isArray(response.data.activities) ? response.data.activities : [];
+
+                tbody.innerHTML = '';
+
+                if (activities.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No recent activities</td></tr>';
+                    return;
+                }
+
+                activities.slice(0, 10).forEach(activity => {
+                    const row = document.createElement('tr');
+                    const activityTime = new Date(activity.created_at || activity.createdAt).toLocaleTimeString();
+                    
+                    row.innerHTML = `
+                        <td><strong>${activity.type || 'Unknown'}</strong></td>
+                        <td>${activity.user_name || activity.ticket_id || 'N/A'}</td>
+                        <td>${activity.details || 'No details'}</td>
+                        <td>${activityTime}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error loading activities:', error);
+            }
         }
 
-        if (!response.ok) throw new Error('Failed to fetch queue status');
+        // ========== LOAD NOTIFICATIONS ==========
+        async function loadNotifications() {
+            if (!notificationSettings.enableNotifications) return;
 
-        const data = await response.json();
-        const queueData = data.data;
+            try {
+                const response = await helpdeskAPI.getNotifications();
+                const notifications = response && response.data && Array.isArray(response.data.notifications) ? response.data.notifications : [];
+                const unreadCount = notifications.filter(n => !n.is_read).length;
 
-        // Update queue displays
-        document.getElementById('generalQueue').textContent = queueData.general || 0;
-        document.getElementById('technicalQueue').textContent = queueData.technical || 0;
-        document.getElementById('billingQueue').textContent = queueData.billing || 0;
-        document.getElementById('totalQueued').textContent = queueData.total || 0;
-
-        // Update queue bars (percentage based on maximum queue)
-        const maxQueueSize = Math.max(queueData.general, queueData.technical, queueData.billing, 1);
-        const generalPercent = (queueData.general / maxQueueSize) * 100;
-        const technicalPercent = (queueData.technical / maxQueueSize) * 100;
-        const billingPercent = (queueData.billing / maxQueueSize) * 100;
-
-        document.getElementById('generalQueueBar').style.width = generalPercent + '%';
-        document.getElementById('technicalQueueBar').style.width = technicalPercent + '%';
-        document.getElementById('billingQueueBar').style.width = billingPercent + '%';
-
-    } catch (error) {
-        console.error('Error loading queue status:', error);
-    }
-}
-
-// ========== LOAD TEAM STATUS ==========
-async function loadTeamStatus() {
-    try {
-        const response = await fetch('http://localhost:5000/api/dashboard/team-status', {
-            method: 'GET',
-            cache: 'no-store',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (response.status === 304) {
-            console.warn('Team status not modified (304), skipping update.');
-            return;
+                const notifCount = document.getElementById('adminNotifCount');
+                
+                if (notificationSettings.enableBadgeCounter) {
+                    if (unreadCount > 0) {
+                        notifCount.textContent = unreadCount;
+                        notifCount.style.display = 'inline-block';
+                    } else {
+                        notifCount.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.warn('Error loading notifications:', error);
+            }
         }
 
-        if (!response.ok) throw new Error('Failed to fetch team status');
-
-        const data = await response.json();
-        if (!data || !data.data) {
-            console.warn('Team status response has no data payload', data);
-            return;
-        }
-
-        const teamData = data.data;
-
-        // Update agent status counts
-        const availableEl = document.getElementById('agentsAvailable');
-        const breakEl = document.getElementById('agentsBreak');
-        const awayEl = document.getElementById('agentsAway');
-        const offlineEl = document.getElementById('agentsOffline');
-        const usageEl = document.getElementById('capacityUsageBar');
-        const bufferEl = document.getElementById('capacityBufferBar');
-        const usagePctEl = document.getElementById('capacityPercentage');
-        const bufferPctEl = document.getElementById('bufferPercentage');
-
-        if (!availableEl || !breakEl || !awayEl || !offlineEl || !usageEl || !bufferEl || !usagePctEl || !bufferPctEl) {
-            console.warn('Missing team dashboard DOM node(s), cannot render team status.', {
-                availableEl, breakEl, awayEl, offlineEl, usageEl, bufferEl, usagePctEl, bufferPctEl
+        // ========== SEARCH ACTIVITIES ==========
+        document.getElementById('searchActivities').addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#activitiesTableBody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
-            return;
-        }
+        });
 
-        availableEl.textContent = teamData.agentsAvailable ?? 0;
-        breakEl.textContent = teamData.agentsBreak ?? 0;
-        awayEl.textContent = teamData.agentsAway ?? 0;
-        offlineEl.textContent = teamData.agentsOffline ?? 0;
+        // ========== LOGOUT ==========
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
 
-        // Update capacity bars
-        const capacityUsage = Number(teamData.capacityUsage) || 0;
-        const buffer = Number(teamData.buffer) || 0;
+            try {
+                await adminAPI.logout();
+            } catch (error) {
+                console.warn('Logout API call failed:', error);
+            }
 
-        usageEl.style.flex = `${capacityUsage}`;
-        bufferEl.style.flex = `${buffer}`;
-        usagePctEl.textContent = capacityUsage;
-        bufferPctEl.textContent = buffer;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('admin');
+            localStorage.removeItem('userRole');
 
-        document.getElementById('capacityUsageBar').style.flex = capacityUsage;
-        document.getElementById('capacityBufferBar').style.flex = buffer;
-        document.getElementById('capacityPercentage').textContent = capacityUsage;
-        document.getElementById('bufferPercentage').textContent = buffer;
+            // Stop polling when logging out
+            dashboardModule.stopAutoRefresh();
 
-    } catch (error) {
-        console.error('Error loading team status:', error);
-    }
-}
+            window.location.href = '../Main Dashboard/AdminLoginPage.html';
+        });
 
-// ========== LOAD DASHBOARD DATA (Both Queue + Team) ==========
-async function loadDashboardWidgets() {
-    await Promise.all([
-        loadQueueStatus(),
-        loadTeamStatus(),
-    ]);
-}
+        // ========== SETTINGS ICON ==========
+        document.querySelector('.settings-icon').addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
+
+        // ========== PROFILE ICON ==========
+        document.querySelector('.admin-profile-icon').addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initAdminDashboard);
+        initAdminDashboard();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            dashboardModule.stopAutoRefresh();
+        });
+    </script>
 
 // ========== LOAD RECENT ACTIVITIES ==========
         async function loadRecentActivities() {

@@ -153,6 +153,8 @@
         </aside>
 
         <section class="admin-content">
+            <!-- Queue Status Summary Widget -->
+            <div id="queueStatusWidget"></div>
             <!-- Tickets List View -->
             <div class="tickets-management-container" id="ticketsListSection">
                 <h2>All Tickets</h2>
@@ -671,5 +673,29 @@
         window.addEventListener('DOMContentLoaded', initManageTickets);
         initManageTickets();
     </script>
+        <script src="../js/dashboardModule.js"></script>
+    <script src="../js/dashboardWidgets.js"></script>
+    
+    // Add to initManageTickets() function:
+    async function initManageTickets() {
+        // ... existing code ...
+
+        // Initialize Dashboard Module
+        await dashboardModule.initialize({
+            autoRefresh: true,
+            refreshInterval: 30000
+        });
+
+        // Render compact queue widget
+        dashboardModule.onQueueStatusUpdated((queueData) => {
+            const queueWidget = document.getElementById('queueStatusWidget');
+            if (queueWidget) {
+                queueWidget.innerHTML = DashboardWidgets.renderCompactQueue(queueData);
+            }
+        });
+
+        await loadAllTickets();
+        // ... rest of existing code ...
+    }
 </body>
 </html>

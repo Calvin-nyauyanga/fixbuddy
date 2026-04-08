@@ -229,6 +229,8 @@
 
             <!-- Messages -->
             <div id="messageContainer"></div>
+            <!-- Queue Status Summary Widget -->
+            <div id="queueStatusWidget"></div>
 
             <!-- Filter Section -->
             <div class="filter-section">
@@ -625,5 +627,20 @@
         window.addEventListener('DOMContentLoaded', initReports);
         initReports();
     </script>
+        <script src="../js/dashboardModule.js"></script>
+    <script src="../js/dashboardWidgets.js"></script>
+
+    // In initReports() function, add:
+    await dashboardModule.initialize({
+        autoRefresh: true,
+        refreshInterval: 30000
+    });
+
+    dashboardModule.onQueueStatusUpdated((queueData) => {
+        const queueWidget = document.getElementById('queueStatusWidget');
+        if (queueWidget) {
+            queueWidget.innerHTML = DashboardWidgets.renderCompactQueue(queueData);
+        }
+    });
 </body>
 </html>

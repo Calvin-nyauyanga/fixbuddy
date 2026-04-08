@@ -292,6 +292,8 @@
         </aside>
         
         <section class="admin-content">
+            <!-- Queue Status Summary Widget -->
+            <div id="queueStatusWidget"></div>
             <div class="content-row full-width">
                 <div class="tickets-management-container">
                     <div class="page-header-actions">
@@ -804,5 +806,20 @@
         // ========== INITIALIZE PAGE ==========
         document.addEventListener('DOMContentLoaded', initUsersPage);
     </script>
+        <script src="../js/dashboardModule.js"></script>
+    <script src="../js/dashboardWidgets.js"></script>
+
+    // In initUsersPage() function, add:
+    await dashboardModule.initialize({
+        autoRefresh: true,
+        refreshInterval: 30000
+    });
+
+    dashboardModule.onQueueStatusUpdated((queueData) => {
+        const queueWidget = document.getElementById('queueStatusWidget');
+        if (queueWidget) {
+            queueWidget.innerHTML = DashboardWidgets.renderCompactQueue(queueData);
+        }
+    });
 </body>
 </html>
