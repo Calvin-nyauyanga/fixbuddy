@@ -1,6 +1,5 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -33,9 +32,15 @@ model Ticket {
   id          Int     @id @default(autoincrement())
   title       String
   description String  @db.Text
+  confidence            Int?     // Added: classification confidence
+  sentiment             Json?    // Added: sentiment analysis
+  suggestedAgent        String?  // Added: routing suggestion
+  estimatedResolutionTime Json?  // Added: SLA estimate
+  intelligenceData      Json?    // Added: full analysis stored
   status      String  @default("open") // "open", "in_progress", "closed", "on_hold"
   priority    String  @default("medium")  //"low", "medium", "high", "critical"
   category    String? @default("General")
+  userId      String ?
 
   createdById Int
   createdBy   User    @relation("CreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
@@ -45,6 +50,7 @@ model Ticket {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
 
   comments    Comment[]
   activities  Activity[]

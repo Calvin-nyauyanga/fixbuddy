@@ -14,18 +14,22 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^4.16.0",
+    "@prisma/adapter-pg": "^7.7.0",
+    "@prisma/client": "^7.7.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-validator": "^7.3.1",
     "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^8.0.5",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "fixbuddy-intelligence": "file:../fixbuddy-intelligence",
     "nodemon": "^3.1.14",
-    "prisma": "^4.16.0"
+    "prisma": "^7.7.0"
   }
 }

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixBuddy – Intelligence Analytics</title>
+    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Intelligence Dashboard Specific Styles */
+        .intelligence-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .intelligence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .intelligence-header h1 {
+            font-size: 2.5rem;
+            margin: 0;
+        }
+
+        .intelligence-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .intelligence-stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .intelligence-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .intelligence-stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .intelligence-stat-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .refresh-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .refresh-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .refresh-button i {
+            margin-right: 0.5rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .chart-wrapper {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 1rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+        }
+
+        .metric-card.success {
+            border-left-color: #4caf50;
+        }
+
+        .metric-card.warning {
+            border-left-color: #ff9800;
+        }
+
+        .metric-card.danger {
+            border-left-color: #f44336;
+        }
+
+        .metric-card.info {
+            border-left-color: #2196f3;
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-change.positive {
+            color: #4caf50;
+        }
+
+        .metric-change.negative {
+            color: #f44336;
+        }
+
+        .detailed-table {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            margin-top: 2rem;
+        }
+
+        .detailed-table h3 {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .detailed-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .detailed-table thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .detailed-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .detailed-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detailed-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .category-network {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .category-hardware {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .category-software {
+            background: #e0f2f1;
+            color: #00796b;
+        }
+
+        .category-security {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .category-database {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .category-email {
+            background: #f1f8e9;
+            color: #558b2f;
+        }
+
+        .sentiment-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .sentiment-positive {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .sentiment-neutral {
+            background: #f5f5f5;
+            color: #616161;
+        }
+
+        .sentiment-negative {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .priority-critical {
+            background: #f44336;
+        }
+
+        .priority-high {
+            background: #ff9800;
+        }
+
+        .priority-medium {
+            background: #2196f3;
+        }
+
+        .priority-low {
+            background: #4caf50;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .filter-group select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .intelligence-stats {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .intelligence-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .intelligence-header h1 {
+                font-size: 1.8rem;
+                margin-bottom: 1rem;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        .routing-effectiveness-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .routing-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .routing-item:last-child {
+            border-bottom: none;
+        }
+
+        .routing-agent-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .routing-metrics {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .routing-metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .routing-metric-label {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .routing-metric-value {
+            font-weight: bold;
+            color: #333;
+            margin-top: 0.25rem;
+        }
+
+        .alert-close {
+            cursor: pointer;
+            font-size: 1.5rem;
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body class="admin-dashboard-body">
+    <header class="topbar dashboard-header">
+        <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">INTELLIGENCE</span></div>
+        <div class="admin-topbar-right">
+            <div class="search-bar">
+                <input type="text" id="searchIntelligence" placeholder="Search intelligence data...">
+                <i class="fa-solid fa-search"></i>
+            </div>
+            <div class="user-info">
+                <span class="welcome-message" id="adminWelcome" style="margin-left: 1rem;">👤 Admin</span>
+                <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <aside class="sidebar">
+            <h2 class="sidebar-heading">🛠️ Fixbuddy Admin</h2>
+            <nav class="sidebar-nav">
+                <a href="AdminDashBoard.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-gauge"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="ManageTickets.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-ticket-alt"></i>
+                    <span>Manage Tickets</span>
+                </a>
+                <a href="Users.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="AdminReports.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="IntelligenceStats.html" class="sidebar-nav-item active">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Stats</span>
+                </a>
+                <a href="settings.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                <a href="#" id="logoutBtn" class="sidebar-nav-item logout-link">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <section class="admin-content">
+            <!-- Intelligence Header Section -->
+            <div class="intelligence-container">
+                <div class="intelligence-header">
+                    <div>
+                        <h1>🧠 Intelligence Analytics</h1>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Real-time AI & Machine Learning Insights</p>
+                    </div>
+                    <button class="refresh-button" id="refreshBtn">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        Refresh Data
+                    </button>
+                </div>
+
+                <!-- Intelligence Stats Cards -->
+                <div class="intelligence-stats">
+                    <div class="intelligence-stat-card">
+                        <div class="intelligence-stat-label">📊 Total Analyzed</div>
+                        <div class="intelligence-stat-value" id="totalAnalyzed">0</div>
+                        <div class="intelligence-stat-subtitle">Tickets processed by AI</div>
+                    </div>
+                    <div class="intelligence-stat-card">
+                        <div class="intelligence-stat-label">✅ Prediction Accuracy</div>
+                        <div class="intelligence-stat-value" id="predictionAccuracy">0%</div>
+                        <div class="intelligence-stat-subtitle">Classification confidence</div>
+                    </div>
+                    <div class="intelligence-stat-card">
+                        <div class="intelligence-stat-label">🔄 Duplicates Detected</div>
+                        <div class="intelligence-stat-value" id="duplicatesDetected">0</div>
+                        <div class="intelligence-stat-subtitle">Potential duplicates found</div>
+                    </div>
+                    <div class="intelligence-stat-card">
+                        <div class="intelligence-stat-label">📍 Routing Success</div>
+                        <div class="intelligence-stat-value" id="routingSuccess">0%</div>
+                        <div class="intelligence-stat-subtitle">Correct agent routing</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="dateFilter">Date Range:</label>
+                    <select id="dateFilter">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="categoryFilter">Category:</label>
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="Network">Network</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Software">Software</option>
+                        <option value="Security">Security</option>
+                        <option value="Database">Database</option>
+                        <option value="Email">Email</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Most Common Categories Chart -->
+                <div class="chart-wrapper">
+                    <h3 class="chart-title">
+                        <i class="fa-solid fa-list"></i>
+                        Most Common Categories
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Average Sentiment by Category Chart -->
+                <div class="chart-wrapper">
+                    <h3 class="chart-title">
+                        <i class="fa-solid fa-face-smile"></i>
+                        Average Sentiment by Category
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card success">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-check-circle" style="color: #4caf50;"></i>
+                    </div>
+                    <div class="metric-label">Classification Accuracy</div>
+                    <div class="metric-value" id="classificationAccuracy">0%</div>
+                    <div class="metric-change positive">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span id="classificationTrend">+0%</span>
+                    </div>
+                </div>
+
+                <div class="metric-card info">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-bullseye" style="color: #2196f3;"></i>
+                    </div>
+                    <div class="metric-label">Average Priority Prediction</div>
+                    <div class="metric-value" id="avgPriorityScore">0</div>
+                    <div class="metric-change">out of 100</div>
+                </div>
+
+                <div class="metric-card warning">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-duplicate" style="color: #ff9800;"></i>
+                    </div>
+                    <div class="metric-label">Duplicate Detection Rate</div>
+                    <div class="metric-value" id="duplicateRate">0%</div>
+                    <div class="metric-change">
+                        <span id="duplicateTrend">of total tickets</span>
+                    </div>
+                </div>
+
+                <div class="metric-card danger">
+                    <div class="metric-icon">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #f44336;"></i>
+                    </div>
+                    <div class="metric-label">Avg Sentiment Score</div>
+                    <div class="metric-value" id="avgSentimentScore">0</div>
+                    <div class="metric-change">-1 to +1 scale</div>
+                </div>
+            </div>
+
+            <!-- Prediction Accuracy Analysis -->
+            <div class="detailed-table">
+                <h3>📈 Ticket Prediction Accuracy Analysis</h3>
+                <p style="color: #666; margin-bottom: 1.5rem;">How well the AI predicts ticket categories and priorities</p>
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Total Classified</th>
+                                <th>Correct Classifications</th>
+                                <th>Accuracy Rate</th>
+                                <th>Avg Confidence</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accuracyTableBody">
+                            <tr>
+                                <td colspan="6" class="no-data">
+                                    <div class="loading-spinner"></div> Loading accuracy data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Routing Effectiveness -->
+            <div class="detailed-table">
+                <h3>🎯 Routing Effectiveness by Agent</h3>
+                <p style="color: #666; margin-bottom: 1.5rem;">AI routing recommendations and agent performance</p>
+                
+                <ul class="routing-effectiveness-list" id="routingEffectivenessList">
+                    <li class="routing-item">
+                        <div style="text-align: center; width: 100%;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 1rem; color: #666;">Loading routing data...</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Sentiment Analysis Details -->
+            <div class="detailed-table">
+                <h3>😊 Sentiment Analysis Breakdown</h3>
+                <p style="color: #666; margin-bottom: 1.5rem;">Customer sentiment distribution across categories</p>
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Positive Sentiment</th>
+                                <th>Neutral Sentiment</th>
+                                <th>Negative Sentiment</th>
+                                <th>Avg Sentiment Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sentimentTableBody">
+                            <tr>
+                                <td colspan="5" class="no-data">
+                                    <div class="loading-spinner"></div> Loading sentiment data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Intelligence Insights -->
+            <div class="detailed-table">
+                <h3>💡 AI Insights & Recommendations</h3>
+                <p style="color: #666; margin-bottom: 1.5rem;">Actionable intelligence based on recent ticket analysis</p>
+                
+                <div id="insightsContainer">
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Loading insights...</span>
+                        <div class="alert-close" onclick="this.parentElement.style.display='none';">×</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <span>© <span id="year"></span> <strong>FixBuddy</strong> - Intelligence Analytics</span>
+    </footer>
+
+    <script src="../js/api-client.js"></script>
+    <script src="IntelligenceStats.js"></script>
+</body>
+</html>

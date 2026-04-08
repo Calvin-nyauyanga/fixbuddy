@@ -140,6 +140,10 @@
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Reports</span>
                 </a>
+                <a href="IntelligenceStats.html" class="sidebar-nav-item">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Stats</span>
+                </a>
                 <a href="settings.html" class="sidebar-nav-item">
                     <i class="fa-solid fa-cog"></i>
                     <span>Settings</span>
@@ -232,6 +236,14 @@
                         </div>
                     </div>
 
+                    <!-- Intelligence Insights -->
+                    <div class="intelligence-insights" style="margin-bottom: 2rem; padding: 1rem; background: #e8f5e8; border-radius: 4px; display: none;" id="insightsContainer">
+                        <h3>AI Insights</h3>
+                        <div id="categoryInsight" style="margin-bottom: 0.5rem;"></div>
+                        <div id="priorityInsight" style="margin-bottom: 0.5rem;"></div>
+                        <div id="sentimentInsight" style="margin-bottom: 0.5rem;"></div>
+                    </div>
+
                     <!-- Description -->
                     <div class="ticket-description" style="margin-bottom: 2rem;">
                         <h3>Description</h3>
@@ -285,6 +297,12 @@
     </footer>
 
     <script src="../js/api-client.js"></script>
+    <script type="module">
+        import { intelligenceAPI } from '../js/intelligenceClient.js';
+
+        // Make intelligenceAPI available globally for the functions
+        window.intelligenceAPI = intelligenceAPI;
+    </script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -491,6 +509,9 @@
                 document.getElementById('detailAssignedTo').textContent = ticket.assignedTo?.name || 'Unassigned';
                 document.getElementById('detailDescription').textContent = ticket.description || 'No description provided';
 
+                // Load intelligence insights
+                await loadTicketInsights(ticket.title, ticket.description);
+
                 loadTicketConversation(ticketId);
                 window.currentTicketId = ticketId;
 
@@ -499,6 +520,36 @@
                 window.scrollTo(0, 0);
             } catch (error) {
                 showNotification(`Error loading ticket: ${error.message}`, 'error');
+            }
+        }
+
+        // ========== LOAD TICKET INSIGHTS ==========
+        async function loadTicketInsights(title, description) {
+            const insightsContainer = document.getElementById('insightsContainer');
+            
+            if (!title || !description) {
+                insightsContainer.style.display = 'none';
+                return;
+            }
+
+            try {
+                const analysis = await window.intelligenceAPI.analyzeTicket(title, description);
+
+                // Display insights
+                document.getElementById('categoryInsight').textContent = 
+                    `Category: ${analysis.classification.category} (${analysis.classification.confidence}% confidence)`;
+                
+                document.getElementById('priorityInsight').textContent = 
+                    `Priority: ${analysis.priority.priority}`;
+                
+                document.getElementById('sentimentInsight').textContent = 
+                    `Sentiment: ${analysis.sentiment.emotion}`;
+
+                insightsContainer.style.display = 'block';
+
+            } catch (error) {
+                console.error('Intelligence analysis error:', error);
+                insightsContainer.style.display = 'none';
             }
         }
 

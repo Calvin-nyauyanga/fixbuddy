@@ -1,4 +1,7 @@
 import prisma from '../config/database.js';
+import TicketIntelligenceService from '../services/TicketIntelligenceService.js'; 
+
+const intelligenceService = new TicketIntelligenceService();
 
 // ✅ CREATE TICKET - Create a new support ticket
 export const createTicket = async (req, res) => {
@@ -554,5 +557,67 @@ export const getUserTickets = async (req, res) => {
       message: 'Server error while fetching your tickets',
       error: error.message,
     });
+  }
+};
+
+export const createTicketWithIntelligence = async (req, res) => {
+  try {
+    const { title, description, userId } = req.body;
+
+    // Validate
+    if (!title || !description) {
+      return res.status(400).json({ error: 'title and description required' });
+    }
+
+    // Get existing tickets for duplicate detection
+    const existingTickets = await prisma.ticket.findMany({
+      select: { title: true, description: true },
+    });
+
+    // Get agents for routing
+    const handlers = await prisma.user.findMany({
+      where: { role: 'agent' },
+      select: { id: true, name: true, specialization: true },
+    });
+
+    // Get historical tickets for SLA estimation
+    const historicalTickets = await prisma.ticket.findMany({
+      select: { title: true, description: true, resolvedAt: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    // Perform full intelligence analysis
+    const intelligence = await intelligenceService.performFullAnalysis(
+      { title, description },
+      { existingTickets, handlers, historicalTickets }
+    );
+
+    // Create ticket with intelligence insights
+    const ticket = await prisma.ticket.create({
+      data: {
+        title,
+        description,
+        userId,
+        category: intelligence.classification.category,
+        priority: intelligence.priority.priority,
+        confidence: intelligence.classification.confidence,
+        sentiment: intelligence.sentiment,
+        suggestedAgent: intelligence.routing?.agentId || null,
+        estimatedResolutionTime: intelligence.sla?.estimatedTime || null,
+        intelligenceData: JSON.stringify(intelligence), // Store full analysis
+      },
+    });
+
+    res.status(201).json({
+      ticket,
+      intelligence,
+      duplicates: intelligence.duplicates,
+      routing: intelligence.routing,
+      sla: intelligence.sla,
+    });
+  } catch (error) {
+    console.error('Ticket creation error:', error);
+    res.status(500).json({ error: error.message });
   }
 };
