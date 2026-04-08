@@ -11,6 +11,8 @@ import userRoutes from './routes/userRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import { loadSystemSettings } from './middleware/settingsMiddleware.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import intelligenceRoutes from './routes/intelligenceRoutes.js';
+import intelligenceAnalyticsRoutes from './routes/intelligenceAnalyticsRoutes.js';
 
 
 const app = express();
@@ -59,6 +61,8 @@ app.use('/api/helpdesk', helpdeskRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/intelligence', intelligenceRoutes);
+app.use('/api/intelligence', intelligenceAnalyticsRoutes);
 
 // Temporary test route to verify routing (placed before userRoutes mounting)
 app.get('/api/users/test-route', (req, res) => {

@@ -1,7 +1,4 @@
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
-
-const prisma = new PrismaClient();
+import prisma from '../config/prisma.js';
 
 // ✅ GET USER STATS - Get statistics for user's tickets
 export const getMyStats = async (req, res) => {

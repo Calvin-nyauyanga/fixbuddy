@@ -51,11 +51,12 @@
                                     <th>Priority</th>
                                     <th>Status</th>
                                     <th>Created</th>
+                                    <th>AI Insights</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="ticketsTableBody">
-                                <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>
+                                <tr><td colspan="8" style="text-align: center; padding: 20px;">Loading tickets...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -69,6 +70,12 @@
     </footer>
 
     <script src="../js/api-client.js"></script>
+    <script type="module">
+        import { intelligenceAPI } from '../js/intelligenceClient.js';
+
+        // Make intelligenceAPI available globally
+        window.intelligenceAPI = intelligenceAPI;
+    </script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -112,7 +119,7 @@
             tbody.innerHTML = '';
 
             if (!tickets || tickets.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No tickets found. <a href="submitticket.html">Submit one now!</a></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">No tickets found. <a href="submitticket.html">Submit one now!</a></td></tr>';
                 return;
             }
 
@@ -128,6 +135,7 @@
                     <td><span class="priority-badge ${ticket.priority}">${ticket.priority || 'Medium'}</span></td>
                     <td><span class="status-badge ${statusClass}">${ticket.status}</span></td>
                     <td>${createdDate}</td>
+                    <td id="insights-${ticket.id}">Loading...</td>
                     <td>
                         <button onclick="viewTicketDetails(${ticket.id})" class="btn-small" title="View"><i class="fa-solid fa-eye"></i></button>
                         <button onclick="editTicket(${ticket.id})" class="btn-small" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -135,7 +143,34 @@
                     </td>
                 `;
                 tbody.appendChild(row);
+                
+                // Load insights for this ticket
+                loadTicketInsights(ticket.id, ticket.title, ticket.description);
             });
+        }
+
+        // Load insights for a ticket
+        async function loadTicketInsights(ticketId, title, description) {
+            const insightsCell = document.getElementById(`insights-${ticketId}`);
+            
+            if (!title || !description) {
+                insightsCell.textContent = 'N/A';
+                return;
+            }
+
+            try {
+                const analysis = await window.intelligenceAPI.analyzeTicket(title, description);
+                insightsCell.innerHTML = `
+                    <small>
+                        Cat: ${analysis.classification.category}<br>
+                        Pri: ${analysis.priority.priority}<br>
+                        Sent: ${analysis.sentiment.emotion}
+                    </small>
+                `;
+            } catch (error) {
+                console.error('Intelligence analysis error:', error);
+                insightsCell.textContent = 'Error';
+            }
         }
 
         // Filter tickets

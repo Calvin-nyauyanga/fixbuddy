@@ -1,0 +1,21 @@
+{
+  "name": "fixbuddy-intelligence",
+  "version": "1.0.0",
+  "description": "AI-powered intelligence engines for FixBuddy ticketing system",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "keywords": [
+    "ai",
+    "intelligence",
+    "ticketing",
+    "classification",
+    "sentiment",
+    "routing",
+    "sla"
+  ],
+  "author": "FixBuddy Team",
+  "license": "MIT"
+}

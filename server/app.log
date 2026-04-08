@@ -2510,3 +2510,13 @@
 2026-04-08T09:48:15.470Z - GET /api/dashboard/team-status - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY0MDg4NiwiZXhwIjoxNzc1NzI3Mjg2fQ.8BF2MAcuf2qaXkcV_zLEQyFZfXzFKJk-Rhe0HWUYXMM
 2026-04-08T09:48:45.463Z - GET /api/dashboard/queue-status - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY0MDg4NiwiZXhwIjoxNzc1NzI3Mjg2fQ.8BF2MAcuf2qaXkcV_zLEQyFZfXzFKJk-Rhe0HWUYXMM
 2026-04-08T09:48:45.498Z - GET /api/dashboard/team-status - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY0MDg4NiwiZXhwIjoxNzc1NzI3Mjg2fQ.8BF2MAcuf2qaXkcV_zLEQyFZfXzFKJk-Rhe0HWUYXMM
+2026-04-08T13:22:26.933Z - POST /api/auth/admin-login - auth=none
+2026-04-08T13:22:50.427Z - POST /api/auth/admin-login - auth=none
+2026-04-08T13:22:57.020Z - POST /api/intelligence/analyze - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY1NDU3MCwiZXhwIjoxNzc1NzQwOTcwfQ.aL7sibXyno17-j1-feD2jUGBP5qJwM9JPxeH5M8a7sk
+2026-04-08T13:24:12.752Z - POST /api/intelligence/analyze - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY1NDU3MCwiZXhwIjoxNzc1NzQwOTcwfQ.aL7sibXyno17-j1-feD2jUGBP5qJwM9JPxeH5M8a7sk
+2026-04-08T13:26:27.330Z - POST /api/intelligence/duplicates - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY1NDU3MCwiZXhwIjoxNzc1NzQwOTcwfQ.aL7sibXyno17-j1-feD2jUGBP5qJwM9JPxeH5M8a7sk
+2026-04-08T13:28:08.898Z - POST /api/intelligence/duplicates - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY1NDU3MCwiZXhwIjoxNzc1NzQwOTcwfQ.aL7sibXyno17-j1-feD2jUGBP5qJwM9JPxeH5M8a7sk
+2026-04-08T13:28:28.534Z - POST /api/intelligence/duplicates - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY1NDU3MCwiZXhwIjoxNzc1NzQwOTcwfQ.aL7sibXyno17-j1-feD2jUGBP5qJwM9JPxeH5M8a7sk
+2026-04-08T13:28:41.825Z - POST /api/intelligence/routing - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY1NDU3MCwiZXhwIjoxNzc1NzQwOTcwfQ.aL7sibXyno17-j1-feD2jUGBP5qJwM9JPxeH5M8a7sk
+2026-04-08T13:28:48.713Z - POST /api/intelligence/sla - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY1NDU3MCwiZXhwIjoxNzc1NzQwOTcwfQ.aL7sibXyno17-j1-feD2jUGBP5qJwM9JPxeH5M8a7sk
+2026-04-08T13:33:57.340Z - POST /api/intelligence/routing - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjUsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTY1NDU3MCwiZXhwIjoxNzc1NzQwOTcwfQ.aL7sibXyno17-j1-feD2jUGBP5qJwM9JPxeH5M8a7sk

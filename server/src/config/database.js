@@ -1,6 +1,12 @@
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+// Temporarily disabled for testing
+// import pkg from '@prisma/client';
+// import "dotenv/config";
 
-const prisma = new PrismaClient();
+// const { PrismaClient } = pkg;
 
+// const prisma = new PrismaClient();
+
+// export default prisma;
+
+const prisma = null; // Mock for testing
 export default prisma;

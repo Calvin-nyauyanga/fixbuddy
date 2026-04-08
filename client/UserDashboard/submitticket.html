@@ -41,6 +41,14 @@
                             <textarea id="description" name="description" placeholder="Detailed description of your problem..." rows="6" required autocomplete="off"></textarea>
                         </div>
 
+                        <!-- Intelligence Insights -->
+                        <div class="intelligence-insights" style="margin-bottom: 1.5rem; padding: 1rem; background: #f5f5f5; border-radius: 4px; display: none;" id="insightsContainer">
+                            <h4 style="margin-top: 0; color: #333;">AI Insights</h4>
+                            <div id="categoryInsight" style="margin-bottom: 0.5rem;"></div>
+                            <div id="priorityInsight" style="margin-bottom: 0.5rem;"></div>
+                            <div id="sentimentInsight" style="margin-bottom: 0.5rem;"></div>
+                        </div>
+
                         <div class="form-group">
                             <label for="category">Category</label>
                             <select id="category" name="category" required autocomplete="off">
@@ -75,6 +83,40 @@
     </footer>
 
     <script src="../js/api-client.js"></script>
+    <script type="module">
+        import { intelligenceAPI } from '../js/intelligenceClient.js';
+
+        // Intelligence analysis on input
+        document.getElementById('ticketForm').addEventListener('input', async (e) => {
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const insightsContainer = document.getElementById('insightsContainer');
+
+            if (title.length > 3 && description.length > 10) {
+                try {
+                    const analysis = await intelligenceAPI.analyzeTicket(title, description);
+
+                    // Display insights
+                    document.getElementById('categoryInsight').textContent = 
+                        `Category: ${analysis.classification.category} (${analysis.classification.confidence}% confidence)`;
+                    
+                    document.getElementById('priorityInsight').textContent = 
+                        `Priority: ${analysis.priority.priority}`;
+                    
+                    document.getElementById('sentimentInsight').textContent = 
+                        `Sentiment: ${analysis.sentiment.emotion}`;
+
+                    insightsContainer.style.display = 'block';
+
+                } catch (error) {
+                    console.error('Intelligence analysis error:', error);
+                    insightsContainer.style.display = 'none';
+                }
+            } else {
+                insightsContainer.style.display = 'none';
+            }
+        });
+    </script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
