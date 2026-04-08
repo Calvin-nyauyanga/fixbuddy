@@ -438,6 +438,28 @@
         document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
         document.getElementById('year').textContent = new Date().getFullYear();
 
+        // Initialize Dashboard Module for live queue and team status
+        await dashboardModule.initialize({
+            autoRefresh: true,
+            refreshInterval: 30000
+        });
+
+        // Listen for queue updates and render
+        dashboardModule.onQueueStatusUpdated((queueData) => {
+            const queueWidget = document.getElementById('queueStatusWidget');
+            if (queueWidget) {
+                DashboardWidgets.renderQueueStatus('queueStatusWidget', queueData);
+            }
+        });
+
+        // Listen for team updates and render
+        dashboardModule.onTeamStatusUpdated((teamData) => {
+            const teamWidget = document.getElementById('teamStatusWidget');
+            if (teamWidget) {
+                DashboardWidgets.renderTeamStatus('teamStatusWidget', teamData);
+            }
+        });
+
         // Load users
         await loadAllUsers();
 
@@ -804,22 +826,15 @@
         }
 
         // ========== INITIALIZE PAGE ==========
-        document.addEventListener('DOMContentLoaded', initUsersPage);
+        window.addEventListener('DOMContentLoaded', initUsersPage);
+        initUsersPage();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            dashboardModule.stopAutoRefresh();
+        });
     </script>
-        <script src="../js/dashboardModule.js"></script>
+    <script src="../js/dashboardModule.js"></script>
     <script src="../js/dashboardWidgets.js"></script>
-
-    // In initUsersPage() function, add:
-    await dashboardModule.initialize({
-        autoRefresh: true,
-        refreshInterval: 30000
-    });
-
-    dashboardModule.onQueueStatusUpdated((queueData) => {
-        const queueWidget = document.getElementById('queueStatusWidget');
-        if (queueWidget) {
-            queueWidget.innerHTML = DashboardWidgets.renderCompactQueue(queueData);
-        }
-    });
 </body>
 </html>

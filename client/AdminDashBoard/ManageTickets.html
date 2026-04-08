@@ -301,6 +301,20 @@
 
             document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
 
+            // Initialize Dashboard Module for live queue and team status
+            await dashboardModule.initialize({
+                autoRefresh: true,
+                refreshInterval: 30000
+            });
+
+            // Listen for queue updates and render
+            dashboardModule.onQueueStatusUpdated((queueData) => {
+                const queueWidget = document.getElementById('queueStatusWidget');
+                if (queueWidget) {
+                    DashboardWidgets.renderQueueStatus('queueStatusWidget', queueData);
+                }
+            });
+
             await loadAllTickets();
             await loadAgentsForAssignment();
             await loadNotifications();
@@ -324,58 +338,96 @@
             }, 3000);
         }
 
+        let allTickets = [];
+
+        function getFilters() {
+            return {
+                status: document.getElementById('filterStatus')?.value || '',
+                priority: document.getElementById('filterPriority')?.value || '',
+                search: document.getElementById('searchTickets')?.value.trim().toLowerCase() || ''
+            };
+        }
+
+        function matchesFilter(ticket, { status, priority, search }) {
+            if (status && ticket.status !== status) return false;
+            if (priority && ticket.priority !== priority) return false;
+
+            if (search) {
+                const filterText = [
+                    ticket.id,
+                    ticket.title,
+                    ticket.status,
+                    ticket.priority,
+                    ticket.createdBy?.name,
+                    ticket.assignedTo?.name,
+                    ticket.description
+                ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+
+                if (!filterText.includes(search)) return false;
+            }
+
+            return true;
+        }
+
+        function displayTickets(tickets) {
+            const tbody = document.getElementById('ticketsTableBody');
+            tbody.innerHTML = '';
+
+            if (tickets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No tickets found</td></tr>';
+                return;
+            }
+
+            tickets.forEach(ticket => {
+                const row = document.createElement('tr');
+                const createdDate = new Date(ticket.createdAt || ticket.created_at).toLocaleDateString();
+                const priorityClass = ticket.priority === 'critical' ? 'critical' : 
+                                    ticket.priority === 'high' ? 'high' : 
+                                    ticket.priority === 'medium' ? 'medium' : 'low';
+                const statusClass = ticket.status || 'open';
+
+                row.innerHTML = `
+                    <td><strong>#${ticket.id}</strong></td>
+                    <td>${ticket.createdBy?.name || 'Unknown'}</td>
+                    <td>${ticket.title}</td>
+                    <td><span class="priority-badge ${priorityClass}">${ticket.priority || 'medium'}</span></td>
+                    <td><span class="status-badge ${statusClass}">${ticket.status || 'open'}</span></td>
+                    <td>${ticket.assignedTo?.name || '<em style="color: #999;">Unassigned</em>'}</td>
+                    <td>${createdDate}</td>
+                    <td>
+                        <div class="action-icons">
+                            <button onclick="viewTicketDetail(${ticket.id})" class="btn-icon btn-view" title="View Details">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button onclick="editTicketStatus(${ticket.id})" class="btn-icon btn-edit" title="Edit Status">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteTicketConfirm(${ticket.id})" class="btn-icon btn-delete" title="Delete Ticket">
+                                <i class="fa-solid fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
         // ========== LOAD ALL TICKETS ==========
         async function loadAllTickets() {
-            const tbody = document.getElementById('ticketsTableBody');
-
             try {
                 const response = await helpdeskAPI.getAllTickets();
-                const tickets = response && response.data && Array.isArray(response.data.tickets) 
-                    ? response.data.tickets 
+                const tickets = response && response.data && Array.isArray(response.data.tickets)
+                    ? response.data.tickets
                     : [];
 
-                tbody.innerHTML = '';
-
-                if (tickets.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No tickets found</td></tr>';
-                    return;
-                }
-
-                tickets.forEach(ticket => {
-                    const row = document.createElement('tr');
-                    const createdDate = new Date(ticket.createdAt || ticket.created_at).toLocaleDateString();
-                    const priorityClass = ticket.priority === 'critical' ? 'critical' : 
-                                        ticket.priority === 'high' ? 'high' : 
-                                        ticket.priority === 'medium' ? 'medium' : 'low';
-                    const statusClass = ticket.status || 'open';
-                    
-                    row.innerHTML = `
-                        <td><strong>#${ticket.id}</strong></td>
-                        <td>${ticket.createdBy?.name || 'Unknown'}</td>
-                        <td>${ticket.title}</td>
-                        <td><span class="priority-badge ${priorityClass}">${ticket.priority || 'medium'}</span></td>
-                        <td><span class="status-badge ${statusClass}">${ticket.status || 'open'}</span></td>
-                        <td>${ticket.assignedTo?.name || '<em style="color: #999;">Unassigned</em>'}</td>
-                        <td>${createdDate}</td>
-                        <td>
-                            <div class="action-icons">
-                                <button onclick="viewTicketDetail(${ticket.id})" class="btn-icon btn-view" title="View Details">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                                <button onclick="editTicketStatus(${ticket.id})" class="btn-icon btn-edit" title="Edit Status">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                                <button onclick="deleteTicketConfirm(${ticket.id})" class="btn-icon btn-delete" title="Delete Ticket">
-                                    <i class="fa-solid fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
+                allTickets = tickets;
+                displayTickets(allTickets);
             } catch (error) {
                 console.error('Error loading tickets:', error);
+                const tbody = document.getElementById('ticketsTableBody');
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red; padding: 20px;">Error loading tickets</td></tr>`;
             }
         }
@@ -599,27 +651,28 @@
         }
 
         // ========== SEARCH TICKETS ==========
-        async function searchTickets(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#ticketsTableBody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
+        function searchTickets() {
+            applyFilters();
         }
 
         // ========== APPLY FILTERS ==========
-        async function applyFilters() {
-            await loadAllTickets();
+        function applyFilters() {
+            const filters = getFilters();
+            const filteredTickets = allTickets.filter(ticket => matchesFilter(ticket, filters));
+            displayTickets(filteredTickets);
         }
 
         // ========== CLEAR FILTERS ==========
         function clearFilters() {
-            document.getElementById('filterStatus').value = '';
-            document.getElementById('filterPriority').value = '';
-            document.getElementById('searchTickets').value = '';
-            loadAllTickets();
+            const statusSelect = document.getElementById('filterStatus');
+            const prioritySelect = document.getElementById('filterPriority');
+            const searchInput = document.getElementById('searchTickets');
+
+            if (statusSelect) statusSelect.value = '';
+            if (prioritySelect) prioritySelect.value = '';
+            if (searchInput) searchInput.value = '';
+
+            displayTickets(allTickets);
         }
 
         // ========== LOAD NOTIFICATIONS ==========
@@ -672,30 +725,14 @@
         // Initialize on load
         window.addEventListener('DOMContentLoaded', initManageTickets);
         initManageTickets();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            dashboardModule.stopAutoRefresh();
+        });
     </script>
-        <script src="../js/dashboardModule.js"></script>
+    <script src="../js/dashboardModule.js"></script>
     <script src="../js/dashboardWidgets.js"></script>
     
-    // Add to initManageTickets() function:
-    async function initManageTickets() {
-        // ... existing code ...
-
-        // Initialize Dashboard Module
-        await dashboardModule.initialize({
-            autoRefresh: true,
-            refreshInterval: 30000
-        });
-
-        // Render compact queue widget
-        dashboardModule.onQueueStatusUpdated((queueData) => {
-            const queueWidget = document.getElementById('queueStatusWidget');
-            if (queueWidget) {
-                queueWidget.innerHTML = DashboardWidgets.renderCompactQueue(queueData);
-            }
-        });
-
-        await loadAllTickets();
-        // ... rest of existing code ...
-    }
 </body>
 </html>

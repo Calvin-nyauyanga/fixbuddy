@@ -358,6 +358,28 @@
 
             document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
             
+            // Initialize Dashboard Module for live queue and team status
+            await dashboardModule.initialize({
+                autoRefresh: true,
+                refreshInterval: 30000
+            });
+
+            // Listen for queue updates and render
+            dashboardModule.onQueueStatusUpdated((queueData) => {
+                const queueWidget = document.getElementById('queueStatusWidget');
+                if (queueWidget) {
+                    DashboardWidgets.renderQueueStatus('queueStatusWidget', queueData);
+                }
+            });
+
+            // Listen for team updates and render
+            dashboardModule.onTeamStatusUpdated((teamData) => {
+                const teamWidget = document.getElementById('teamStatusWidget');
+                if (teamWidget) {
+                    DashboardWidgets.renderTeamStatus('teamStatusWidget', teamData);
+                }
+            });
+            
             await loadAllReports();
         }
 
@@ -626,21 +648,13 @@
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', initReports);
         initReports();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            dashboardModule.stopAutoRefresh();
+        });
     </script>
-        <script src="../js/dashboardModule.js"></script>
+    <script src="../js/dashboardModule.js"></script>
     <script src="../js/dashboardWidgets.js"></script>
-
-    // In initReports() function, add:
-    await dashboardModule.initialize({
-        autoRefresh: true,
-        refreshInterval: 30000
-    });
-
-    dashboardModule.onQueueStatusUpdated((queueData) => {
-        const queueWidget = document.getElementById('queueStatusWidget');
-        if (queueWidget) {
-            queueWidget.innerHTML = DashboardWidgets.renderCompactQueue(queueData);
-        }
-    });
 </body>
 </html>

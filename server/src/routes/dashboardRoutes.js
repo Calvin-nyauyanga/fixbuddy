@@ -5,8 +5,12 @@ import {
   updateAgentStatus,
   getDashboardData,
 } from '../controllers/dashboardController.js';
+import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Protect all dashboard routes with authentication
+router.use(authMiddleware);
 
 // Get queue status
 router.get('/queue-status', getQueueStatus);
