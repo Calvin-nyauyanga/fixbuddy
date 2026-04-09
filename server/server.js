@@ -1,9 +1,6 @@
-import dotenv from "dotenv";
+import "dotenv/config";                // ← FIRST LINE (loads env vars)
 
-// Load environment variables FIRST before any imports that use them
-dotenv.config();
-
-import app from './src/app.js';
+import app from './src/app.js';        // ← SECOND (now env vars are available)
 
 const PORT = process.env.PORT || 5000;
 

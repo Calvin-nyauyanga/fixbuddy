@@ -1,4 +1,4 @@
-import prisma from '../config/database.js';
+import prisma from '../config/prisma.js';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 
