@@ -14,6 +14,8 @@ let intelligenceData = {
     predictedCorrectly: 0
 };
 
+const API_BASE = 'http://localhost:5000/api';
+
 // API Endpoints
 const INTELLIGENCE_API = {
     async getAnalytics(dateRange = '30', category = '') {
@@ -22,7 +24,7 @@ const INTELLIGENCE_API = {
                 days: dateRange,
                 category: category
             });
-            const response = await fetch(`/api/intelligence/analytics?${params}`, {
+            const response = await fetch(`${API_BASE}/intelligence/analytics?${params}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -39,7 +41,7 @@ const INTELLIGENCE_API = {
 
     async getAccuracyMetrics(dateRange = '30') {
         try {
-            const response = await fetch(`/api/intelligence/accuracy-metrics?days=${dateRange}`, {
+            const response = await fetch(`${API_BASE}/intelligence/accuracy-metrics?days=${dateRange}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -56,7 +58,7 @@ const INTELLIGENCE_API = {
 
     async getRoutingMetrics(dateRange = '30') {
         try {
-            const response = await fetch(`/api/intelligence/routing-metrics?days=${dateRange}`, {
+            const response = await fetch(`${API_BASE}/intelligence/routing-metrics?days=${dateRange}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -73,7 +75,7 @@ const INTELLIGENCE_API = {
 
     async getSentimentAnalysis(dateRange = '30') {
         try {
-            const response = await fetch(`/api/intelligence/sentiment-analysis?days=${dateRange}`, {
+            const response = await fetch(`${API_BASE}/intelligence/sentiment-analysis?days=${dateRange}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -90,7 +92,7 @@ const INTELLIGENCE_API = {
 
     async getInsights(dateRange = '30') {
         try {
-            const response = await fetch(`/api/intelligence/insights?days=${dateRange}`, {
+            const response = await fetch(`${API_BASE}/intelligence/insights?days=${dateRange}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,

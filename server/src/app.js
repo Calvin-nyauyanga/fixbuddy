@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import helpdeskRoutes from './routes/helpdeskRoutes.js';
 import reportsRoutes from './routes/reportsRoutes.js';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import prisma from './config/prisma.js';
 import userRoutes from './routes/userRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
