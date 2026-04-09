@@ -585,7 +585,7 @@ export const createTicketWithIntelligence = async (req, res) => {
     // Get agents for routing
     const handlers = await prisma.user.findMany({
       where: { role: 'agent' },
-      select: { id: true, name: true, specialization: true },
+      select: { id: true, name: true, status: true },
     });
 
     // Get historical tickets for SLA estimation

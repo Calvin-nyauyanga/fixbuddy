@@ -216,7 +216,7 @@ router.get('/routing-metrics', authMiddleware, async (req, res) => {
             select: {
                 id: true,
                 name: true,
-                specialization: true
+                status: true
             }
         });
 
@@ -236,7 +236,7 @@ router.get('/routing-metrics', authMiddleware, async (req, res) => {
 
             agentMetrics[agent.id] = {
                 agent_name: agent.name,
-                specialization: agent.specialization || 'General Support',
+                status: agent.status,
                 total_assigned: assignedTickets.length,
                 total_resolved: resolved.length,
                 routing_accuracy: assignedTickets.length > 0
@@ -251,8 +251,8 @@ router.get('/routing-metrics', authMiddleware, async (req, res) => {
             overall_routing_accuracy: calculateOverallAccuracy(Object.values(agentMetrics))
         });
     } catch (error) {
-        console.error('Routing metrics error:', error);
-        res.status(500).json({ error: error.message });
+        console.error('🔴 ROUTING-METRICS-ERROR:', error.message);
+        res.status(500).json({ error: '[ROUTING-METRICS] ' + error.message });
     }
 });
 
@@ -447,7 +447,5 @@ function calculateOverallAccuracy(agentMetrics) {
     const totalAccuracy = agentMetrics.reduce((sum, agent) => sum + agent.routing_accuracy, 0);
     return totalAccuracy / agentMetrics.length;
 }
-
-export default router;
 
 export default router;
