@@ -25,6 +25,7 @@ model User {
   ticketsAssigned Ticket[] @relation("AssignedTo")
   comments Comment[]
   activities Activity[]
+  darkMode  Boolean @default(false)
 
   @@map("users")
 }

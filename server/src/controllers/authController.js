@@ -106,6 +106,14 @@ export const login = async (req, res) => {
     // Find user
     const user = await prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        name: true,
+        role: true,
+        status: true,
+      },
     });
 
     if (!user) {
@@ -240,6 +248,14 @@ export const adminLogin = async (req, res) => {
     // Find admin user
     const admin = await prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        name: true,
+        role: true,
+        status: true,
+      },
     });
 
     if (!admin) {

@@ -2,7 +2,7 @@
 // USER REPORTS API SERVICE
 // ============================================
 
-const API_BASE = 'http://localhost:5000/api';
+const USER_REPORTS_API_BASE = 'http://localhost:5000/api';
 
 /**
  * Get authentication token from localStorage
@@ -20,7 +20,7 @@ async function authenticatedFetch(endpoint, options = {}) {
         'Authorization': `Bearer ${getAuthToken()}`
     };
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    const response = await fetch(`${USER_REPORTS_API_BASE}${endpoint}`, {
         ...options,
         headers: { ...headers, ...options.headers }
     });

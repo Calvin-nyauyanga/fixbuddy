@@ -1,22 +1,22 @@
 //JWT Helper functions for generating, verifying, and decoding tokens
 import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_EXPIRE = process.env.JWT_EXPIRE || '1d';
+
 export const generateToken = (userId, role = 'user') => {
-  const secret = process.env.JWT_SECRET;
-  const expiresIn = process.env.JWT_EXPIRE || '1d';
-  if (!secret) {
-    throw new Error('JWT secret is not configured');
+  if (!process.env.JWT_SECRET) {
+    console.warn('Warning: JWT_SECRET is not configured. Using fallback secret for development only.');
   }
-  return jwt.sign({ id: userId, role: role }, secret, {
-    expiresIn,
+
+  return jwt.sign({ id: userId, role: role }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRE,
   });
 };
 
 export const verifyToken = (token) => {
   try {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) return null;
-    return jwt.verify(token, secret);
+    return jwt.verify(token, JWT_SECRET);
   } catch (error) {
     return null;
   }
