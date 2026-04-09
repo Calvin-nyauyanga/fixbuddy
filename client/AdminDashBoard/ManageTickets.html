@@ -297,6 +297,8 @@
     </footer>
 
     <script src="../js/api-client.js"></script>
+    <script src="../js/dashboardModule.js"></script>
+    <script src="../js/dashboardWidgets.js"></script>
     <script type="module">
         import { intelligenceAPI } from '../js/intelligenceClient.js';
 
@@ -446,7 +448,7 @@
             } catch (error) {
                 console.error('Error loading tickets:', error);
                 const tbody = document.getElementById('ticketsTableBody');
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red; padding: 20px;">Error loading tickets</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red; padding: 20px;">Error loading tickets: ${error.message}</td></tr>`;
             }
         }
 
@@ -775,15 +777,11 @@
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', initManageTickets);
-        initManageTickets();
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             dashboardModule.stopAutoRefresh();
         });
     </script>
-    <script src="../js/dashboardModule.js"></script>
-    <script src="../js/dashboardWidgets.js"></script>
-    
 </body>
 </html>

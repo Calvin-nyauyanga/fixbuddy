@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import prisma from '../config/prisma.js'; 
 import TicketIntelligenceService from '../services/TicketIntelligenceService.js'; 
 
 const intelligenceService = new TicketIntelligenceService();
@@ -501,10 +501,18 @@ export const assignTicket = async (req, res) => {
 export const getUserTickets = async (req, res) => {
   try {
     const { status, priority, page = 1, limit = 10 } = req.query;
+    const userId = parseInt(req.user?.id ?? req.user?.userId, 10);
+
+    if (!Number.isInteger(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user identifier in authentication token',
+      });
+    }
 
     // Build filter
     const filters = {
-      createdById: req.user.id,
+      createdById: userId,
     };
 
     if (status) filters.status = status;

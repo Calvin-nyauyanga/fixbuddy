@@ -417,11 +417,19 @@ export const closeTicket = async (req, res) => {
 // ✅ GET NOTIFICATIONS
 export const getNotifications = async (req, res) => {
   try {
+    const userId = parseInt(req.user?.id, 10);
+    if (!Number.isInteger(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user identifier in authentication token',
+      });
+    }
+
     // Get recent activities related to user
     const activities = await prisma.activity.findMany({
       where: {
         OR: [
-          { userId: req.user.id },
+          { userId },
         ],
       },
       orderBy: { createdAt: 'desc' },

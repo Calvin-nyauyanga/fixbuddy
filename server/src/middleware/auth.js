@@ -21,7 +21,15 @@ export const authMiddleware = (req, res, next) => {
       });
     }
 
-    req.user = decoded;
+    const userId = parseInt(decoded.id ?? decoded.userId, 10);
+    if (!Number.isInteger(userId)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token payload.',
+      });
+    }
+
+    req.user = { ...decoded, id: userId };
     next();
   } catch (error) {
     res.status(500).json({
