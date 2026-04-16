@@ -15,7 +15,7 @@ import { loadSystemSettings } from './middleware/settingsMiddleware.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import intelligenceRoutes from './routes/intelligenceRoutes.js';
 import intelligenceAnalyticsRoutes from './routes/intelligenceAnalyticsRoutes.js';
-import darkModeRoutes from './routes/darkModeRoutes.js';
+import darkmodeRoutes from './routes/darkmodeRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,7 +70,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/intelligence', intelligenceRoutes);
 app.use('/api/intelligence', intelligenceAnalyticsRoutes);
-app.use('/api/darkmode', darkModeRoutes);
+app.use('/api/darkmode', darkmodeRoutes);
 
 // Temporary test route to verify routing (placed before userRoutes mounting)
 app.get('/api/users/test-route', (req, res) => {

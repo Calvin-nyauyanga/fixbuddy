@@ -287,6 +287,62 @@ const dashboardAPI = {
     }).then(res => res.json());
   },
 };
+// client/js/api-client.js or similar
+
+const darkmodeAPI = {
+  // Get user's darkmode preference
+  async getPreference() {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch('http://localhost:5000/api/darkmode/preference', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.json();
+  },
+
+  // Update darkmode preference
+  async setPreference(darkMode) {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch('http://localhost:5000/api/darkmode/preference', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ darkMode })
+    });
+    return response.json();
+  },
+
+  // Toggle darkmode
+  async toggle() {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch('http://localhost:5000/api/darkmode/toggle', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.json();
+  },
+
+  // Get all users' preferences (admin only)
+  async getAllPreferences() {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch('http://localhost:5000/api/darkmode/all', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.json();
+  }
+};
 
 // Export for use in HTML files
 window.apiRequest = apiRequest;
