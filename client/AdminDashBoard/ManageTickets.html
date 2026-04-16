@@ -298,8 +298,6 @@
 
     <script src="../js/api-client.js"></script>
     <script src="../js/darkMode.js"></script>
-    <script src="../js/dashboardModule.js"></script>
-    <script src="../js/dashboardWidgets.js"></script>
     <script type="module">
         import { intelligenceAPI } from '../js/intelligenceClient.js';
 
@@ -779,10 +777,6 @@
         // Initialize on load
         window.addEventListener('DOMContentLoaded', initManageTickets);
 
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            dashboardModule.stopAutoRefresh();
-        });
     </script>
 </body>
 </html>

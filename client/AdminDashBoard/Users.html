@@ -833,13 +833,6 @@
         // ========== INITIALIZE PAGE ==========
         window.addEventListener('DOMContentLoaded', initUsersPage);
         initUsersPage();
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            dashboardModule.stopAutoRefresh();
-        });
     </script>
-    <script src="../js/dashboardModule.js"></script>
-    <script src="../js/dashboardWidgets.js"></script>
 </body>
 </html>
