@@ -87,6 +87,13 @@
                 loginMessage.textContent = '✅ Login successful! Redirecting...';
                 loginMessage.style.color = '#4caf50';
 
+                localStorage.setItem('authToken', token);
+                localStorage.setItem('user', JSON.stringify(user));
+
+                if (window.themeManager) {
+                themeManager.syncAfterLogin();
+}
+
                 // Redirect to dashboard after 1 second
                 setTimeout(() => {
                     window.location.href = '../UserDashboard/UserDashboard.html';

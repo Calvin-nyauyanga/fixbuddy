@@ -6,7 +6,11 @@
 const API_BASE = 'http://localhost:5000/api';
 
 function getAuthToken() {
-  return localStorage.getItem('authToken');
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    console.warn('⚠️ No auth token found');
+  }
+  return token;
 }
 
 const themeAPI = {
@@ -15,16 +19,23 @@ const themeAPI = {
    */
   getDarkModePreference: async () => {
     try {
+      const token = getAuthToken();
+
+      if (!token) {
+        throw new Error('Not authenticated - no token available');
+      }
+
       const response = await fetch(`${API_BASE}/theme/dark-mode`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch dark mode preference: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`API Error ${response.status}: ${errorData.message || 'Failed to fetch dark mode preference'}`);
       }
 
       return await response.json();
@@ -39,17 +50,24 @@ const themeAPI = {
    */
   updateDarkModePreference: async (darkmode) => {
     try {
+      const token = getAuthToken();
+
+      if (!token) {
+        throw new Error('Not authenticated - no token available');
+      }
+
       const response = await fetch(`${API_BASE}/theme/dark-mode`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ darkmode }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update dark mode preference: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`API Error ${response.status}: ${errorData.message || 'Failed to update dark mode preference'}`);
       }
 
       return await response.json();
@@ -64,16 +82,23 @@ const themeAPI = {
    */
   toggleDarkMode: async () => {
     try {
+      const token = getAuthToken();
+
+      if (!token) {
+        throw new Error('Not authenticated - no token available');
+      }
+
       const response = await fetch(`${API_BASE}/theme/dark-mode/toggle`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to toggle dark mode: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`API Error ${response.status}: ${errorData.message || 'Failed to toggle dark mode'}`);
       }
 
       return await response.json();
