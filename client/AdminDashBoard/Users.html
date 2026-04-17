@@ -445,27 +445,32 @@
         document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        // Initialize Dashboard Module for live queue and team status
-        await dashboardModule.initialize({
-            autoRefresh: true,
-            refreshInterval: 30000
-        });
+       // ==========================================
+// INITIALIZATION
+// ==========================================
+async function initUsersPage() {
+    const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
 
-        // Listen for queue updates and render
-        dashboardModule.onQueueStatusUpdated((queueData) => {
-            const queueWidget = document.getElementById('queueStatusWidget');
-            if (queueWidget) {
-                DashboardWidgets.renderQueueStatus('queueStatusWidget', queueData);
-            }
-        });
+    // Check authentication
+    if (!token || !admin || userRole !== 'admin') {
+        window.location.href = '../Main Dashboard/AdminLoginPage.html';
+        return;
+    }
 
-        // Listen for team updates and render
-        dashboardModule.onTeamStatusUpdated((teamData) => {
-            const teamWidget = document.getElementById('teamStatusWidget');
-            if (teamWidget) {
-                DashboardWidgets.renderTeamStatus('teamStatusWidget', teamData);
-            }
-        });
+    // Display admin welcome message
+    document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ✅ REMOVED: dashboardModule.initialize() - Only on AdminDashBoard.html
+
+    // Load users
+    await loadAllUsers();
+
+    // Setup event listeners
+    setupIconListeners();
+}
 
         // Load users
         await loadAllUsers();

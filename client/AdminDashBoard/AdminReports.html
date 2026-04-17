@@ -365,30 +365,25 @@
 
             document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
             
-            // Initialize Dashboard Module for live queue and team status
-            await dashboardModule.initialize({
-                autoRefresh: true,
-                refreshInterval: 30000
-            });
+          // ========== INITIALIZATION ==========
+async function initReports() {
+    const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
 
-            // Listen for queue updates and render
-            dashboardModule.onQueueStatusUpdated((queueData) => {
-                const queueWidget = document.getElementById('queueStatusWidget');
-                if (queueWidget) {
-                    DashboardWidgets.renderQueueStatus('queueStatusWidget', queueData);
-                }
-            });
+    if (!token || !admin || userRole !== 'admin') {
+        window.location.href = '../Main Dashboard/AdminLoginPage.html';
+        return;
+    }
 
-            // Listen for team updates and render
-            dashboardModule.onTeamStatusUpdated((teamData) => {
-                const teamWidget = document.getElementById('teamStatusWidget');
-                if (teamWidget) {
-                    DashboardWidgets.renderTeamStatus('teamStatusWidget', teamData);
-                }
-            });
-            
-            await loadAllReports();
-        }
+    document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+    document.getElementById('year').textContent = new Date().getFullYear();
+    
+    // ✅ REMOVED: dashboardModule.initialize() - Only on AdminDashBoard.html
+    // ✅ REMOVED: queueStatusWidget - Only on AdminDashBoard.html
+    
+    await loadAllReports();
+}
 
         // ========== LOAD ALL REPORTS ==========
         async function loadAllReports() {

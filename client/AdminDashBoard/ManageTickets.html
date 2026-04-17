@@ -160,8 +160,7 @@
         </aside>
 
         <section class="admin-content">
-            <!-- Queue Status Summary Widget -->
-            <div id="queueStatusWidget"></div>
+            
             <!-- Tickets List View -->
             <div class="tickets-management-container" id="ticketsListSection">
                 <h2>All Tickets</h2>
@@ -310,40 +309,30 @@
         document.getElementById('year').textContent = new Date().getFullYear();
 
         // ========== INITIALIZATION ==========
-        async function initManageTickets() {
-            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
-            const token = localStorage.getItem('authToken');
-            const userRole = localStorage.getItem('userRole');
+async function initManageTickets() {
+    const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
 
-            if (!token || !admin || userRole !== 'admin') {
-                window.location.href = '../Main Dashboard/AdminLoginPage.html';
-                return;
-            }
+    if (!token || !admin || userRole !== 'admin') {
+        window.location.href = '../Main Dashboard/AdminLoginPage.html';
+        return;
+    }
 
-            document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+    document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-            // Initialize Dashboard Module for live queue and team status
-            await dashboardModule.initialize({
-                autoRefresh: true,
-                refreshInterval: 30000
-            });
+    // ✅ REMOVED: dashboardModule.initialize() - Only on AdminDashBoard.html
+    // ✅ REMOVED: queueStatusWidget - Only on AdminDashBoard.html
 
-            // Listen for queue updates and render
-            dashboardModule.onQueueStatusUpdated((queueData) => {
-                const queueWidget = document.getElementById('queueStatusWidget');
-                if (queueWidget) {
-                    DashboardWidgets.renderQueueStatus('queueStatusWidget', queueData);
-                }
-            });
+    await loadAllTickets();
+    await loadAgentsForAssignment();
+    await loadNotifications();
 
-            await loadAllTickets();
-            await loadAgentsForAssignment();
-            await loadNotifications();
-
-            document.getElementById('searchTickets').addEventListener('keyup', searchTickets);
-            document.getElementById('filterStatus').addEventListener('change', applyFilters);
-            document.getElementById('filterPriority').addEventListener('change', applyFilters);
-        }
+    document.getElementById('searchTickets').addEventListener('keyup', searchTickets);
+    document.getElementById('filterStatus').addEventListener('change', applyFilters);
+    document.getElementById('filterPriority').addEventListener('change', applyFilters);
+}
 
         // ========== SHOW NOTIFICATION ==========
         function showNotification(message, type = 'success') {
