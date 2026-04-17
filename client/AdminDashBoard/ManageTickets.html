@@ -103,6 +103,8 @@
             }
         }
     </style>
+     <script src="../js/themeApi.js"></script>
+    <script src="../js/themeManager.js"></script>
 </head>
 <body class="admin-dashboard-body">
     <header class="topbar dashboard-header">
@@ -116,6 +118,7 @@
                 <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
                 <span class="welcome-message" id="adminWelcome" style="margin-left: 1rem;">👤 Admin</span>
                 <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
+                 <button class="theme-toggle" title="Toggle Dark Mode">🌙</button>
             </div>
         </div>
     </header>
@@ -777,13 +780,7 @@
         window.addEventListener('DOMContentLoaded', initManageTickets);
         initManageTickets();
 
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            dashboardModule.stopAutoRefresh();
-        });
     </script>
-    <script src="../js/dashboardModule.js"></script>
-    <script src="../js/dashboardWidgets.js"></script>
     
 </body>
 </html>

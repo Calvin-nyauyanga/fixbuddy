@@ -19,6 +19,8 @@ if ('serviceWorker' in navigator) {
         .catch(err => console.log('Service Worker registration failed:', err));
 }
 </script>
+ <script src="../js/themeApi.js"></script>
+    <script src="../js/themeManager.js"></script>
 </head>
 <body class="main-body">
 
@@ -31,6 +33,7 @@ if ('serviceWorker' in navigator) {
         <div class="topbar-auth">
             <a href="UserLoginPage.html" class="btn btn-primary">Login</a>
             <a href="SignUp.html" class="btn btn-secondary">Sign Up</a>
+             <button class="theme-toggle" title="Toggle Dark Mode">🌙</button>
         </div>
     </header>
 

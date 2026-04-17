@@ -2225,5 +2225,443 @@ th, td {
     color: #aaa;
     font-size: 0.9em;
 }
+/* ==========================================
+   DARK MODE THEME VARIABLES & STYLES
+   ========================================== */
 
+/* Light Mode (Default) */
+:root[data-theme="light"],
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #eeeeee;
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  --border-color-dm: #ddd;
+  --border-light: #efefef;
+  --hover-bg: #f0f0f0;
+  --card-bg-dm: #ffffff;
+  --shadow-dm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --input-bg: #ffffff;
+  --input-border: #ddd;
+  --link-color-dm: #007bff;
+  --success-color-dm: #28a745;
+  --error-color-dm: #dc3545;
+  --warning-color-dm: #ffc107;
+  --info-color-dm: #17a2b8;
+}
+
+/* Dark Mode */
+:root[data-theme="dark"] {
+  --bg-primary: #0f1419;
+  --bg-secondary: #1a1f26;
+  --bg-tertiary: #242b33;
+  --text-primary: #e4e6eb;
+  --text-secondary: #b0b3b8;
+  --text-light: #7a7d82;
+  --border-color-dm: #3e444c;
+  --border-light: #2d323a;
+  --hover-bg: #2a3139;
+  --card-bg-dm: #1a1f26;
+  --shadow-dm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --input-bg: #242b33;
+  --input-border: #3e444c;
+  --link-color-dm: #64b5f6;
+  --success-color-dm: #4caf50;
+  --error-color-dm: #f44336;
+  --warning-color-dm: #ff9800;
+  --info-color-dm: #2196f3;
+}
+
+/* ==========================================
+   GLOBAL DARK MODE STYLES
+   ========================================== */
+
+body.dark-mode,
+body[data-theme="dark"] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-mode,
+body[data-theme="light"] {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Universal element transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ==========================================
+   CONTAINERS & CARDS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] .container,
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .box,
+:root[data-theme="dark"] .section,
+:root[data-theme="dark"] .dashboard-section,
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .dashboard-header,
+:root[data-theme="dark"] .search-bar input,
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .reports-analytics,
+:root[data-theme="dark"] .tickets-management-container,
+:root[data-theme="dark"] .chart-card {
+  background-color: var(--card-bg-dm);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color-dm);
+}
+
+:root[data-theme="dark"] table {
+  background-color: var(--card-bg-dm);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color-dm);
+}
+
+:root[data-theme="dark"] thead tr {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] tbody tr {
+  border-color: var(--border-light);
+}
+
+:root[data-theme="dark"] tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+/* ==========================================
+   INPUTS & FORMS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] .form-control {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--input-border);
+}
+
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] textarea:focus,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] .form-control:focus {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--link-color-dm);
+  box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.1);
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: var(--text-light);
+}
+
+/* ==========================================
+   BUTTONS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] button,
+:root[data-theme="dark"] .btn,
+:root[data-theme="dark"] .button {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color-dm);
+}
+
+:root[data-theme="dark"] button:hover,
+:root[data-theme="dark"] .btn:hover,
+:root[data-theme="dark"] .button:hover {
+  background-color: var(--hover-bg);
+}
+
+:root[data-theme="dark"] button:disabled,
+:root[data-theme="dark"] .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Primary Button - Dark Mode */
+:root[data-theme="dark"] .btn-primary {
+  background-color: var(--link-color-dm);
+  color: #fff;
+  border: none;
+}
+
+:root[data-theme="dark"] .btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* ==========================================
+   NAVIGATION & HEADER (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] nav,
+:root[data-theme="dark"] header,
+:root[data-theme="dark"] .navbar,
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .dashboard-header {
+  background-color: var(--card-bg-dm);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color-dm);
+}
+
+:root[data-theme="dark"] .search-bar input {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--input-border);
+}
+
+:root[data-theme="dark"] .search-bar input:focus {
+  border-color: var(--link-color-dm);
+}
+
+/* ==========================================
+   MODALS & DIALOGS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .dialog,
+:root[data-theme="dark"] .popup,
+:root[data-theme="dark"] .overlay {
+  background-color: var(--card-bg-dm);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .modal-content,
+:root[data-theme="dark"] .dialog-content {
+  background-color: var(--card-bg-dm);
+}
+
+/* ==========================================
+   THEME TOGGLE BUTTON
+   ========================================== */
+
+.theme-toggle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color-dm);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--hover-bg);
+  transform: scale(1.05);
+}
+
+.theme-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:root[data-theme="dark"] .theme-toggle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color-dm);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .theme-toggle:hover {
+  background-color: var(--hover-bg);
+}
+
+/* ==========================================
+   LINKS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] a {
+  color: var(--link-color-dm);
+  text-decoration: none;
+}
+
+:root[data-theme="dark"] a:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================
+   TEXT COLORS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] .text-primary {
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .text-secondary {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .text-light {
+  color: var(--text-light);
+}
+
+/* ==========================================
+   STATUS BADGES (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] .status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+:root[data-theme="dark"] .status-badge.active {
+  background-color: var(--success-color-dm);
+  color: white;
+}
+
+:root[data-theme="dark"] .status-badge.inactive {
+  background-color: var(--error-color-dm);
+  color: white;
+}
+
+:root[data-theme="dark"] .status-badge.pending {
+  background-color: var(--warning-color-dm);
+  color: #000;
+}
+
+:root[data-theme="dark"] .status-badge.open {
+  background-color: #f7a268;
+  color: white;
+}
+
+:root[data-theme="dark"] .status-badge.progress {
+  background-color: #5d53f6;
+  color: white;
+}
+
+:root[data-theme="dark"] .status-badge.closed {
+  background-color: var(--success-color-dm);
+  color: white;
+}
+
+/* ==========================================
+   ALERTS & NOTIFICATIONS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] .alert {
+  border-radius: 4px;
+  padding: 12px 16px;
+}
+
+:root[data-theme="dark"] .alert-success {
+  background-color: var(--success-color-dm);
+  color: white;
+}
+
+:root[data-theme="dark"] .alert-error {
+  background-color: var(--error-color-dm);
+  color: white;
+}
+
+:root[data-theme="dark"] .alert-warning {
+  background-color: var(--warning-color-dm);
+  color: #000;
+}
+
+:root[data-theme="dark"] .alert-info {
+  background-color: var(--info-color-dm);
+  color: white;
+}
+
+/* ==========================================
+   SIDEBAR (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] .sidebar {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .sidebar-nav-item {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .sidebar-nav-item:hover {
+  color: var(--link-color-dm);
+  background-color: var(--hover-bg);
+}
+
+:root[data-theme="dark"] .sidebar-nav-item.active {
+  color: var(--text-primary);
+  background-color: var(--hover-bg);
+  border-left-color: var(--link-color-dm);
+}
+
+/* ==========================================
+   REPORT & ACTIVITY SECTIONS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] .reports-analytics,
+:root[data-theme="dark"] .tickets-management-container,
+:root[data-theme="dark"] .activity-icon {
+  background-color: var(--card-bg-dm);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .activity-icon {
+  background-color: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] .activity-icon i {
+  color: var(--link-color-dm);
+}
+
+/* ==========================================
+   SCROLLBAR (Webkit browsers - Dark Mode)
+   ========================================== */
+
+:root[data-theme="dark"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--border-color-dm);
+  border-radius: 5px;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-light);
+}
+
+/* ==========================================
+   FORM FIELDS (DARK MODE)
+   ========================================== */
+
+:root[data-theme="dark"] .form-control,
+:root[data-theme="dark"] .search-bar input {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--input-border);
+}
+
+:root[data-theme="dark"] .chart-placeholder {
+  color: var(--text-light);
+  border-color: var(--border-color-dm);
+}
 /* =========================================================================

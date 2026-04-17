@@ -141,6 +141,8 @@
             left: 28px;
         }
     </style>
+     <script src="../js/themeApi.js"></script>
+    <script src="../js/themeManager.js"></script>
 </head>
 <body class="admin-dashboard-body">
     <!-- Audio element for notification sound (using external file to comply with CSP) -->
@@ -157,6 +159,7 @@
                 <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
                 <span class="welcome-message" id="adminWelcome" style="margin-left: 1rem;">👤 Admin</span>
                 <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
+                 <button class="theme-toggle" title="Toggle Dark Mode">🌙</button>
             </div>
         </div>
     </header>
@@ -689,10 +692,7 @@
         window.addEventListener('DOMContentLoaded', initAdminDashboard);
         initAdminDashboard();
 
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            dashboardModule.stopAutoRefresh();
-        });
+        
     </script>
 </body>
 </html>
