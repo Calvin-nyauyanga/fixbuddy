@@ -1,4 +1,4 @@
-import prisma from '../config/database.js';
+import prisma from '../config/prisma.js';
 import TicketIntelligenceService from '../services/TicketIntelligenceService.js'; 
 
 const intelligenceService = new TicketIntelligenceService();

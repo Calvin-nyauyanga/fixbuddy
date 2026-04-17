@@ -2532,3 +2532,6 @@
 2026-04-17T12:35:57.273Z - POST /api/theme/dark-mode/toggle - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NjMyNjQ3MSwiZXhwIjoxNzc2NDEyODcxfQ.ihbARYUvjHfq0sS7sbgXgB_5u7DpBtXg98HJ29StNTI
 2026-04-17T12:35:59.033Z - POST /api/theme/dark-mode/toggle - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NjMyNjQ3MSwiZXhwIjoxNzc2NDEyODcxfQ.ihbARYUvjHfq0sS7sbgXgB_5u7DpBtXg98HJ29StNTI
 2026-04-17T12:37:31.218Z - POST /api/auth/signup - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NjMyNjQ3MSwiZXhwIjoxNzc2NDEyODcxfQ.ihbARYUvjHfq0sS7sbgXgB_5u7DpBtXg98HJ29StNTI
+2026-04-17T12:45:53.399Z - GET /api/theme/dark-mode - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NjMyNjQ3MSwiZXhwIjoxNzc2NDEyODcxfQ.ihbARYUvjHfq0sS7sbgXgB_5u7DpBtXg98HJ29StNTI
+2026-04-17T12:45:58.016Z - POST /api/auth/login - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NjMyNjQ3MSwiZXhwIjoxNzc2NDEyODcxfQ.ihbARYUvjHfq0sS7sbgXgB_5u7DpBtXg98HJ29StNTI
+2026-04-17T12:46:17.430Z - POST /api/auth/signup - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzksInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NjMyNjQ3MSwiZXhwIjoxNzc2NDEyODcxfQ.ihbARYUvjHfq0sS7sbgXgB_5u7DpBtXg98HJ29StNTI

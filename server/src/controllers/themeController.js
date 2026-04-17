@@ -1,4 +1,4 @@
-import prisma from '../config/database.js';
+import prisma from '../config/prisma.js';
 
 // ============================================
 // GET USER DARK MODE PREFERENCE
