@@ -181,6 +181,7 @@
             <div class="user-info">
                 <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
                 <span class="welcome-message" id="adminWelcome">👤 Admin</span>
+                <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
                  <button class="theme-toggle" title="Toggle Dark Mode">🌙</button>
             </div>
         </div>
@@ -347,311 +348,309 @@
     <script src="../js/reportsApi.js"></script>
     <script src="../js/api-client.js"></script>
     <script>
-        // Chart instances for updating
-        let chartsInstances = {};
+    // Chart instances for updating
+    let chartsInstances = {};
 
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ========== INITIALIZATION ==========
+    async function initReports() {
+        const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+        const token = localStorage.getItem('authToken');
+        const userRole = localStorage.getItem('userRole');
+
+        if (!token || !admin || userRole !== 'admin') {
+            window.location.href = '../Main Dashboard/AdminLoginPage.html';
+            return;
+        }
+
+        document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
         document.getElementById('year').textContent = new Date().getFullYear();
+        
+        // Load reports on page load
+        await loadAllReports();
+    }
 
-        // ========== INITIALIZATION ==========
-        async function initReports() {
-            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
-            const token = localStorage.getItem('authToken');
-            const userRole = localStorage.getItem('userRole');
+    // ========== LOAD ALL REPORTS ==========
+    async function loadAllReports() {
+        try {
+            showLoading();
 
-            if (!token || !admin || userRole !== 'admin') {
-                window.location.href = '../Main Dashboard/AdminLoginPage.html';
+            // Load statistics
+            const statsResponse = await adminReportsAPI.getDashboardStats();
+            if (statsResponse.data) {
+                updateStatistics(statsResponse.data);
+            }
+
+            // Load trends
+            const trendsResponse = await adminReportsAPI.getResolutionTrends();
+            if (trendsResponse.data) {
+                renderTicketsTrendChart(trendsResponse.data);
+            }
+
+            // Load status distribution
+            const statusResponse = await adminReportsAPI.getStatusDistribution();
+            if (statusResponse.data) {
+                renderStatusChart(statusResponse.data);
+            }
+
+            // Load categories
+            const categoryResponse = await adminReportsAPI.getCategoryBreakdown();
+            if (categoryResponse.data) {
+                renderCategoryChart(categoryResponse.data);
+            }
+
+            // Load priorities
+            const priorityResponse = await adminReportsAPI.getPriorityDistribution();
+            if (priorityResponse.data) {
+                renderPriorityChart(priorityResponse.data);
+            }
+
+            // Load top issues
+            await loadTopIssues();
+
+            hideLoading();
+            showMessage('Reports loaded successfully', 'success');
+        } catch (error) {
+            console.error('Error loading reports:', error);
+            showMessage('Error loading reports: ' + error.message, 'error');
+            hideLoading();
+        }
+    }
+
+    // ========== UPDATE STATISTICS ==========
+    function updateStatistics(stats) {
+        document.getElementById('statTotalTickets').textContent = stats.totalTickets || 0;
+        document.getElementById('statOpenTickets').textContent = stats.openTickets || 0;
+        document.getElementById('statResolved').textContent = stats.resolvedToday || 0;
+        document.getElementById('statAvgResolution').textContent = (stats.avgResolutionTime || 0).toFixed(1) + 'd';
+    }
+
+    // ========== RENDER CHARTS ==========
+    function renderTicketsTrendChart(data) {
+        const ctx = document.getElementById('ticketsChart').getContext('2d');
+        
+        if (chartsInstances.ticketsChart) {
+            chartsInstances.ticketsChart.destroy();
+        }
+
+        chartsInstances.ticketsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates || [],
+                datasets: [{
+                    label: 'Tickets Created',
+                    data: data.counts || [],
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#667eea'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderStatusChart(data) {
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        
+        if (chartsInstances.statusChart) {
+            chartsInstances.statusChart.destroy();
+        }
+
+        chartsInstances.statusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.statuses || [],
+                datasets: [{
+                    data: data.counts || [],
+                    backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    function renderCategoryChart(data) {
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        
+        if (chartsInstances.categoryChart) {
+            chartsInstances.categoryChart.destroy();
+        }
+
+        chartsInstances.categoryChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.categories || [],
+                datasets: [{
+                    label: 'Count',
+                    data: data.counts || [],
+                    backgroundColor: '#667eea',
+                    borderColor: '#764ba2',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function renderPriorityChart(data) {
+        const ctx = document.getElementById('priorityChart').getContext('2d');
+        
+        if (chartsInstances.priorityChart) {
+            chartsInstances.priorityChart.destroy();
+        }
+
+        const colors = {
+            'critical': '#f44336',
+            'high': '#ff9800',
+            'medium': '#ffc107',
+            'low': '#4caf50'
+        };
+
+        chartsInstances.priorityChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data.priorities || [],
+                datasets: [{
+                    data: data.counts || [],
+                    backgroundColor: (data.priorities || []).map(p => colors[p.toLowerCase()] || '#667eea')
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // ========== LOAD TOP ISSUES ==========
+    async function loadTopIssues() {
+        try {
+            const response = await adminReportsAPI.getCategoryBreakdown();
+            const tbody = document.getElementById('topIssuesBody');
+            tbody.innerHTML = '';
+
+            if (!response.data || !response.data.counts) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 1rem; text-align: center; color: #999;">No data available</td></tr>';
                 return;
             }
 
-            document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
-            
-          // ========== INITIALIZATION ==========
-async function initReports() {
-    const admin = JSON.parse(localStorage.getItem('admin') || 'null');
-    const token = localStorage.getItem('authToken');
-    const userRole = localStorage.getItem('userRole');
+            const total = response.data.counts.reduce((a, b) => a + b, 0);
 
-    if (!token || !admin || userRole !== 'admin') {
-        window.location.href = '../Main Dashboard/AdminLoginPage.html';
-        return;
+            response.data.categories.forEach((category, index) => {
+                const count = response.data.counts[index];
+                const percentage = ((count / total) * 100).toFixed(1);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding: 1rem; border-bottom: 1px solid #eee;">${category}</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #eee;">${count}</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #eee;">${percentage}%</td>
+                    <td style="padding: 1rem; border-bottom: 1px solid #eee;">
+                        <span style="background-color: #e3f2fd; color: #1976d2; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">Active</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading top issues:', error);
+            document.getElementById('topIssuesBody').innerHTML = '<tr><td colspan="4" style="padding: 1rem; text-align: center; color: #999;">Error loading data</td></tr>';
+        }
     }
 
-    document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
-    document.getElementById('year').textContent = new Date().getFullYear();
-    
-    // ✅ REMOVED: dashboardModule.initialize() - Only on AdminDashBoard.html
-    // ✅ REMOVED: queueStatusWidget - Only on AdminDashBoard.html
-    
-    await loadAllReports();
-}
+    // ========== UTILITIES ==========
+    function showLoading() {
+        document.getElementById('messageContainer').innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading reports...</div>';
+    }
 
-        // ========== LOAD ALL REPORTS ==========
-        async function loadAllReports() {
-            try {
-                showLoading();
+    function hideLoading() {
+        const loader = document.querySelector('.loading');
+        if (loader) loader.remove();
+    }
 
-                // Load statistics
-                const statsResponse = await adminReportsAPI.getDashboardStats();
-                updateStatistics(statsResponse.data);
+    function showMessage(message, type) {
+        const className = type === 'success' ? 'success-message' : 'error-message';
+        const container = document.getElementById('messageContainer');
+        const div = document.createElement('div');
+        div.className = className;
+        div.textContent = message;
+        container.innerHTML = '';
+        container.appendChild(div);
+        
+        setTimeout(() => {
+            div.remove();
+        }, 5000);
+    }
 
-                // Load trends
-                const trendsResponse = await adminReportsAPI.getResolutionTrends();
-                renderTicketsTrendChart(trendsResponse.data);
+    function applyFilters() {
+        showMessage('Filters applied. Refreshing reports...', 'success');
+        loadAllReports();
+    }
 
-                // Load status distribution
-                const statusResponse = await adminReportsAPI.getStatusDistribution();
-                renderStatusChart(statusResponse.data);
+    function resetFilters() {
+        document.getElementById('dateRangeFilter').value = '7days';
+        document.getElementById('categoryFilter').value = '';
+        loadAllReports();
+    }
 
-                // Load categories
-                const categoryResponse = await adminReportsAPI.getCategoryBreakdown();
-                renderCategoryChart(categoryResponse.data);
+    function exportReportsToPDF() {
+        alert('PDF export functionality will be implemented soon!');
+    }
 
-                // Load priorities
-                const priorityResponse = await adminReportsAPI.getPriorityDistribution();
-                renderPriorityChart(priorityResponse.data);
+    // ========== LOGOUT ==========
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('admin');
+        localStorage.removeItem('userRole');
+        window.location.href = '../Main Dashboard/AdminLoginPage.html';
+    });
 
-                // Load top issues
-                await loadTopIssues();
-
-                hideLoading();
-                showMessage('Reports loaded successfully', 'success');
-            } catch (error) {
-                console.error('Error loading reports:', error);
-                showMessage('Error loading reports: ' + error.message, 'error');
-                hideLoading();
-            }
-        }
-
-        // ========== UPDATE STATISTICS ==========
-        function updateStatistics(stats) {
-            document.getElementById('statTotalTickets').textContent = stats.totalTickets || 0;
-            document.getElementById('statOpenTickets').textContent = stats.openTickets || 0;
-            document.getElementById('statResolved').textContent = stats.resolvedToday || 0;
-            document.getElementById('statAvgResolution').textContent = '4.2d'; // Calculate from data if available
-        }
-
-        // ========== RENDER CHARTS ==========
-        function renderTicketsTrendChart(data) {
-            const ctx = document.getElementById('ticketsChart').getContext('2d');
-            
-            if (chartsInstances.ticketsChart) {
-                chartsInstances.ticketsChart.destroy();
-            }
-
-            chartsInstances.ticketsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.dates,
-                    datasets: [{
-                        label: 'Tickets Created',
-                        data: data.counts,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#667eea'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderStatusChart(data) {
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            
-            if (chartsInstances.statusChart) {
-                chartsInstances.statusChart.destroy();
-            }
-
-            chartsInstances.statusChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.statuses,
-                    datasets: [{
-                        data: data.counts,
-                        backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderCategoryChart(data) {
-            const ctx = document.getElementById('categoryChart').getContext('2d');
-            
-            if (chartsInstances.categoryChart) {
-                chartsInstances.categoryChart.destroy();
-            }
-
-            chartsInstances.categoryChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.categories,
-                    datasets: [{
-                        label: 'Count',
-                        data: data.counts,
-                        backgroundColor: '#667eea',
-                        borderColor: '#764ba2',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    scales: {
-                        x: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderPriorityChart(data) {
-            const ctx = document.getElementById('priorityChart').getContext('2d');
-            
-            if (chartsInstances.priorityChart) {
-                chartsInstances.priorityChart.destroy();
-            }
-
-            const colors = {
-                'critical': '#f44336',
-                'high': '#ff9800',
-                'medium': '#ffc107',
-                'low': '#4caf50'
-            };
-
-            chartsInstances.priorityChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: data.priorities,
-                    datasets: [{
-                        data: data.counts,
-                        backgroundColor: data.priorities.map(p => colors[p.toLowerCase()] || '#667eea')
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        }
-
-        // ========== LOAD TOP ISSUES ==========
-        async function loadTopIssues() {
-            try {
-                const response = await adminReportsAPI.getCategoryBreakdown();
-                const tbody = document.getElementById('topIssuesBody');
-                tbody.innerHTML = '';
-
-                const total = response.data.counts.reduce((a, b) => a + b, 0);
-
-                response.data.categories.forEach((category, index) => {
-                    const count = response.data.counts[index];
-                    const percentage = ((count / total) * 100).toFixed(1);
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td style="padding: 1rem; border-bottom: 1px solid #eee;">${category}</td>
-                        <td style="padding: 1rem; border-bottom: 1px solid #eee;">${count}</td>
-                        <td style="padding: 1rem; border-bottom: 1px solid #eee;">${percentage}%</td>
-                        <td style="padding: 1rem; border-bottom: 1px solid #eee;">
-                            <span style="background-color: #e3f2fd; color: #1976d2; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">Active</span>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error loading top issues:', error);
-            }
-        }
-
-        // ========== UTILITIES ==========
-        function showLoading() {
-            document.getElementById('messageContainer').innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading reports...</div>';
-        }
-
-        function hideLoading() {
-            const loader = document.querySelector('.loading');
-            if (loader) loader.remove();
-        }
-
-        function showMessage(message, type) {
-            const className = type === 'success' ? 'success-message' : 'error-message';
-            const container = document.getElementById('messageContainer');
-            const div = document.createElement('div');
-            div.className = className;
-            div.textContent = message;
-            container.innerHTML = '';
-            container.appendChild(div);
-            
-            setTimeout(() => {
-                div.remove();
-            }, 5000);
-        }
-
-        function applyFilters() {
-            showMessage('Filters applied. Refreshing reports...', 'success');
-            loadAllReports();
-        }
-
-        function resetFilters() {
-            document.getElementById('dateRangeFilter').value = '7days';
-            document.getElementById('categoryFilter').value = '';
-            loadAllReports();
-        }
-
-        function exportReportsToPDF() {
-            alert('PDF export functionality will be implemented soon!');
-            // This would use a library like jsPDF or similar
-        }
-
-        // ========== LOGOUT ==========
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('admin');
-            localStorage.removeItem('userRole');
-            window.location.href = '../Main Dashboard/AdminLoginPage.html';
-        });
-
-        // Initialize on page load
-        window.addEventListener('DOMContentLoaded', initReports);
-        initReports();
-
-       
-    </script>
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', initReports);
+    initReports();
+</script>
 </body>
 </html>
