@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const USERS_API_BASE = 'http://localhost:5000/api';
 let usersData = [];
 
 // Initialize on page load
@@ -54,7 +54,7 @@ function getAuthToken() {
 // Load all users
 async function loadUsers() {
     try {
-        const response = await fetch(`${API_BASE}/users`, {
+        const response = await fetch(`${USERS_API_BASE}/users`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`
@@ -132,7 +132,7 @@ async function handleSearch(e) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/users/search?q=${encodeURIComponent(query)}`, {
+        const response = await fetch(`${USERS_API_BASE}/users/search?q=${encodeURIComponent(query)}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`
@@ -190,7 +190,7 @@ function handleAddUser() {
         try {
             // Try the dedicated create user endpoint first
             // If it doesn't exist, your backend can return 404 and you can add it
-            const response = await fetch(`${API_BASE}/users`, {
+            const response = await fetch(`${USERS_API_BASE}/users`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -252,7 +252,7 @@ function handleEditUser(userId) {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/users/${userId}`, {
+            const response = await fetch(`${USERS_API_BASE}/users/${userId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -287,7 +287,7 @@ async function handleSuspendUser(userId) {
     if (!confirm('Are you sure you want to suspend this user?')) return;
 
     try {
-        const response = await fetch(`${API_BASE}/users/${userId}/suspend`, {
+        const response = await fetch(`${USERS_API_BASE}/users/${userId}/suspend`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`
@@ -318,7 +318,7 @@ async function handleActivateUser(userId) {
     if (!confirm('Are you sure you want to activate this user?')) return;
 
     try {
-        const response = await fetch(`${API_BASE}/users/${userId}/activate`, {
+        const response = await fetch(`${USERS_API_BASE}/users/${userId}/activate`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`
@@ -343,7 +343,7 @@ async function handleDeleteUser(userId) {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
 
     try {
-        const response = await fetch(`${API_BASE}/users/${userId}`, {
+        const response = await fetch(`${USERS_API_BASE}/users/${userId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`

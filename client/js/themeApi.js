@@ -3,7 +3,7 @@
  * Handles all dark mode related API calls
  */
 
-const API_BASE = 'http://localhost:5000/api';
+const THEME_API_BASE = 'http://localhost:5000/api';
 
 function getAuthToken() {
   const token = localStorage.getItem('authToken');
@@ -25,7 +25,7 @@ const themeAPI = {
         throw new Error('Not authenticated - no token available');
       }
 
-      const response = await fetch(`${API_BASE}/theme/dark-mode`, {
+      const response = await fetch(`${THEME_API_BASE}/theme/dark-mode`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -56,7 +56,7 @@ const themeAPI = {
         throw new Error('Not authenticated - no token available');
       }
 
-      const response = await fetch(`${API_BASE}/theme/dark-mode`, {
+      const response = await fetch(`${THEME_API_BASE}/theme/dark-mode`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -88,7 +88,7 @@ const themeAPI = {
         throw new Error('Not authenticated - no token available');
       }
 
-      const response = await fetch(`${API_BASE}/theme/dark-mode/toggle`, {
+      const response = await fetch(`${THEME_API_BASE}/theme/dark-mode/toggle`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
