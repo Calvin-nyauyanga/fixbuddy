@@ -838,8 +838,20 @@ async function initUsersPage() {
         }
 
         // ========== INITIALIZE PAGE ==========
-        window.addEventListener('DOMContentLoaded', initUsersPage);
-        initUsersPage();
+        function handleUsersPageLoad() {
+            initUsersPage().catch(error => {
+                console.error('Fatal error in users page initialization:', error);
+            });
+        }
+        
+        window.addEventListener('DOMContentLoaded', handleUsersPageLoad);
+        
+        if (document.readyState === 'loading') {
+            // DOM still loading
+        } else {
+            // DOM already loaded
+            handleUsersPageLoad();
+        }
 
     </script>
 </body>

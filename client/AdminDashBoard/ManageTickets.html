@@ -766,8 +766,20 @@ async function initManageTickets() {
         });
 
         // Initialize on load
-        window.addEventListener('DOMContentLoaded', initManageTickets);
-        initManageTickets();
+        function handleTicketsPageLoad() {
+            initManageTickets().catch(error => {
+                console.error('Fatal error in tickets page initialization:', error);
+            });
+        }
+        
+        window.addEventListener('DOMContentLoaded', handleTicketsPageLoad);
+        
+        if (document.readyState === 'loading') {
+            // DOM still loading
+        } else {
+            // DOM already loaded
+            handleTicketsPageLoad();
+        }
 
     </script>
     

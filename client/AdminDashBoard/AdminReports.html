@@ -242,12 +242,14 @@
 
             <!-- Filter Section -->
             <div class="filter-section">
+                <label for="dateRangeFilter" style="display: none;">Date Range</label>
                 <select id="dateRangeFilter">
                     <option value="7days">Last 7 Days</option>
                     <option value="30days">Last 30 Days</option>
                     <option value="90days">Last 90 Days</option>
                     <option value="all">All Time</option>
                 </select>
+                <label for="categoryFilter" style="display: none;">Category</label>
                 <select id="categoryFilter">
                     <option value="">All Categories</option>
                 </select>
@@ -649,8 +651,20 @@
     });
 
     // Initialize on page load
-    window.addEventListener('DOMContentLoaded', initReports);
-    initReports();
+    function handleReportsPageLoad() {
+        initReports().catch(error => {
+            console.error('Fatal error in reports page initialization:', error);
+        });
+    }
+    
+    window.addEventListener('DOMContentLoaded', handleReportsPageLoad);
+    
+    if (document.readyState === 'loading') {
+        // DOM still loading
+    } else {
+        // DOM already loaded
+        handleReportsPageLoad();
+    }
 </script>
 </body>
 </html>

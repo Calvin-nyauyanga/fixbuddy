@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-family='system-ui'>🖥️</text></svg>">
     <title>FixBuddy – Admin Dashboard</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
@@ -152,6 +153,7 @@
         <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
             <div class="search-bar">
+                <label for="searchActivities" style="display: none;">Search activities</label>
                 <input type="text" id="searchActivities" placeholder="Search activities...">
                 <i class="fa-solid fa-search"></i>
             </div>
@@ -554,25 +556,42 @@
             document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
             initializeSettingsUI();
 
-            // Initialize Dashboard Module
-            await dashboardModule.initialize({
-                autoRefresh: true,
-                refreshInterval: 30000
-            });
-
-            // Listen for queue updates and render
+            // ✅ SET UP EVENT LISTENERS FIRST (before initialize)
             dashboardModule.onQueueStatusUpdated((queueData) => {
+                console.log('📊 Queue Status Updated:', queueData);
                 DashboardWidgets.renderQueueStatus('queueStatus', queueData);
             });
 
-            // Listen for team updates and render
             dashboardModule.onTeamStatusUpdated((teamData) => {
+                console.log('👥 Team Status Updated:', teamData);
                 DashboardWidgets.renderTeamStatus('teamStatus', teamData);
             });
 
-            await loadDashboardStats();
-            await loadRecentActivities();
-            await loadNotifications();
+            // ✅ NOW INITIALIZE (which will trigger the listeners)
+            try {
+                await dashboardModule.initialize({
+                    autoRefresh: true,
+                    refreshInterval: 30000
+                });
+                console.log('✅ Dashboard Module initialized successfully');
+            } catch (error) {
+                console.error('❌ Failed to initialize dashboard module:', error);
+            }
+
+            try {
+                await loadDashboardStats();
+                await loadRecentActivities();
+                await loadNotifications();
+            } catch (error) {
+                console.error('Error during dashboard load:', error);
+            }
+        }
+
+        // Wrapper to prevent Promise from being returned to event listener
+        function handleDOMContentLoaded() {
+            initAdminDashboard().catch(error => {
+                console.error('Fatal error in dashboard initialization:', error);
+            });
         }
 
         // ========== LOAD DASHBOARD STATISTICS ==========
@@ -688,9 +707,16 @@
             window.location.href = 'settings.html';
         });
 
-        // Initialize on page load
-        window.addEventListener('DOMContentLoaded', initAdminDashboard);
-        initAdminDashboard();
+        // ========== PAGE LOAD ==========
+        window.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
+        
+        // Also call directly in case DOM is already loaded
+        if (document.readyState === 'loading') {
+            // DOM still loading, event will fire
+        } else {
+            // DOM already loaded, call directly
+            handleDOMContentLoaded();
+        }
 
         
     </script>

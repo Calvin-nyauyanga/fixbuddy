@@ -40,19 +40,41 @@ class DashboardModule {
    */
   async refreshQueueStatus() {
     try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
       const response = await fetch('http://localhost:5000/api/dashboard/queue-status', {
         method: 'GET',
-        cache: 'no-store',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch queue status');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Failed to fetch queue status: ${response.status} ${errorData.message || ''}`);
+      }
 
       const data = await response.json();
-      this.queueData = data.data || {};
+      
+      // Extract data from response (handle both nested and flat structures)
+      this.queueData = data.data || data || {
+        general: 0,
+        technical: 0,
+        billing: 0,
+        total: 0
+      };
+
+      // Ensure all required fields exist
+      this.queueData = {
+        general: this.queueData.general || 0,
+        technical: this.queueData.technical || 0,
+        billing: this.queueData.billing || 0,
+        total: this.queueData.total || 0
+      };
+
       this.lastUpdateTime = new Date();
 
       // Dispatch custom event for pages to listen
@@ -60,6 +82,17 @@ class DashboardModule {
       console.log('✅ Queue Status Updated:', this.queueData);
     } catch (error) {
       console.error('❌ Error loading queue status:', error);
+      
+      // Set default empty data on error
+      this.queueData = {
+        general: 0,
+        technical: 0,
+        billing: 0,
+        total: 0
+      };
+      
+      // Dispatch with default data so UI updates
+      this.dispatchEvent('queueStatusUpdated', this.queueData);
     }
   }
 
@@ -68,19 +101,47 @@ class DashboardModule {
    */
   async refreshTeamStatus() {
     try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
       const response = await fetch('http://localhost:5000/api/dashboard/team-status', {
         method: 'GET',
-        cache: 'no-store',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch team status');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Failed to fetch team status: ${response.status} ${errorData.message || ''}`);
+      }
 
       const data = await response.json();
-      this.teamData = data.data || {};
+      
+      // Extract data from response (handle both nested and flat structures)
+      this.teamData = data.data || data || {
+        agentsAvailable: 0,
+        agentsBreak: 0,
+        agentsAway: 0,
+        agentsOffline: 0,
+        totalAgents: 0,
+        capacityUsage: 0,
+        buffer: 0
+      };
+
+      // Ensure all required fields exist
+      this.teamData = {
+        agentsAvailable: this.teamData.agentsAvailable || 0,
+        agentsBreak: this.teamData.agentsBreak || 0,
+        agentsAway: this.teamData.agentsAway || 0,
+        agentsOffline: this.teamData.agentsOffline || 0,
+        totalAgents: this.teamData.totalAgents || 0,
+        capacityUsage: Number(this.teamData.capacityUsage) || 0,
+        buffer: Number(this.teamData.buffer) || 0
+      };
+
       this.lastUpdateTime = new Date();
 
       // Dispatch custom event for pages to listen
@@ -88,6 +149,20 @@ class DashboardModule {
       console.log('✅ Team Status Updated:', this.teamData);
     } catch (error) {
       console.error('❌ Error loading team status:', error);
+      
+      // Set default empty data on error
+      this.teamData = {
+        agentsAvailable: 0,
+        agentsBreak: 0,
+        agentsAway: 0,
+        agentsOffline: 0,
+        totalAgents: 0,
+        capacityUsage: 0,
+        buffer: 100
+      };
+      
+      // Dispatch with default data so UI updates
+      this.dispatchEvent('teamStatusUpdated', this.teamData);
     }
   }
 
@@ -154,6 +229,43 @@ class DashboardModule {
    */
   onTeamStatusUpdated(callback) {
     document.addEventListener('teamStatusUpdated', (e) => callback(e.detail));
+  }
+
+  /**
+   * Debug method to check API connectivity and data
+   */
+  async debug() {
+    console.log('🔍 Dashboard Module Debug Info:');
+    console.log('- Queue Data:', this.queueData);
+    console.log('- Team Data:', this.teamData);
+    console.log('- Auth Token:', localStorage.getItem('authToken') ? '✅ Present' : '❌ Missing');
+    console.log('- Last Update:', this.lastUpdateTime);
+    
+    try {
+      console.log('\n🧪 Testing Queue Status Endpoint...');
+      const queueResponse = await fetch('http://localhost:5000/api/dashboard/queue-status', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+      console.log('Queue Status Response:', queueResponse.status, await queueResponse.json());
+    } catch (error) {
+      console.error('Queue Status Error:', error);
+    }
+
+    try {
+      console.log('\n🧪 Testing Team Status Endpoint...');
+      const teamResponse = await fetch('http://localhost:5000/api/dashboard/team-status', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+      console.log('Team Status Response:', teamResponse.status, await teamResponse.json());
+    } catch (error) {
+      console.error('Team Status Error:', error);
+    }
   }
 }
 

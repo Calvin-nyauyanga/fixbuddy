@@ -23,9 +23,14 @@ function getUserRole() {
  */
 async function authenticatedFetch(endpoint, options = {}) {
     const headers = {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${getAuthToken()}`
     };
+
+    // Only add Content-Type for non-GET requests
+    const method = options.method || 'GET';
+    if (method !== 'GET') {
+        headers['Content-Type'] = 'application/json';
+    }
 
     const response = await fetch(`${REPORTS_API_BASE}${endpoint}`, {
         ...options,

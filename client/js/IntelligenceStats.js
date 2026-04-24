@@ -28,7 +28,6 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) throw new Error('Failed to fetch analytics');
@@ -45,7 +44,6 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) throw new Error('Failed to fetch accuracy metrics');
@@ -62,7 +60,6 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) throw new Error('Failed to fetch routing metrics');
@@ -79,7 +76,6 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) throw new Error('Failed to fetch sentiment analysis');
@@ -96,7 +92,6 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) throw new Error('Failed to fetch insights');

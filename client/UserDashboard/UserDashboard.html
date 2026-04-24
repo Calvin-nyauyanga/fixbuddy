@@ -184,8 +184,20 @@
         });
 
         // Initialize dashboard on page load
-        window.addEventListener('DOMContentLoaded', initDashboard);
-        initDashboard();
+        function handleDashboardLoad() {
+            initDashboard().catch(error => {
+                console.error('Fatal error in dashboard initialization:', error);
+            });
+        }
+        
+        window.addEventListener('DOMContentLoaded', handleDashboardLoad);
+        
+        if (document.readyState === 'loading') {
+            // DOM still loading
+        } else {
+            // DOM already loaded
+            handleDashboardLoad();
+        }
     </script>
 </body>
 </html>

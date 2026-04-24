@@ -222,23 +222,34 @@
     let chartInstances = {};
 
     // Initialize page on load
-    document.addEventListener('DOMContentLoaded', async () => {
+    function handleReportsLoad() {
         const token = localStorage.getItem('authToken');
         const user = JSON.parse(localStorage.getItem('user') || 'null');
 
-        // Redirect if not logged in ✅ REMOVED userRole check
+        // Redirect if not logged in
         if (!token || !user) {
-          window.location.href = '../Main Dashboard/UserLoginPage.html';
-         return;
+            window.location.href = '../Main Dashboard/UserLoginPage.html';
+            return;
         }
 
         // Set welcome message
-        document.getElementById('userWelcome').textContent = `👋 Hi, ${user.name || 'User'}`;
-         document.getElementById('year').textContent = new Date().getFullYear();
+        document.getElementById('userWelcome').textContent = `👋 Hi, ${user.name || user.email}`;
+        document.getElementById('year').textContent = new Date().getFullYear();
 
         // Load all reports data
-     await loadAllReports();
-    });
+        loadAllReports().catch(error => {
+            console.error('Error loading reports:', error);
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', handleReportsLoad);
+    
+    if (document.readyState === 'loading') {
+        // DOM still loading
+    } else {
+        // DOM already loaded
+        handleReportsLoad();
+    }
 
     // ==========================================
     // LOAD ALL REPORTS DATA

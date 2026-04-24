@@ -11,10 +11,13 @@ const API_BASE_URL = 'http://localhost:5000/api';
 async function apiRequest(endpoint, method = 'GET', body = null) {
   const options = {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: {},
   };
+
+  // Only add Content-Type for non-GET requests
+  if (method !== 'GET') {
+    options.headers['Content-Type'] = 'application/json';
+  }
 
   const token = localStorage.getItem('authToken');
   if (token) {
@@ -251,7 +254,6 @@ const dashboardAPI = {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        'Content-Type': 'application/json',
       },
     }).then(res => res.json());
   },
@@ -261,7 +263,6 @@ const dashboardAPI = {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        'Content-Type': 'application/json',
       },
     }).then(res => res.json());
   },
@@ -282,7 +283,6 @@ const dashboardAPI = {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        'Content-Type': 'application/json',
       },
     }).then(res => res.json());
   },

@@ -1089,7 +1089,20 @@
         }
 
         // ========== INITIALIZE ON LOAD ==========
-        document.addEventListener('DOMContentLoaded', initSettingsPage);
+        function handleSettingsPageLoad() {
+            initSettingsPage().catch(error => {
+                console.error('Fatal error in settings page initialization:', error);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', handleSettingsPageLoad);
+        
+        if (document.readyState === 'loading') {
+            // DOM still loading
+        } else {
+            // DOM already loaded
+            handleSettingsPageLoad();
+        }
     </script>
 </body>
 </html>
