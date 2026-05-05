@@ -150,8 +150,10 @@ function setupProfileDropdown() {
     });
 
     // Close dropdown when clicking outside
-    document.addEventListener('click', () => {
-        profileDropdown.classList.remove('show');
+    document.addEventListener('click', (e) => {
+        if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
+            profileDropdown.classList.remove('show');
+        }
     });
 
     updateProfileDisplay();
@@ -159,3 +161,8 @@ function setupProfileDropdown() {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', setupProfileDropdown);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupProfileDropdown);
+} else {
+    setupProfileDropdown();
+}

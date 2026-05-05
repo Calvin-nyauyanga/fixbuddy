@@ -727,27 +727,38 @@ async function initUsersPage() {
         // ========== SETUP ICON LISTENERS ==========
         function setupIconListeners() {
             // Settings icon
-            document.querySelector('.settings-icon').addEventListener('click', () => {
-                window.location.href = 'settings.html';
-            });
+            const settingsIcon = document.querySelector('.settings-icon');
+            if (settingsIcon) {
+                settingsIcon.addEventListener('click', () => {
+                    window.location.href = 'settings.html';
+                });
+            }
 
             // Profile icon - toggle dropdown
-            document.querySelector('.admin-profile-icon').addEventListener('click', (e) => {
-                e.stopPropagation();
-                const dropdown = document.getElementById('profileDropdown');
-                dropdown.classList.toggle('show');
-            });
+            const profileIcon = document.querySelector('.admin-profile-icon');
+            const profileDropdown = document.getElementById('profileDropdown');
+            if (profileIcon && profileDropdown) {
+                profileIcon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    profileDropdown.classList.toggle('show');
+                });
 
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                document.getElementById('profileDropdown').classList.remove('show');
-            });
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
+                        profileDropdown.classList.remove('show');
+                    }
+                });
+            }
 
             // Logout button
-            document.getElementById('logoutBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                logout();
-            });
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logout();
+                });
+            }
         }
 
         // ========== PROFILE FUNCTIONS ==========
