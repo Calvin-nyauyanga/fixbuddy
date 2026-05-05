@@ -353,6 +353,96 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Profile Dropdown Styles */
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: white;
+            min-width: 280px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            z-index: 1001;
+            margin-top: 0.5rem;
+        }
+
+        .profile-dropdown-menu.show {
+            display: block;
+        }
+
+        .profile-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .profile-info h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .profile-info p {
+            margin: 0.25rem 0 0 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .profile-menu-items {
+            padding: 0.5rem 0;
+        }
+
+        .profile-menu-item {
+            padding: 0.75rem 1.5rem;
+            color: #333;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background-color 0.2s ease;
+            border: none;
+            width: 100%;
+            text-align: left;
+            background: none;
+            font-size: 0.95rem;
+        }
+
+        .profile-menu-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .profile-menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .profile-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 0.5rem 0;
+        }
+
         @media (max-width: 768px) {
             .settings-container {
                 flex-direction: column;
@@ -376,17 +466,43 @@
         }
     </style>
      <script src="../js/themeApi.js"></script>
-    <script src="../js/themeManager.js"></script>
+    <script src="../js/themeManager-v2.js"></script>
 </head>
 <body class="admin-dashboard-body">
 
     <header class="topbar dashboard-header">
-        <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
+        <div class="logo"><span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
             <div class="user-info">
                 <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
                 <span class="welcome-message" id="adminWelcome">👤 Admin</span>
-                <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
+                <div class="profile-dropdown">
+                    <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
+                    <div class="profile-dropdown-menu" id="profileDropdown">
+                        <div class="profile-header">
+                            <div class="profile-avatar" id="profileAvatar">A</div>
+                            <div class="profile-info">
+                                <h3 id="profileName">Admin</h3>
+                                <p id="profileEmail">admin@fixbuddy.com</p>
+                            </div>
+                        </div>
+                        <div class="profile-menu-items">
+                            <button class="profile-menu-item" onclick="document.querySelector('[data-section=profile]').click()">
+                                <i class="fa-solid fa-user"></i>
+                                My Profile
+                            </button>
+                            <div class="profile-divider"></div>
+                            <button class="profile-menu-item" onclick="goToUsers()">
+                                <i class="fa-solid fa-users"></i>
+                                Users
+                            </button>
+                            <button class="profile-menu-item" onclick="logoutUser()">
+                                <i class="fa-solid fa-sign-out-alt"></i>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
                  <button class="theme-toggle" title="Toggle Dark Mode">🌙</button>
             </div>
         </div>
@@ -803,9 +919,16 @@
                 window.location.href = 'settings.html';
             });
 
-            // Profile icon
-            document.querySelector('.admin-profile-icon').addEventListener('click', () => {
-                window.location.href = 'settings.html';
+            // Profile icon - toggle dropdown
+            document.querySelector('.admin-profile-icon').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdown = document.getElementById('profileDropdown');
+                dropdown.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                document.getElementById('profileDropdown').classList.remove('show');
             });
 
             // Logout button
@@ -821,7 +944,9 @@
                 localStorage.removeItem('userRole');
                 window.location.href = '../Main Dashboard/AdminLoginPage.html';
             });
-        }
+
+            // Update profile display
+            updateProfileDisplay();
 
         // ========== LOAD SETTINGS FROM API ==========
         async function loadSettings() {
@@ -1086,6 +1211,44 @@
             setTimeout(() => {
                 notification.remove();
             }, 3000);
+        }
+
+        // ========== PROFILE FUNCTIONS ==========
+        function updateProfileDisplay() {
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            if (!admin) return;
+
+            const name = admin.name || admin.email || 'Admin';
+            const email = admin.email || 'admin@fixbuddy.com';
+            const initials = name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
+
+            // Update dropdown
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('profileEmail').textContent = email;
+            document.getElementById('profileAvatar').textContent = initials;
+
+            // Populate profile form
+            document.getElementById('fullName').value = name;
+            document.getElementById('email').value = email;
+            document.getElementById('phone').value = admin.phone || '';
+        }
+
+        function goToUsers() {
+            document.getElementById('profileDropdown').classList.remove('show');
+            window.location.href = 'Users.html';
+        }
+
+        function logoutUser() {
+            document.getElementById('profileDropdown').classList.remove('show');
+            try {
+                adminAPI.logout();
+            } catch (error) {
+                console.warn('Logout API call failed:', error);
+            }
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('admin');
+            localStorage.removeItem('userRole');
+            window.location.href = '../Main Dashboard/AdminLoginPage.html';
         }
 
         // ========== INITIALIZE ON LOAD ==========

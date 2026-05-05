@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Favicon - using data URI to avoid 404 requests -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-family='system-ui'>🖥️</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-family='system-ui'>FB</text></svg>">
     <title>FixBuddy – Home</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
@@ -20,12 +20,152 @@ if ('serviceWorker' in navigator) {
 }
 </script>
  <script src="../js/themeApi.js"></script>
-    <script src="../js/themeManager.js"></script>
+    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/dark-mode.css">
+    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/animations.css">
+    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/components.css">
+    <style>
+        /* Make MainDashboard fit on one page without scrolling */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            padding: var(--space-md) var(--space-lg) !important;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: var(--space-md) !important;
+            gap: var(--space-md) !important;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        footer {
+            flex-shrink: 0;
+            padding: var(--space-sm) var(--space-lg);
+            font-size: 0.8rem;
+        }
+
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-lg);
+            flex: 0.6;
+            align-items: center;
+            min-height: 0;
+        }
+
+        .hero-text {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            min-height: 0;
+        }
+
+        .hero-text h1 {
+            margin-bottom: var(--space-xs) !important;
+            font-size: 1.8rem;
+        }
+
+        .hero-text p {
+            margin-bottom: var(--space-sm) !important;
+            font-size: 0.85rem;
+        }
+
+        .hero-text .btn {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            width: fit-content;
+        }
+
+        .hero-image {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .hero-image img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .features-section {
+            flex: 0.4;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .content-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md) !important;
+            height: 100%;
+        }
+
+        .feature-card {
+            padding: var(--space-md) !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .feature-card i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: var(--space-xs);
+        }
+
+        .feature-card h3 {
+            font-size: 1rem;
+            margin-bottom: var(--space-xs) !important;
+        }
+
+        .feature-card p {
+            font-size: 0.8rem;
+            margin-bottom: 0 !important;
+        }
+
+        .topbar-nav {
+            display: flex;
+            gap: var(--space-md);
+        }
+
+        .topbar-nav-item {
+            padding: var(--space-xs) var(--space-md);
+            font-size: 0.9rem;
+        }
+
+        .topbar-auth {
+            display: flex;
+            gap: var(--space-sm);
+            align-items: center;
+        }
+
+        .btn-large {
+            padding: 0.6rem 1.2rem !important;
+            font-size: 0.85rem !important;
+        }
+    </style>
+    <script src="../js/themeManager-v2.js"></script>
 </head>
 <body class="main-body">
 
     <header class="topbar dashboard-header">
-        <div class="logo">🖥️ <span>FixBuddy</span></div>
+        <div class="logo"><span>FixBuddy</span></div>
         <nav class="topbar-nav">
             <a href="MainDashBoard.html" class="topbar-nav-item active">Home</a>
             <a href="Contact.html" class="topbar-nav-item">Contact Us</a>

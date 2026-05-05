@@ -240,14 +240,160 @@
             color: #333;
             font-weight: 500;
         }
+
+        /* Profile Dropdown Styles */
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: white;
+            min-width: 280px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            z-index: 1001;
+            margin-top: 0.5rem;
+        }
+
+        .profile-dropdown-menu.show {
+            display: block;
+        }
+
+        .profile-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .profile-info h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .profile-info p {
+            margin: 0.25rem 0 0 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .profile-menu-items {
+            padding: 0.5rem 0;
+        }
+
+        .profile-menu-item {
+            padding: 0.75rem 1.5rem;
+            color: #333;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background-color 0.2s ease;
+            border: none;
+            width: 100%;
+            text-align: left;
+            background: none;
+            font-size: 0.95rem;
+        }
+
+        .profile-menu-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .profile-menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .profile-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 0.5rem 0;
+        }
+
+        /* Profile Modal Styles */
+        .profile-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-modal.show {
+            display: flex;
+        }
+
+        .profile-modal-content {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .profile-modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-modal-header .profile-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+            margin-right: 1.5rem;
+        }
+
+        .profile-modal-info h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .profile-modal-info p {
+            margin: 0.5rem 0 0 0;
+            color: #666;
+            font-size: 0.95rem;
+        }
     </style>
      <script src="../js/themeApi.js"></script>
-    <script src="../js/themeManager.js"></script>
+    <script src="../js/themeManager-v2.js"></script>
 </head>
 <body class="admin-dashboard-body">
 
     <header class="topbar dashboard-header">
-        <div class="logo">🖥️ <span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
+        <div class="logo"><span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
            <div class="search-bar">
                 <input type="text" id="searchInput" name="searchInput" placeholder="Search users..." autocomplete="off">
@@ -256,7 +402,37 @@
             <div class="user-info">
                 <i class="fa-solid fa-cog settings-icon" style="cursor: pointer;"></i>
                 <span class="welcome-message" id="adminWelcome">👤 Admin</span>
-                <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
+                <div class="profile-dropdown">
+                    <i class="fa-solid fa-user-circle admin-profile-icon" style="cursor: pointer;"></i>
+                    <div class="profile-dropdown-menu" id="profileDropdown">
+                        <div class="profile-header">
+                            <div class="profile-avatar" id="profileAvatar">A</div>
+                            <div class="profile-info">
+                                <h3 id="profileName">Admin</h3>
+                                <p id="profileEmail">admin@fixbuddy.com</p>
+                            </div>
+                        </div>
+                        <div class="profile-menu-items">
+                            <button class="profile-menu-item" onclick="openProfileModal()">
+                                <i class="fa-solid fa-user"></i>
+                                View Profile
+                            </button>
+                            <button class="profile-menu-item" onclick="openEditProfileModal()">
+                                <i class="fa-solid fa-edit"></i>
+                                Edit Profile
+                            </button>
+                            <div class="profile-divider"></div>
+                            <button class="profile-menu-item" onclick="goToSettings()">
+                                <i class="fa-solid fa-cog"></i>
+                                Settings
+                            </button>
+                            <button class="profile-menu-item" onclick="logoutUser()">
+                                <i class="fa-solid fa-sign-out-alt"></i>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
                  <button class="theme-toggle" title="Toggle Dark Mode">🌙</button>
             </div>
         </div>
@@ -318,6 +494,72 @@
             </div>
         </section>
     </main>
+
+  <!-- PROFILE VIEW MODAL -->
+<div id="profileViewModal" class="profile-modal">
+    <div class="profile-modal-content">
+        <div class="profile-modal-header">
+            <div class="profile-avatar" id="modalProfileAvatar">A</div>
+            <div class="profile-modal-info">
+                <h2 id="modalProfileName">Admin</h2>
+                <p id="modalProfileEmail">admin@fixbuddy.com</p>
+                <p id="modalProfileRole" style="font-size: 0.85rem; color: #007bff; margin-top: 0.5rem;"></p>
+            </div>
+        </div>
+        <div style="padding: 1rem 0;">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Email Address</label>
+                <p id="modalProfileEmailDetail" style="margin: 0; color: #333;">admin@fixbuddy.com</p>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Role</label>
+                <p id="modalProfileRoleDetail" style="margin: 0; color: #333; text-transform: capitalize;">Admin</p>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Member Since</label>
+                <p id="modalProfileJoined" style="margin: 0; color: #333;"></p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            <button type="button" onclick="closeProfileModal()" class="btn btn-secondary" style="flex: 1;">Close</button>
+            <button type="button" onclick="closeProfileModal(); openEditProfileModal();" class="btn btn-primary" style="flex: 1;">Edit Profile</button>
+        </div>
+    </div>
+</div>
+
+  <!-- EDIT PROFILE MODAL -->
+<div id="editProfileModal" class="profile-modal">
+    <div class="profile-modal-content">
+        <div class="modal-header">Edit Your Profile</div>
+        
+        <form id="editProfileForm" onsubmit="submitEditProfileForm(event)">
+            <div class="form-group">
+                <label for="editProfileName">Full Name *</label>
+                <input type="text" id="editProfileName" name="editProfileName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="editProfileEmail">Email Address *</label>
+                <input type="email" id="editProfileEmail" name="editProfileEmail" required>
+            </div>
+
+            <div class="form-group">
+                <label for="editProfilePhone">Phone Number</label>
+                <input type="tel" id="editProfilePhone" name="editProfilePhone" placeholder="Optional">
+            </div>
+
+            <div class="form-group">
+                <label for="editProfilePassword">New Password</label>
+                <input type="password" id="editProfilePassword" name="editProfilePassword" placeholder="Leave blank to keep current password" autocomplete="new-password">
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditProfileModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 
   <!-- ADD USER MODAL -->
 <div id="userModal" class="modal">
@@ -470,6 +712,9 @@ async function initUsersPage() {
 
     // Setup event listeners
     setupIconListeners();
+
+    // Update profile display
+    updateProfileDisplay();
 }
 
         // Load users
@@ -486,9 +731,16 @@ async function initUsersPage() {
                 window.location.href = 'settings.html';
             });
 
-            // Profile icon
-            document.querySelector('.admin-profile-icon').addEventListener('click', () => {
-                window.location.href = 'settings.html';
+            // Profile icon - toggle dropdown
+            document.querySelector('.admin-profile-icon').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdown = document.getElementById('profileDropdown');
+                dropdown.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                document.getElementById('profileDropdown').classList.remove('show');
             });
 
             // Logout button
@@ -496,6 +748,125 @@ async function initUsersPage() {
                 e.preventDefault();
                 logout();
             });
+        }
+
+        // ========== PROFILE FUNCTIONS ==========
+        function updateProfileDisplay() {
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            if (!admin) return;
+
+            const name = admin.name || admin.email || 'Admin';
+            const email = admin.email || 'admin@fixbuddy.com';
+            const initials = name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
+
+            // Update dropdown
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('profileEmail').textContent = email;
+            document.getElementById('profileAvatar').textContent = initials;
+
+            // Update modal
+            document.getElementById('modalProfileName').textContent = name;
+            document.getElementById('modalProfileEmail').textContent = email;
+            document.getElementById('modalProfileRole').textContent = (admin.role || 'admin').toUpperCase();
+            document.getElementById('modalProfileEmailDetail').textContent = email;
+            document.getElementById('modalProfileRoleDetail').textContent = admin.role || 'Admin';
+            document.getElementById('modalProfileAvatar').textContent = initials;
+
+            // Set joined date
+            if (admin.createdAt) {
+                const joinedDate = new Date(admin.createdAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                document.getElementById('modalProfileJoined').textContent = joinedDate;
+            }
+        }
+
+        function openProfileModal() {
+            document.getElementById('profileDropdown').classList.remove('show');
+            updateProfileDisplay();
+            document.getElementById('profileViewModal').classList.add('show');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileViewModal').classList.remove('show');
+        }
+
+        function openEditProfileModal() {
+            document.getElementById('profileDropdown').classList.remove('show');
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            if (!admin) return;
+
+            document.getElementById('editProfileName').value = admin.name || '';
+            document.getElementById('editProfileEmail').value = admin.email || '';
+            document.getElementById('editProfilePhone').value = admin.phone || '';
+            document.getElementById('editProfilePassword').value = '';
+
+            document.getElementById('editProfileModal').classList.add('show');
+        }
+
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').classList.remove('show');
+        }
+
+        async function submitEditProfileForm(event) {
+            event.preventDefault();
+
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            if (!admin || !admin.id) {
+                showNotification('❌ Admin session not found', 'error');
+                return;
+            }
+
+            const userData = {
+                name: document.getElementById('editProfileName').value,
+                email: document.getElementById('editProfileEmail').value,
+                phone: document.getElementById('editProfilePhone').value
+            };
+
+            // Only include password if provided
+            if (document.getElementById('editProfilePassword').value) {
+                userData.password = document.getElementById('editProfilePassword').value;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${admin.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update profile');
+                }
+
+                // Update local storage
+                const updatedAdmin = { ...admin, ...userData };
+                delete updatedAdmin.password;
+                localStorage.setItem('admin', JSON.stringify(updatedAdmin));
+
+                showNotification('✅ Profile updated successfully!', 'success');
+                closeEditProfileModal();
+                updateProfileDisplay();
+                document.getElementById('adminWelcome').textContent = `👤 ${updatedAdmin.name || updatedAdmin.email}`;
+            } catch (error) {
+                showNotification(`❌ Failed to update profile: ${error.message}`, 'error');
+            }
+        }
+
+        function goToSettings() {
+            document.getElementById('profileDropdown').classList.remove('show');
+            window.location.href = 'settings.html';
+        }
+
+        function logoutUser() {
+            document.getElementById('profileDropdown').classList.remove('show');
+            logout();
         }
 
         // ========== LOGOUT ==========
