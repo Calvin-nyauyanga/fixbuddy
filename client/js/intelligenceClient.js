@@ -1,4 +1,6 @@
 // Intelligence API client
+const API_BASE_URL = 'http://localhost:5000/api';
+
 export const intelligenceAPI = {
   async analyzeTicket(title, description) {
     try {
@@ -7,7 +9,9 @@ export const intelligenceAPI = {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch('http://localhost:5000/api/intelligence/analyze', {
+      console.log(`🔗 Fetching: ${API_BASE_URL}/intelligence/analyze`);
+
+      const response = await fetch(`${API_BASE_URL}/intelligence/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -16,9 +20,14 @@ export const intelligenceAPI = {
         body: JSON.stringify({ title, description }),
       });
 
+      console.log(`📡 Response Status: ${response.status}`);
+
       // Check if response is ok
       if (!response.ok) {
-        console.error(`Intelligence API Error: ${response.status} ${response.statusText}`);
+        console.error(`❌ Intelligence API Error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
         // Return mock data for testing
         return {
           classification: { category: 'support', confidence: 85 },
@@ -44,7 +53,7 @@ export const intelligenceAPI = {
   async checkDuplicates(title, description, existingTickets) {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5000/api/intelligence/duplicates', {
+      const response = await fetch(`${API_BASE_URL}/intelligence/duplicates`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +76,7 @@ export const intelligenceAPI = {
   async getFullAnalysis(title, description, existingTickets, handlers, historicalTickets) {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5000/api/intelligence/full-analysis', {
+      const response = await fetch(`${API_BASE_URL}/intelligence/full-analysis`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
