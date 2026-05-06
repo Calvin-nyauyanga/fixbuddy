@@ -7,7 +7,39 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; connect-src 'self' http://localhost:5000 http://localhost:5500 ws://localhost:*; img-src 'self' data: https:;">
     <title>FixBuddy – User Dashboard</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        /* User Profile Avatar - Shows first letter of name */
+        .user-profile-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-profile-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* 6 different gradient colors for avatars */
+        .user-profile-avatar.color-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .user-profile-avatar.color-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .user-profile-avatar.color-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .user-profile-avatar.color-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .user-profile-avatar.color-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .user-profile-avatar.color-6 { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+    </style>
+</head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
@@ -17,8 +49,7 @@
         <div class="admin-topbar-right">
             <span class="welcome-message" id="welcomeMessage">👋 Hi, User</span>
             <div class="user-info">
-                <i class="fa-solid fa-bell notifications-icon"></i>
-                <i class="fa-solid fa-user-circle user-profile-icon" style="cursor: pointer;"></i>
+            <div class="user-profile-avatar" id="userProfileAvatar" title="User Profile"></div>
             </div>
         </div>
     </header>
@@ -82,6 +113,21 @@
 
     <script src="../js/api-client.js"></script>
     <script>
+                // ========== USER PROFILE AVATAR SETUP ==========
+        function setupUserProfileAvatar(user) {
+            const avatarElement = document.getElementById('userProfileAvatar');
+            if (!avatarElement || !user) return;
+
+            const name = user.name || user.email || 'U';
+            const firstLetter = name.charAt(0).toUpperCase();
+
+            avatarElement.textContent = firstLetter;
+
+            const colorIndex = (firstLetter.charCodeAt(0) % 6) + 1;
+            avatarElement.className = `user-profile-avatar color-${colorIndex}`;
+
+            avatarElement.setAttribute('title', name);
+        }
         document.getElementById('year').textContent = new Date().getFullYear();
 
 
@@ -98,6 +144,7 @@
 
             // Update welcome message
             document.getElementById('welcomeMessage').textContent = `👋 Hi, ${user.name || user.email}`;
+            setupUserProfileAvatar(user);
 
             // Load user's tickets
             await loadUserTickets();
@@ -124,7 +171,9 @@
                 // Populate table
                 tickets.forEach(ticket => {
                     const row = document.createElement('tr');
-                    const createdDate = new Date(ticket.created_at).toLocaleDateString();
+                    const createdDate = ticket.createdAt 
+                        ? new Date(ticket.createdAt).toLocaleDateString()
+                        : new Date(ticket.createdAt).toLocaleDateString();
                     const statusClass = ticket.status === 'solved' ? 'solved' : ticket.status === 'pending' ? 'pending' : 'open';
                     
                     row.innerHTML = `

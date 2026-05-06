@@ -520,23 +520,25 @@ export const getUserTickets = async (req, res) => {
       where: filters,
     });
 
-    // Fetch user's tickets
-    const tickets = await prisma.ticket.findMany({
-      where: filters,
-      include: {
-        createdBy: {
-          select: { id: true, name: true, email: true },
-        },
-        assignedTo: {
-          select: { id: true, name: true, email: true },
-        },
-        comments: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: limitNum,
-    });
-
+         // Fetch user's tickets
+     const tickets = await prisma.ticket.findMany({
+       where: filters,
+       include: {
+         createdBy: {
+           select: { id: true, name: true, email: true },
+         },
+         assignedTo: {
+           select: { id: true, name: true, email: true },
+         },
+         comments: {
+           select: { id: true, content: true, createdAt: true },
+         },
+       },
+       orderBy: { createdAt: 'desc' },
+       skip,
+       take: limitNum,
+     });
+     
     res.status(200).json({
       success: true,
       message: 'Your tickets fetched successfully',

@@ -3,21 +3,31 @@ import prisma from '../config/prisma.js';
 // ✅ GET QUEUE STATUS BY CATEGORY
 export const getQueueStatus = async (req, res) => {
   try {
-    const categories = ['general', 'technical', 'billing']; // Define your categories
+    // Define ticket categories
+    const categories = ['General', 'Technical', 'Billing'];
     
     const queueData = {};
     let totalQueued = 0;
 
     for (const category of categories) {
+      // Count open or in_progress tickets for each category
       const count = await prisma.ticket.count({
         where: {
           category: category,
           status: { in: ['open', 'in_progress'] }, // Tickets waiting or being processed
         },
       });
-      queueData[category] = count;
+      
+      // Use lowercase key names for consistency
+      const key = category.toLowerCase();
+      queueData[key] = count;
       totalQueued += count;
     }
+
+    console.log('📋 Queue Status Debug:', {
+      queueData,
+      totalQueued,
+    });
 
     res.status(200).json({
       success: true,
@@ -41,15 +51,15 @@ export const getQueueStatus = async (req, res) => {
 // ✅ GET TEAM AVAILABILITY STATUS
 export const getTeamStatus = async (req, res) => {
   try {
-    // Assuming you have an 'agentStatus' or 'status' field in User table
-    // If not, we'll use a default logic based on last activity
-
+    // Fetch all agents (role = 'agent' or 'staff')
     const agents = await prisma.user.findMany({
-      where: { role: 'agent' },
+      where: { 
+        role: { in: ['agent', 'staff'] }
+      },
       select: {
         id: true,
         name: true,
-        status: true, // 'available', 'on_break', 'away', 'offline'
+        status: true, // 'active' or 'suspended' from database
         ticketsAssigned: {
           where: { status: { not: 'closed' } },
           select: { id: true },
@@ -58,17 +68,27 @@ export const getTeamStatus = async (req, res) => {
     });
 
     // Count agents by status
+    // Map database status values to display status values
     const statusCounts = {
-      available: 0,
-      on_break: 0,
-      away: 0,
-      offline: 0,
+      available: 0,      // active agents
+      on_break: 0,       // agents marked as on_break (to be set via updateAgentStatus)
+      away: 0,           // suspended or away agents
+      offline: 0,        // agents with no activity (future feature)
     };
 
     agents.forEach((agent) => {
-      const status = agent.status || 'offline';
-      if (statusCounts.hasOwnProperty(status)) {
-        statusCounts[status]++;
+      const dbStatus = agent.status || 'active';
+      
+      // Map database status to display status
+      if (dbStatus === 'active') {
+        statusCounts.available++;
+      } else if (dbStatus === 'on_break') {
+        statusCounts.on_break++;
+      } else if (dbStatus === 'suspended' || dbStatus === 'away') {
+        // Suspended users show as "away"
+        statusCounts.away++;
+      } else {
+        statusCounts.offline++;
       }
     });
 
@@ -79,7 +99,16 @@ export const getTeamStatus = async (req, res) => {
       0
     );
     const avgTicketsPerAgent = totalAgents > 0 ? totalAssignedTickets / totalAgents : 0;
-    const capacityUsage = Math.min(Math.round((avgTicketsPerAgent / 3) * 100), 100); // Assume max 3 tickets per agent
+    // Assume max 5 tickets per agent for capacity calculation
+    const capacityUsage = Math.min(Math.round((avgTicketsPerAgent / 5) * 100), 100);
+
+    console.log('📊 Team Status Debug:', {
+      totalAgents,
+      statusCounts,
+      totalAssignedTickets,
+      avgTicketsPerAgent,
+      capacityUsage,
+    });
 
     res.status(200).json({
       success: true,
