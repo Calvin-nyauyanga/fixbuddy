@@ -475,3 +475,175 @@ export const getUserStats = async (req, res) => {
         });
     }
 };
+
+// ✅ Update user status (for team availability)
+export const updateUserStatus = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                errors: errors.array()
+            });
+        }
+
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const user = await prisma.user.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Staff can only update their own status (unless admin)
+        if (req.isStaff && !req.isAdmin && user.id !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only update your own status'
+            });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: {
+                status: status,
+                updatedAt: new Date()
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'User status updated successfully',
+            data: updatedUser
+        });
+    } catch (error) {
+        console.error('Update User Status Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating user status',
+            error: error.message
+        });
+    }
+};
+
+// ✅ Get users by status (for filtering on dashboard)
+export const getUsersByStatus = async (req, res) => {
+    try {
+        const { status } = req.params;
+        const validStatuses = ['available', 'on-break', 'away', 'offline', 'active', 'suspended'];
+
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid status. Valid statuses: ${validStatuses.join(', ')}`
+            });
+        }
+
+        const users = await prisma.user.findMany({
+            where: { status: status },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true
+            },
+            orderBy: { updatedAt: 'desc' }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `Users with status: ${status}`,
+            count: users.length,
+            data: {
+                users
+            }
+        });
+    } catch (error) {
+        console.error('Get Users By Status Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching users by status',
+            error: error.message
+        });
+    }
+};
+
+// ✅ Get team status summary (for Admin Dashboard Team Status widget)
+export const getTeamStatus = async (req, res) => {
+    try {
+        // Count users by status (only staff/admin users)
+        const teamMembers = await prisma.user.findMany({
+            where: {
+                role: { in: ['staff', 'admin'] }
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                status: true
+            }
+        });
+
+        // Aggregate status counts
+        const statusCounts = {
+            available: 0,
+            'on-break': 0,
+            away: 0,
+            offline: 0,
+            suspended: 0
+        };
+
+        teamMembers.forEach(member => {
+            if (statusCounts.hasOwnProperty(member.status)) {
+                statusCounts[member.status]++;
+            }
+        });
+
+        const totalCapacity = teamMembers.filter(m => m.status === 'available').length;
+        const totalTeamMembers = teamMembers.length;
+        const capacityPercentage = totalTeamMembers > 0 
+            ? Math.round((totalCapacity / totalTeamMembers) * 100) 
+            : 0;
+
+        res.status(200).json({
+            success: true,
+            message: 'Team status summary',
+            data: {
+                agentsAvailable: statusCounts.available,
+                agentsBreak: statusCounts['on-break'],
+                agentsAway: statusCounts.away,
+                agentsOffline: statusCounts.offline,
+                agentsSuspended: statusCounts.suspended,
+                totalTeamMembers: totalTeamMembers,
+                capacityUsage: capacityPercentage,
+                teamMembers: teamMembers
+            }
+        });
+    } catch (error) {
+        console.error('Get Team Status Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching team status',
+            error: error.message
+        });
+    }
+};

@@ -11,8 +11,12 @@ import {
     changeUserRole,
     getUserStats,
     createUser,
+    updateUserStatus,
+    getUsersByStatus,
+    getTeamStatus,
 } from '../controllers/userController.js';
 import { adminAuthMiddleware } from '../middleware/adminAuth.js';
+import { staffAuthMiddleware } from '../middleware/staffAuth.js';
 import { checkSuspension } from '../middleware/checkSuspension.js';
 
 const router = express.Router();
@@ -27,11 +31,17 @@ router.get('/protected-route', checkSuspension, (req, res) => {
   return res.status(200).json({ success: true, message: 'Protected route access granted' });
 });
 
-// ✅ GET all users - public endpoint (protected by checking in controller if needed)
+// ✅ GET all users - public endpoint
 router.get('/', getAllUsers);
 
-// ✅ GET user statistics - protected
+// ✅ GET user statistics - protected (admin only)
 router.get('/stats/overview', adminAuthMiddleware, getUserStats);
+
+// ✅ GET users by status - protected (staff & admin)
+router.get('/status/:status', staffAuthMiddleware, getUsersByStatus);
+
+// ✅ GET team status for dashboard - protected (staff & admin)
+router.get('/team/status/dashboard', staffAuthMiddleware, getTeamStatus);
 
 // ✅ SEARCH users - public
 router.get('/search', searchUsers);
@@ -39,7 +49,7 @@ router.get('/search', searchUsers);
 // ✅ GET single user - public
 router.get('/:id', getUserById);
 
-// ✅ CREATE user - protected
+// ✅ CREATE user - protected (admin only)
 router.post('/', adminAuthMiddleware, [
     body('name').notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Valid email is required'),
@@ -47,25 +57,31 @@ router.post('/', adminAuthMiddleware, [
     body('role').optional().isIn(['user', 'staff', 'admin']).withMessage('Invalid role')
 ], createUser);
 
-// ✅ UPDATE user - protected
+// ✅ UPDATE user - protected (admin only)
 router.put('/:id', adminAuthMiddleware, [
     body('name').optional().trim().notEmpty().withMessage('Name is required'),
     body('email').optional().isEmail().withMessage('Valid email is required')
 ], updateUser);
 
-// ✅ SUSPEND user - protected
+// ✅ UPDATE user status (Admin-only route) - protected (admin only)
+router.patch('/:id/status', adminAuthMiddleware, [
+    body('status').notEmpty().withMessage('Status is required'),
+    body('status').isIn(['available', 'on-break', 'away', 'offline', 'active', 'suspended']).withMessage('Invalid status')
+], updateUserStatus);
+
+// ✅ SUSPEND user - protected (admin only)
 router.patch('/:id/suspend', adminAuthMiddleware, suspendUser);
 
-// ✅ ACTIVATE user - protected
+// ✅ ACTIVATE user - protected (admin only)
 router.patch('/:id/activate', adminAuthMiddleware, activateUser);
 
-// ✅ CHANGE user role - protected
+// ✅ CHANGE user role - protected (admin only)
 router.patch('/:id/role', adminAuthMiddleware, [
     body('role').notEmpty().withMessage('Role is required'),
     body('role').isIn(['user', 'staff', 'admin']).withMessage('Invalid role')
 ], changeUserRole);
 
-// ✅ DELETE user - protected
+// ✅ DELETE user - protected (admin only)
 router.delete('/:id', adminAuthMiddleware, deleteUser);
 
 export default router;

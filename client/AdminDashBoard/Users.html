@@ -637,9 +637,37 @@
 
     <footer>
         <span>© <span id="year"></span> <strong>FixBuddy</strong> - Admin Helpdesk System</span>
+    <!-- CHANGE USER TEAM STATUS MODAL -->
+<div id="changeStatusModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">Change Team Status</div>
+        
+        <form id="changeStatusForm" onsubmit="submitChangeStatusForm(event)">
+            <input type="hidden" id="changeStatusUserId">
+            <input type="hidden" id="changeStatusUserName">
+
+            <div class="form-group">
+                <label for="userTeamStatus">Team Status *</label>
+                <select id="userTeamStatus" name="userTeamStatus" required>
+                    <option value="">-- Select Status --</option>
+                    <option value="available">✅ Available</option>
+                    <option value="on-break">⏸️ On Break</option>
+                    <option value="away">📍 Away</option>
+                    <option value="offline">⭕ Offline</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="closeChangeStatusModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
     </footer>
 
     <script src="../js/api-client.js"></script>
+    <script src="../js/dashboardModule.js"></script>
     <script>
         let allUsers = [];
         let searchTimeout;
@@ -912,77 +940,109 @@ async function initUsersPage() {
             }
         }
 
-        // ========== DISPLAY USERS TABLE ==========
-        function displayUsers(users) {
-            const container = document.getElementById('usersListContainer');
-            
-            if (!users || users.length === 0) {
-                container.innerHTML = '<p style="text-align: center;">No users found.</p>';
-                return;
-            }
+       // ========== DISPLAY USERS TABLE ==========
+function displayUsers(users) {
+    const container = document.getElementById('usersListContainer');
+    
+    if (!users || users.length === 0) {
+        container.innerHTML = '<p style="text-align: center;">No users found.</p>';
+        return;
+    }
 
-            let html = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>User ID</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            users.forEach(user => {
-                // ✅ CHECK STATUS FIELD CORRECTLY
-                const isActive = user.status === 'active' || (!user.status);
-                const statusBadge = isActive 
-                    ? '<span class="user-status-badge active">Active</span>'
-                    : '<span class="user-status-badge suspended">Suspended</span>';
-                
-                const createdDate = new Date(user.createdAt).toLocaleDateString();
-
-                html += `
+    let html = `
+        <div class="table-container">
+            <table>
+                <thead>
                     <tr>
-                        <td>#U${String(user.id).padStart(3, '0')}</td>
-                        <td>${user.name}</td>
-                        <td>${user.email}</td>
-                        <td><span style="text-transform: capitalize;">${user.role}</span></td>
-                        <td>${statusBadge}</td>
-                        <td>${createdDate}</td>
-                        <td class="action-icons">
-                            <a href="#" title="Edit User" onclick="openEditUserModal(${user.id}); return false;">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
-                            ${isActive 
-                                ? `<a href="#" title="Suspend User" onclick="confirmSuspendUser(${user.id}); return false;">
-                                    <i class="fa-solid fa-ban"></i>
-                                </a>` 
-                                : `<a href="#" title="Activate User" onclick="confirmActivateUser(${user.id}); return false;">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                </a>`
-                            }
-                            <a href="#" title="Delete User" onclick="confirmDeleteUser(${user.id}); return false;">
-                                <i class="fa-solid fa-trash"></i>
-                            </a>
-                        </td>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Team Status</th>
+                        <th>Account Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
                     </tr>
-                `;
-            });
+                </thead>
+                <tbody>
+    `;
 
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
+    users.forEach(user => {
+        // ✅ CHECK STATUS FIELD CORRECTLY
+        const isActive = user.status === 'active' || (!user.status);
+        const accountStatusBadge = isActive 
+            ? '<span class="user-status-badge active">Active</span>'
+            : '<span class="user-status-badge suspended">Suspended</span>';
+        
+        // ✅ NEW: Team Status Badge
+        let teamStatusBadge = '';
+        let teamStatusColor = '#9e9e9e';
+        let teamStatusLabel = 'Offline';
 
-            container.innerHTML = html;
+        switch(user.status) {
+            case 'available':
+                teamStatusBadge = '<span class="user-status-badge" style="background-color: #4caf50;">Available</span>';
+                teamStatusLabel = 'Available';
+                break;
+            case 'on-break':
+                teamStatusBadge = '<span class="user-status-badge" style="background-color: #ffc107;">On Break</span>';
+                teamStatusLabel = 'On Break';
+                break;
+            case 'away':
+                teamStatusBadge = '<span class="user-status-badge" style="background-color: #f44336;">Away</span>';
+                teamStatusLabel = 'Away';
+                break;
+            case 'offline':
+                teamStatusBadge = '<span class="user-status-badge" style="background-color: #9e9e9e;">Offline</span>';
+                teamStatusLabel = 'Offline';
+                break;
+            default:
+                teamStatusBadge = '<span class="user-status-badge" style="background-color: #9e9e9e;">Offline</span>';
+                teamStatusLabel = 'Offline';
         }
+        
+        const createdDate = new Date(user.createdAt).toLocaleDateString();
+
+        html += `
+            <tr>
+                <td>#U${String(user.id).padStart(3, '0')}</td>
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td><span style="text-transform: capitalize;">${user.role}</span></td>
+                <td>${teamStatusBadge}</td>
+                <td>${accountStatusBadge}</td>
+                <td>${createdDate}</td>
+                <td class="action-icons">
+                    <a href="#" title="Edit User" onclick="openEditUserModal(${user.id}); return false;">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </a>
+                    <a href="#" title="Change Team Status" onclick="openChangeStatusModal(${user.id}, '${user.name}'); return false;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </a>
+                    ${isActive 
+                        ? `<a href="#" title="Suspend User" onclick="confirmSuspendUser(${user.id}); return false;">
+                            <i class="fa-solid fa-ban"></i>
+                        </a>` 
+                        : `<a href="#" title="Activate User" onclick="confirmActivateUser(${user.id}); return false;">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </a>`
+                    }
+                    <a href="#" title="Delete User" onclick="confirmDeleteUser(${user.id}); return false;">
+                        <i class="fa-solid fa-trash"></i>
+                    </a>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
 
         // ========== OPEN ADD USER MODAL ==========
         function openAddUserModal() {
@@ -1028,6 +1088,93 @@ async function initUsersPage() {
                 showNotification(`❌ Failed to create user: ${error.message}`, 'error');
             }
         }
+        // ========== OPEN CHANGE STATUS MODAL ==========
+function openChangeStatusModal(userId, userName) {
+    document.getElementById('changeStatusUserId').value = userId;
+    document.getElementById('changeStatusUserName').value = userName;
+    document.getElementById('changeStatusModal').classList.add('show');
+}
+
+// ========== CLOSE CHANGE STATUS MODAL ==========
+function closeChangeStatusModal() {
+    document.getElementById('changeStatusModal').classList.remove('show');
+}
+
+// ========== SUBMIT CHANGE STATUS FORM ==========
+async function submitChangeStatusForm(event) {
+    event.preventDefault();
+
+    const userId = document.getElementById('changeStatusUserId').value;
+    const userName = document.getElementById('changeStatusUserName').value;
+    const status = document.getElementById('userTeamStatus').value;
+
+    if (!status) {
+        showNotification('❌ Please select a status', 'error');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken');
+        
+        // Debug: Check token exists
+        if (!token) {
+            throw new Error('No auth token found. Please log in again.');
+        }
+
+        console.log('📤 Sending PATCH request to update status:', {
+            userId,
+            status,
+            hasToken: !!token
+        });
+
+        const response = await fetch(`http://localhost:5000/api/users/${userId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: status })
+        });
+
+        console.log('📥 Response status:', response.status);
+
+        const result = await response.json().catch(err => {
+            console.error('Failed to parse response JSON:', err);
+            return { message: `HTTP ${response.status}` };
+        });
+
+        console.log('📋 Response data:', result);
+
+        if (!response.ok) {
+            const errorMsg = result.message || result.error || `Server error (${response.status})`;
+            console.error('❌ Status update failed:', errorMsg);
+            throw new Error(errorMsg);
+        }
+
+        showNotification(`✅ ${userName}'s status updated to ${status}!`, 'success');
+        closeChangeStatusModal();
+        
+        // 🔄 SYNC TEAM STATUS WITH ADMIN DASHBOARD
+        // Reload users list
+        await loadAllUsers();
+        
+        // Refresh team status immediately if dashboardModule is available
+        if (typeof dashboardModule !== 'undefined') {
+            console.log('🔄 Refreshing team status to sync with AdminDashBoard...');
+            await dashboardModule.refreshTeamStatus();
+            
+            // Notify other tabs via localStorage
+            localStorage.setItem('teamStatusUpdated', JSON.stringify({
+                timestamp: new Date().getTime(),
+                userId: userId,
+                status: status
+            }));
+        }
+    } catch (error) {
+        console.error('💥 Error in submitChangeStatusForm:', error);
+        showNotification(`❌ Failed to update status: ${error.message}`, 'error');
+    }
+}
 
         // ========== OPEN EDIT USER MODAL ==========
         async function openEditUserModal(userId) {

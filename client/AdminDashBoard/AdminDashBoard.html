@@ -566,6 +566,24 @@
                 DashboardWidgets.renderTeamStatus('teamStatus', teamData);
             });
 
+            // ✅ LISTEN FOR TEAM STATUS UPDATES FROM USERS.HTML (real-time sync)
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'teamStatusUpdated' && event.newValue) {
+                    try {
+                        const update = JSON.parse(event.newValue);
+                        console.log('🔄 Team status update received from Users.html:', update);
+                        // Refresh team status immediately for real-time sync
+                        dashboardModule.refreshTeamStatus().then(() => {
+                            console.log('✅ Team status refreshed and synced!');
+                        }).catch(err => {
+                            console.error('❌ Error syncing team status:', err);
+                        });
+                    } catch (error) {
+                        console.error('Error parsing team status update:', error);
+                    }
+                }
+            });
+
             // ✅ NOW INITIALIZE (which will trigger the listeners)
             try {
                 await dashboardModule.initialize({

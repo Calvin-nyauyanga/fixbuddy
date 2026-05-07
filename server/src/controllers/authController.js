@@ -252,11 +252,11 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    // Check if user has admin role
-    if (admin.role !== 'admin') {
+       // Check if user has admin or staff role
+    if (admin.role !== 'admin' && admin.role !== 'staff') {
       return res.status(403).json({
         success: false,
-        message: 'Only admin users can access this endpoint',
+        message: 'Only admin and staff users can access this endpoint',
       });
     }
 
@@ -309,7 +309,7 @@ export const adminLogin = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Admin login successful',
+           message: `${admin.role === 'admin' ? 'Admin' : 'Staff'} login successful`,
       data: {
         id: admin.id,
         name: admin.name,
