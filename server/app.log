@@ -6683,3 +6683,5 @@
 2026-05-07T09:59:45.076Z - GET /api/helpdesk/activities - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4MTQ2MjA3LCJleHAiOjE3NzgyMzI2MDd9.v6jbllvp72sAnylqoeNghjnaT-He5Pk68uel9LtEKy4
 2026-05-07T10:00:15.962Z - GET /api/dashboard/queue-status - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4MTQ2MjA3LCJleHAiOjE3NzgyMzI2MDd9.v6jbllvp72sAnylqoeNghjnaT-He5Pk68uel9LtEKy4
 2026-05-07T10:00:15.967Z - GET /api/dashboard/team-status - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4MTQ2MjA3LCJleHAiOjE3NzgyMzI2MDd9.v6jbllvp72sAnylqoeNghjnaT-He5Pk68uel9LtEKy4
+2026-05-07T10:00:45.966Z - GET /api/dashboard/queue-status - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4MTQ2MjA3LCJleHAiOjE3NzgyMzI2MDd9.v6jbllvp72sAnylqoeNghjnaT-He5Pk68uel9LtEKy4
+2026-05-07T10:00:46.000Z - GET /api/dashboard/team-status - auth=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc4MTQ2MjA3LCJleHAiOjE3NzgyMzI2MDd9.v6jbllvp72sAnylqoeNghjnaT-He5Pk68uel9LtEKy4
