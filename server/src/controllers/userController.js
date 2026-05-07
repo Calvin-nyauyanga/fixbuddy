@@ -488,7 +488,7 @@ export const updateUserStatus = async (req, res) => {
         }
 
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, teamStatus } = req.body;
 
         const user = await prisma.user.findUnique({
             where: { id: parseInt(id) }
@@ -509,18 +509,43 @@ export const updateUserStatus = async (req, res) => {
             });
         }
 
+        // Build update object
+        const updateData = { updatedAt: new Date() };
+        
+        // ✅ Account Status (only admin can change)
+        if (status && req.isAdmin) {
+            const validAccountStatuses = ['active', 'suspended'];
+            if (!validAccountStatuses.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid account status. Valid values: ${validAccountStatuses.join(', ')}`
+                });
+            }
+            updateData.status = status;
+        }
+        
+        // ✅ Team Status (available, on-break, away, offline)
+        if (teamStatus) {
+            const validTeamStatuses = ['available', 'on-break', 'away', 'offline'];
+            if (!validTeamStatuses.includes(teamStatus)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid team status. Valid values: ${validTeamStatuses.join(', ')}`
+                });
+            }
+            updateData.teamStatus = teamStatus;
+        }
+
         const updatedUser = await prisma.user.update({
             where: { id: parseInt(id) },
-            data: {
-                status: status,
-                updatedAt: new Date()
-            },
+            data: updateData,
             select: {
                 id: true,
                 name: true,
                 email: true,
                 role: true,
                 status: true,
+                teamStatus: true,
                 createdAt: true,
                 updatedAt: true
             }

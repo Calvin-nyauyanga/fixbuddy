@@ -17,6 +17,7 @@ model User {
   phone     String?
   role      String  @default("user") // "user", "agent", "admin"
   status    String  @default("active")
+  teamStatus            String    @default("offline") // offline, available, on-break, away (TEAM STATUS)
   avatar    String?
   darkmode  Boolean  @default(false)
 
