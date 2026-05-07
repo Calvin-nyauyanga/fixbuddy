@@ -156,7 +156,7 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
-// ✅ GET RECENT ACTIVITIES
+/// ✅ GET RECENT ACTIVITIES (WITH USER NAME AND TICKET INFO)
 export const getRecentActivities = async (req, res) => {
   try {
     const { limit = 20 } = req.query;
@@ -164,22 +164,51 @@ export const getRecentActivities = async (req, res) => {
     const activities = await prisma.activity.findMany({
       orderBy: { createdAt: 'desc' },
       take: parseInt(limit),
-      select: {
-        id: true,
-        type: true,
-        details: true,
-        oldValue: true,
-        newValue: true,
-        createdAt: true,
-        userId: true,
-        ticketId: true,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+        ticket: {
+          select: {
+            id: true,
+            title: true,
+            createdBy: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
+
+    // Format activities for display
+    const formattedActivities = activities.map((activity) => ({
+      id: activity.id,
+      type: activity.type,
+      user_name: activity.user?.name || 'System',
+      user_email: activity.user?.email,
+      user_role: activity.user?.role,
+      ticket_id: activity.ticket?.id ? `#${activity.ticket.id}` : null,
+      ticket_title: activity.ticket?.title,
+      ticket_creator: activity.ticket?.createdBy?.name,
+      details: activity.details,
+      oldValue: activity.oldValue,
+      newValue: activity.newValue,
+      created_at: activity.createdAt,
+      createdAt: activity.createdAt,
+    }));
 
     res.status(200).json({
       success: true,
       data: {
-        activities: activities || [],
+        activities: formattedActivities || [],
       },
     });
   } catch (error) {

@@ -87,19 +87,16 @@ export const signup = async (req, res) => {
   }
 };
 
-// LOGIN - WITH SUSPENSION CHECK
+// LOGIN - WITH SUSPENSION CHECK AND ACTIVITY LOGGING
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Validation
-    const missingLogin = [];
-    if (!email) missingLogin.push('email');
-    if (!password) missingLogin.push('password');
-    if (missingLogin.length > 0) {
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: `Missing required field(s): ${missingLogin.join(', ')}`,
+        message: 'Email and password are required',
       });
     }
 
@@ -112,14 +109,6 @@ export const login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
-      });
-    }
-
-    // ✅ CHECK IF USER IS SUSPENDED
-    if (user.status === 'suspended') {
-      return res.status(403).json({
-        success: false,
-        message: 'Your account has been suspended. Please contact support.',
       });
     }
 
@@ -136,6 +125,20 @@ export const login = async (req, res) => {
     // Generate token with role
     const token = generateToken(user.id, user.role);
 
+    // ✅ LOG USER LOGIN ACTIVITY
+    try {
+      await prisma.activity.create({
+        data: {
+          type: 'user_login',
+          userId: user.id,
+          details: `User ${user.name} logged in`,
+          createdAt: new Date(),
+        },
+      });
+    } catch (err) {
+      console.warn('Could not log user login activity:', err);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -144,7 +147,7 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        status: user.status,  // ✅ INCLUDE STATUS
+        status: user.status,
       },
       token,
     });
