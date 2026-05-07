@@ -1125,7 +1125,7 @@ async function submitChangeStatusForm(event) {
         console.log('📤 Sending PATCH request:', {
             url: `http://localhost:5000/api/users/${userId}/status`,
             method: 'PATCH',
-            body: { teamStatus }
+            body: { status: teamStatus }
         });
 
         // ✅ FIX: Use correct endpoint with /status
@@ -1135,7 +1135,7 @@ async function submitChangeStatusForm(event) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ teamStatus })
+            body: JSON.stringify({ status: teamStatus })
         });
 
         console.log('📥 Response Status:', response.status);
