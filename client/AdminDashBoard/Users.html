@@ -980,7 +980,7 @@ function displayUsers(users) {
         let teamStatusBadge = '';
         let teamStatusLabel = 'Offline';
 
-        switch(teamStatus) {
+        switch(user.teamStatus) {
             case 'available':
                 teamStatusBadge = '<span class="user-status-badge" style="background-color: #4caf50;">Available</span>';
                 teamStatusLabel = 'Available';
@@ -1129,14 +1129,14 @@ async function submitChangeStatusForm(event) {
             hasToken: !!token
         });
 
-        const response = await fetch(`http://localhost:5000/api/users/${userId}/status`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ status: status })
-        });
+        const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+    method: 'PUT',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ teamStatus: status })
+});
 
         console.log('📥 Response status:', response.status);
 
