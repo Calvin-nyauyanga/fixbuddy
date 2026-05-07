@@ -968,18 +968,19 @@ function displayUsers(users) {
     `;
 
     users.forEach(user => {
-        // ✅ CHECK STATUS FIELD CORRECTLY
-        const isActive = user.status === 'active' || (!user.status);
+        // ✅ FIX: Account Status - Check accountStatus field ONLY
+        const accountStatus = user.accountStatus || user.status || 'active';
+        const isActive = accountStatus === 'active';
         const accountStatusBadge = isActive 
             ? '<span class="user-status-badge active">Active</span>'
             : '<span class="user-status-badge suspended">Suspended</span>';
         
-        // ✅ NEW: Team Status Badge
+        // ✅ FIX: Team Status - Check teamStatus field ONLY
+        const teamStatus = user.teamStatus || 'offline';
         let teamStatusBadge = '';
-        let teamStatusColor = '#9e9e9e';
         let teamStatusLabel = 'Offline';
 
-        switch(user.status) {
+        switch(teamStatus) {
             case 'available':
                 teamStatusBadge = '<span class="user-status-badge" style="background-color: #4caf50;">Available</span>';
                 teamStatusLabel = 'Available';
@@ -1000,7 +1001,7 @@ function displayUsers(users) {
                 teamStatusBadge = '<span class="user-status-badge" style="background-color: #9e9e9e;">Offline</span>';
                 teamStatusLabel = 'Offline';
         }
-        
+
         const createdDate = new Date(user.createdAt).toLocaleDateString();
 
         html += `
@@ -1055,39 +1056,40 @@ function displayUsers(users) {
             document.getElementById('userModal').classList.remove('show');
         }
 
-        // ========== SUBMIT ADD USER FORM ==========
-        async function submitUserForm(event) {
-            event.preventDefault();
+       async function submitChangeStatusForm(event) {
+    event.preventDefault();
+    
+    const userId = parseInt(document.getElementById('changeStatusUserId').value);
+    const teamStatus = document.getElementById('userTeamStatus').value;
+    
+    if (!teamStatus) {
+        showNotification('❌ Please select a team status', 'error');
+        return;
+    }
 
-            const userData = {
-                name: document.getElementById('userName').value,
-                email: document.getElementById('userEmail').value,
-                password: document.getElementById('userPassword').value,
-                role: document.getElementById('userRole').value
-            };
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ teamStatus }) // ✅ Only update teamStatus
+        });
 
-            try {
-                const response = await fetch('http://localhost:5000/api/users', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
-                    body: JSON.stringify(userData)
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to create user');
-                }
-
-                showNotification('✅ User created successfully!', 'success');
-                closeUserModal();
-                await loadAllUsers();
-            } catch (error) {
-                showNotification(`❌ Failed to create user: ${error.message}`, 'error');
-            }
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update team status');
         }
+
+        showNotification('✅ Team status updated successfully!', 'success');
+        closeChangeStatusModal();
+        await loadAllUsers();
+    } catch (error) {
+        showNotification(`❌ Failed to update team status: ${error.message}`, 'error');
+    }
+}
         // ========== OPEN CHANGE STATUS MODAL ==========
 function openChangeStatusModal(userId, userName) {
     document.getElementById('changeStatusUserId').value = userId;

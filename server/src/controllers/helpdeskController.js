@@ -335,7 +335,7 @@ export const solveTicket = async (req, res) => {
     const updatedTicket = await prisma.ticket.update({
       where: { id: parseInt(id) },
       data: {
-        status: 'closed',
+       status: 'solved',
         updatedAt: new Date(),
       },
       select: {
@@ -570,7 +570,7 @@ export const updateTicketStatus = async (req, res) => {
     const { status } = req.body;
 
     // Validate status
-    const validStatuses = ['open', 'in_progress', 'closed', 'on_hold'];
+   const validStatuses = ['open', 'in_progress', 'closed', 'on_hold', 'solved'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,

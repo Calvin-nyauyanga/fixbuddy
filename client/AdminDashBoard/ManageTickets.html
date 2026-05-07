@@ -449,10 +449,10 @@ async function initManageTickets() {
                 const currentStatus = ticket.data.status;
                 
                 const newStatus = prompt(
-                    `Current Status: ${currentStatus}\n\nEnter new status:\n(open, in_progress, pending, on_hold, closed, solved)`,
+                    `Current Status: ${currentStatus}\n\nEnter new status:\n(open, in_progress, on_hold, closed)`,
                     currentStatus
-                );
-                
+                )
+                                
                 if (!newStatus || newStatus === currentStatus) return;
 
                 await helpdeskAPI.updateTicketStatus(ticketId, newStatus);
