@@ -1101,7 +1101,6 @@ function openChangeStatusModal(userId, userName) {
 function closeChangeStatusModal() {
     document.getElementById('changeStatusModal').classList.remove('show');
 }
-
 // ========== SUBMIT CHANGE STATUS FORM ==========
 async function submitChangeStatusForm(event) {
     event.preventDefault();
@@ -1118,31 +1117,32 @@ async function submitChangeStatusForm(event) {
     try {
         const token = localStorage.getItem('authToken');
         
-        // Debug: Check token exists
         if (!token) {
             throw new Error('No auth token found. Please log in again.');
         }
 
-        console.log('📤 Sending PATCH request to update status:', {
-            userId,
-            teamStatus,
-            hasToken: !!token
+        console.log('📋 Form Data:', { userId, userName, teamStatus });
+        console.log('📤 Sending PATCH request:', {
+            url: `http://localhost:5000/api/users/${userId}/status`,
+            method: 'PATCH',
+            body: { teamStatus }
         });
 
-        const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
-    method: 'PATCH',
-    headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ teamStatus: teamStatus })
-});
-        console.log('✅ Update successful:', result.data);
-            showNotification(`✅ ${userName}'s team status updated to ${teamStatus}!`, 'success');
-            closeChangeStatusModal();
-        
+        // ✅ FIX: Use correct endpoint with /status
+        const response = await fetch(`http://localhost:5000/api/users/${userId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ teamStatus })
+        });
 
-        console.log('📋 Response data:', result);
+        console.log('📥 Response Status:', response.status);
+
+        // ✅ FIX: Parse JSON BEFORE checking response.ok
+        const result = await response.json();
+        console.log('📥 Response Data:', result);
 
         if (!response.ok) {
             const errorMsg = result.message || result.error || `Server error (${response.status})`;
@@ -1150,22 +1150,21 @@ async function submitChangeStatusForm(event) {
             throw new Error(errorMsg);
         }
 
+        // ✅ Only execute success logic if response was OK
+        console.log('✅ Update successful!');
         showNotification(`✅ ${userName}'s team status updated to ${teamStatus}!`, 'success');
         closeChangeStatusModal();
         
-        // 🔄 SYNC TEAM STATUS WITH ADMIN DASHBOARD
-        // Reload users list
+        // 🔄 SYNC WITH ADMIN DASHBOARD
         await loadAllUsers();
         
-        // Refresh team status immediately if dashboardModule is available
         if (typeof dashboardModule !== 'undefined') {
             console.log('🔄 Refreshing team status to sync with AdminDashBoard...');
             await dashboardModule.refreshTeamStatus();
             
-            // Notify other tabs via localStorage
             localStorage.setItem('teamStatusUpdated', JSON.stringify({
                 timestamp: new Date().getTime(),
-                userId: userId,
+                userId,
                 status: teamStatus
             }));
         }
