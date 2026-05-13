@@ -1,6 +1,6 @@
 /**
  * Staff Authorization Middleware
- * Allows staff/admin to access admin endpoints with different permission levels
+ * Allows staff/agent/admin to access endpoints with different permission levels
  */
 
 import jwt from 'jsonwebtoken';
@@ -21,17 +21,17 @@ export const staffAuthMiddleware = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
-    // Check if user has admin or staff role
-    if (decoded.role !== 'admin' && decoded.role !== 'staff') {
+    // Check if user has admin, staff, or agent role
+    if (decoded.role !== 'admin' && decoded.role !== 'staff' && decoded.role !== 'agent') {
       return res.status(403).json({
         success: false,
-        message: 'Staff or Admin access required',
+        message: 'Staff, Agent, or Admin access required',
       });
     }
 
     req.user = decoded;
     req.isAdmin = decoded.role === 'admin';
-    req.isStaff = decoded.role === 'staff';
+    req.isStaff = decoded.role === 'staff' || decoded.role === 'agent';
     next();
   } catch (error) {
     return res.status(401).json({

@@ -31,9 +31,13 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
 
-    if (response.status === 401) {
+    // For login endpoints, allow 401 to be handled by the caller
+    // For other endpoints, 401 means session expired, so redirect
+    if (response.status === 401 && !endpoint.includes('login') && !endpoint.includes('admin-login')) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
+      localStorage.removeItem('admin');
+      localStorage.removeItem('userRole');
       window.location.href = '../Main Dashboard/UserLoginPage.html';
       return null;
     }

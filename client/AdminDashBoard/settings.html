@@ -467,6 +467,7 @@
     </style>
      <script src="../js/themeApi.js"></script>
     <script src="../js/themeManager-v2.js"></script>
+    <script src="../js/settingsSync.js"></script>
 </head>
 <body class="admin-dashboard-body">
 
@@ -881,6 +882,32 @@
     <script>
         let currentAdmin = null;
 
+        // ========== SUPPRESS EXTENSION MESSAGE ERRORS ==========
+        window.addEventListener('error', (e) => {
+            if (e.message && e.message.includes('message channel closed')) {
+                e.preventDefault();
+            }
+        });
+
+        // ========== BROADCAST SETTINGS CHANGES ==========
+        function broadcastSettingsChange(settingType, data) {
+            try {
+                // Use BroadcastChannel for same-origin pages
+                if (window.BroadcastChannel) {
+                    const channel = new BroadcastChannel('fixbuddy-settings');
+                    channel.postMessage({
+                        type: 'SETTINGS_UPDATED',
+                        settingType: settingType,
+                        data: data,
+                        timestamp: new Date().toISOString()
+                    });
+                    channel.close();
+                }
+            } catch (err) {
+                console.warn('BroadcastChannel not available:', err);
+            }
+        }
+
         // ========== INITIALIZE PAGE ==========
         async function initSettingsPage() {
             const admin = JSON.parse(localStorage.getItem('admin') || 'null');
@@ -1099,6 +1126,8 @@
 
                 if (response.ok) {
                     showNotification('✅ Settings saved successfully!', 'success');
+                    // Broadcast to other pages
+                    broadcastSettingsChange(section, data);
                 } else {
                     const error = await response.json();
                     showNotification(`❌ Failed to save settings: ${error.message}`, 'error');
@@ -1155,6 +1184,8 @@
                     document.getElementById('currentPassword').value = '';
                     document.getElementById('newPassword').value = '';
                     document.getElementById('confirmPassword').value = '';
+                    // Broadcast profile change
+                    broadcastSettingsChange('profile', { name: data.name, phone: data.phone });
                 } else {
                     const error = await response.json();
                     showNotification(`❌ ${error.message}`, 'error');
@@ -1192,7 +1223,7 @@
 
             try {
                 const token = localStorage.getItem('authToken');
-                const response = await fetch(`http://localhost:5000/api/admin/profile/${currentAdmin.id}`, {
+                const response = await fetch(`http://localhost:5000/api/settings/admin/profile/${currentAdmin.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`

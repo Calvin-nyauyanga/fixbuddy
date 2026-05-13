@@ -389,6 +389,7 @@
     </style>
      <script src="../js/themeApi.js"></script>
     <script src="../js/themeManager-v2.js"></script>
+    <script src="../js/settingsSync.js"></script>
 </head>
 <body class="admin-dashboard-body">
 
@@ -396,7 +397,8 @@
         <div class="logo"><span>FixBuddy</span> <span style="color: #ff9800; margin-left: 0.5rem;">ADMIN</span></div>
         <div class="admin-topbar-right">
            <div class="search-bar">
-                <input type="text" id="searchInput" name="searchInput" placeholder="Search users..." autocomplete="off">
+                <label for="searchInput" style="display: none;">Search users</label>
+                <input type="text" id="searchInput" name="searchInput" placeholder="Search users..." autocomplete="off" aria-label="Search users">
                 <i class="fa-solid fa-search"></i>
             </div>
             <div class="user-info">
@@ -976,11 +978,15 @@ function displayUsers(users) {
             : '<span class="user-status-badge suspended">Suspended</span>';
         
         // ✅ FIX: Team Status - Check teamStatus field ONLY
-        const teamStatus = user.teamStatus || 'offline';
+        // Use the actual teamStatus value, default to 'offline' if not set
+        const teamStatus = (user.teamStatus && user.teamStatus.toLowerCase()) || 'offline';
         let teamStatusBadge = '';
         let teamStatusLabel = 'Offline';
 
-        switch(user.teamStatus) {
+        // Normalize the team status for comparison
+        const normalizedStatus = teamStatus.toLowerCase().trim();
+
+        switch(normalizedStatus) {
             case 'available':
                 teamStatusBadge = '<span class="user-status-badge" style="background-color: #4caf50;">Available</span>';
                 teamStatusLabel = 'Available';
@@ -1060,55 +1066,9 @@ function displayUsers(users) {
     event.preventDefault();
     
     const userId = parseInt(document.getElementById('changeStatusUserId').value);
-    const teamStatus = document.getElementById('userTeamStatus').value;
-    
-    if (!teamStatus) {
-        showNotification('❌ Please select a team status', 'error');
-        return;
-    }
-
-    try {
-        const token = localStorage.getItem('authToken');
-        const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ teamStatus }) // ✅ Only update teamStatus
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to update team status');
-        }
-
-        showNotification('✅ Team status updated successfully!', 'success');
-        closeChangeStatusModal();
-        await loadAllUsers();
-    } catch (error) {
-        showNotification(`❌ Failed to update team status: ${error.message}`, 'error');
-    }
-}
-        // ========== OPEN CHANGE STATUS MODAL ==========
-function openChangeStatusModal(userId, userName) {
-    document.getElementById('changeStatusUserId').value = userId;
-    document.getElementById('changeStatusUserName').value = userName;
-    document.getElementById('changeStatusModal').classList.add('show');
-}
-
-// ========== CLOSE CHANGE STATUS MODAL ==========
-function closeChangeStatusModal() {
-    document.getElementById('changeStatusModal').classList.remove('show');
-}
-// ========== SUBMIT CHANGE STATUS FORM ==========
-async function submitChangeStatusForm(event) {
-    event.preventDefault();
-
-    const userId = parseInt(document.getElementById('changeStatusUserId').value);
     const userName = document.getElementById('changeStatusUserName').value;
     const teamStatus = document.getElementById('userTeamStatus').value;
-
+    
     if (!teamStatus) {
         showNotification('❌ Please select a team status', 'error');
         return;
@@ -1121,28 +1081,22 @@ async function submitChangeStatusForm(event) {
             throw new Error('No auth token found. Please log in again.');
         }
 
-        console.log('📋 Form Data:', { userId, userName, teamStatus });
-        console.log('📤 Sending PATCH request:', {
-            url: `http://localhost:5000/api/users/${userId}/status`,
-            method: 'PATCH',
-            body: { status: teamStatus }
-        });
+        console.log('📋 Changing team status for user:', { userId, userName, teamStatus });
 
-        // ✅ FIX: Use correct endpoint with /status
+        // Send update request
         const response = await fetch(`http://localhost:5000/api/users/${userId}/status`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ status: teamStatus })
+            body: JSON.stringify({ teamStatus })
         });
 
-        console.log('📥 Response Status:', response.status);
-
-        // ✅ FIX: Parse JSON BEFORE checking response.ok
         const result = await response.json();
-        console.log('📥 Response Data:', result);
+        console.log('📥 API Response Status:', response.status);
+        console.log('📥 API Response Data:', result);
+        console.log('📥 Updated User from API:', result.data);
 
         if (!response.ok) {
             const errorMsg = result.message || result.error || `Server error (${response.status})`;
@@ -1150,28 +1104,67 @@ async function submitChangeStatusForm(event) {
             throw new Error(errorMsg);
         }
 
-        // ✅ Only execute success logic if response was OK
-        console.log('✅ Update successful!');
-        showNotification(`✅ ${userName}'s team status updated to ${teamStatus}!`, 'success');
+        // ✅ USE API RESPONSE DATA directly
+        console.log('✅ Update successful! Using API response data...');
+        const updatedUser = result.data;
+        
+        if (!updatedUser) {
+            throw new Error('API did not return updated user data');
+        }
+
+        console.log('📝 Updating local user - Before:', allUsers.find(u => u.id === userId));
+
+        // Update local user with response data
+        const userIndex = allUsers.findIndex(u => u.id === userId);
+        if (userIndex !== -1) {
+            // Directly set the entire user object from API response
+            allUsers[userIndex] = updatedUser;
+            console.log('✅ Local user data updated from API - After:', allUsers[userIndex]);
+            console.log('✅ New teamStatus:', allUsers[userIndex].teamStatus);
+        }
+
+        // Close modal and show notification
         closeChangeStatusModal();
+        showNotification(`✅ ${userName}'s team status changed to ${teamStatus}!`, 'success');
+        
+        // ✅ IMMEDIATELY RE-RENDER TABLE with updated data
+        console.log('🎨 Re-rendering table with updated data...');
+        displayUsers(allUsers);
+        console.log('✅ Table display updated immediately');
         
         // 🔄 SYNC WITH ADMIN DASHBOARD
-        await loadAllUsers();
-        
         if (typeof dashboardModule !== 'undefined') {
-            console.log('🔄 Refreshing team status to sync with AdminDashBoard...');
-            await dashboardModule.refreshTeamStatus();
+            console.log('🔄 Refreshing AdminDashBoard team status...');
+            try {
+                await dashboardModule.refreshTeamStatus();
+                console.log('✅ AdminDashBoard synced');
+            } catch (err) {
+                console.error('⚠️ Failed to sync AdminDashBoard:', err);
+            }
             
+            // Trigger storage event for cross-tab communication
             localStorage.setItem('teamStatusUpdated', JSON.stringify({
                 timestamp: new Date().getTime(),
                 userId,
-                status: teamStatus
+                userName,
+                teamStatus
             }));
         }
     } catch (error) {
         console.error('💥 Error in submitChangeStatusForm:', error);
         showNotification(`❌ Failed to update team status: ${error.message}`, 'error');
     }
+}
+        // ========== OPEN CHANGE STATUS MODAL ==========
+function openChangeStatusModal(userId, userName) {
+    document.getElementById('changeStatusUserId').value = userId;
+    document.getElementById('changeStatusUserName').value = userName;
+    document.getElementById('changeStatusModal').classList.add('show');
+}
+
+        // ========== CLOSE CHANGE STATUS MODAL ==========
+function closeChangeStatusModal() {
+    document.getElementById('changeStatusModal').classList.remove('show');
 }
 
         // ========== OPEN EDIT USER MODAL ==========
@@ -1371,6 +1364,33 @@ async function submitChangeStatusForm(event) {
             });
         }
         
+        // ========== GLOBAL ERROR HANDLER ==========
+        // Handle unhandled promise rejections from message passing
+        window.addEventListener('unhandledrejection', (event) => {
+            if (event.reason && event.reason.message && 
+                event.reason.message.includes('message channel closed')) {
+                // Suppress the error - it's from external message passing (extensions, etc)
+                console.debug('ℹ️ Suppressed external message channel error');
+                event.preventDefault();
+            }
+        });
+
+        // Handle any message events gracefully
+        if (window.chrome && window.chrome.runtime) {
+            try {
+                chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+                    try {
+                        sendResponse({ received: true });
+                    } catch (error) {
+                        console.debug('ℹ️ Message response failed (expected if port closed)');
+                    }
+                    return false; // Don't return true to avoid async channel issues
+                });
+            } catch (error) {
+                // Chrome API not available in this context
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', handleUsersPageLoad);
         
         if (document.readyState === 'loading') {

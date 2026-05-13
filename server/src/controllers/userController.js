@@ -481,6 +481,7 @@ export const updateUserStatus = async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.error('❌ Validation errors:', errors.array());
             return res.status(400).json({
                 success: false,
                 errors: errors.array()
@@ -490,22 +491,42 @@ export const updateUserStatus = async (req, res) => {
         const { id } = req.params;
         const { status, teamStatus } = req.body;
 
+        console.log('📝 updateUserStatus called:', { id, status, teamStatus, requestingUser: req.user });
+
         const user = await prisma.user.findUnique({
             where: { id: parseInt(id) }
         });
 
         if (!user) {
+            console.error('❌ User not found:', id);
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
         }
 
-        // Staff can only update their own status (unless admin)
-        if (req.isStaff && !req.isAdmin && user.id !== req.user.id) {
+        // ✅ AUTHORIZATION CHECK
+        // Admins can change any user's status
+        // Staff/Agents can ONLY change their own team status
+        const isAdmin = req.isAdmin === true;
+        const isStaff = req.isStaff === true;
+        const isOwnUser = req.user && req.user.id === parseInt(id);
+
+        if (!isAdmin && !isOwnUser) {
+            // Non-admin trying to update another user's status
+            console.error('❌ Unauthorized: User', req.user?.id, 'trying to update user', id);
             return res.status(403).json({
                 success: false,
                 message: 'You can only update your own status'
+            });
+        }
+
+        if (!isAdmin && isStaff && status) {
+            // Staff trying to change account status (only admins can do this)
+            console.error('❌ Unauthorized: Staff trying to change account status');
+            return res.status(403).json({
+                success: false,
+                message: 'Only admins can change account status'
             });
         }
 
@@ -513,27 +534,42 @@ export const updateUserStatus = async (req, res) => {
         const updateData = { updatedAt: new Date() };
         
         // ✅ Account Status (only admin can change)
-        if (status && req.isAdmin) {
+        if (status && isAdmin) {
             const validAccountStatuses = ['active', 'suspended'];
             if (!validAccountStatuses.includes(status)) {
+                console.error('❌ Invalid account status:', status);
                 return res.status(400).json({
                     success: false,
                     message: `Invalid account status. Valid values: ${validAccountStatuses.join(', ')}`
                 });
             }
             updateData.status = status;
+            console.log('✅ Updating account status to:', status);
         }
         
         // ✅ Team Status (available, on-break, away, offline)
+        // Agents/Staff can update their own, Admins can update anyone's
         if (teamStatus) {
             const validTeamStatuses = ['available', 'on-break', 'away', 'offline'];
             if (!validTeamStatuses.includes(teamStatus)) {
+                console.error('❌ Invalid team status:', teamStatus);
                 return res.status(400).json({
                     success: false,
                     message: `Invalid team status. Valid values: ${validTeamStatuses.join(', ')}`
                 });
             }
             updateData.teamStatus = teamStatus;
+            console.log('✅ Updating team status to:', teamStatus);
+        }
+
+        // Check if there's anything to update
+        if (Object.keys(updateData).length === 1) {
+            // Only updatedAt is in the object
+            console.warn('⚠️ No status fields to update');
+            return res.status(400).json({
+                success: false,
+                message: 'No status fields to update. Provide either status or teamStatus.'
+            });
         }
 
         const updatedUser = await prisma.user.update({
@@ -551,13 +587,15 @@ export const updateUserStatus = async (req, res) => {
             }
         });
 
+        console.log('✅ User updated successfully:', updatedUser);
+
         res.status(200).json({
             success: true,
             message: 'User status updated successfully',
             data: updatedUser
         });
     } catch (error) {
-        console.error('Update User Status Error:', error);
+        console.error('❌ Update User Status Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error updating user status',
@@ -614,39 +652,43 @@ export const getUsersByStatus = async (req, res) => {
 // ✅ Get team status summary (for Admin Dashboard Team Status widget)
 export const getTeamStatus = async (req, res) => {
     try {
-        // Count users by status (only staff/admin users)
+        // Count users by team status (only staff/admin/agent users)
         const teamMembers = await prisma.user.findMany({
             where: {
-                role: { in: ['staff', 'admin'] }
+                role: { in: ['staff', 'admin', 'agent'] }
             },
             select: {
                 id: true,
                 name: true,
                 email: true,
                 role: true,
-                status: true
+                teamStatus: true, // ✅ FIXED: Using teamStatus field
+                status: true      // account status (active/suspended)
             }
         });
 
-        // Aggregate status counts
+        // Aggregate status counts by TEAM STATUS
         const statusCounts = {
             available: 0,
             'on-break': 0,
             away: 0,
-            offline: 0,
-            suspended: 0
+            offline: 0
         };
 
         teamMembers.forEach(member => {
-            if (statusCounts.hasOwnProperty(member.status)) {
-                statusCounts[member.status]++;
+            // ✅ FIXED: Check teamStatus field directly
+            const teamStatus = member.teamStatus || 'offline';
+            if (statusCounts.hasOwnProperty(teamStatus)) {
+                statusCounts[teamStatus]++;
+            } else {
+                statusCounts.offline++;
             }
         });
 
-        const totalCapacity = teamMembers.filter(m => m.status === 'available').length;
+        const totalAvailable = statusCounts.available;
         const totalTeamMembers = teamMembers.length;
         const capacityPercentage = totalTeamMembers > 0 
-            ? Math.round((totalCapacity / totalTeamMembers) * 100) 
+            ? Math.round((totalAvailable / totalTeamMembers) * 100) 
             : 0;
 
         res.status(200).json({
@@ -657,7 +699,6 @@ export const getTeamStatus = async (req, res) => {
                 agentsBreak: statusCounts['on-break'],
                 agentsAway: statusCounts.away,
                 agentsOffline: statusCounts.offline,
-                agentsSuspended: statusCounts.suspended,
                 totalTeamMembers: totalTeamMembers,
                 capacityUsage: capacityPercentage,
                 teamMembers: teamMembers

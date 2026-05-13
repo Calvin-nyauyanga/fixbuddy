@@ -167,15 +167,39 @@ class ThemeManager {
       savedTheme: localStorage.getItem(this.STORAGE_KEY)
     };
   }
+
+  /**
+   * Listen for settings changes from other pages
+   */
+  listenForSettingsUpdates() {
+    try {
+      if (window.BroadcastChannel) {
+        const settingsChannel = new BroadcastChannel('fixbuddy-settings');
+        settingsChannel.addEventListener('message', (event) => {
+          if (event.data.type === 'SETTINGS_UPDATED' && event.data.settingType === 'appearance') {
+            // Update dark mode if it was changed in settings
+            if (event.data.data.darkMode !== undefined) {
+              const newTheme = event.data.data.darkMode ? this.THEMES.DARK : this.THEMES.LIGHT;
+              this.applyTheme(newTheme);
+            }
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Could not setup settings listener:', err);
+    }
+  }
 }
 
 // Initialize theme manager when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     window.themeManager = new ThemeManager();
+    window.themeManager.listenForSettingsUpdates();
   });
 } else {
   window.themeManager = new ThemeManager();
+  window.themeManager.listenForSettingsUpdates();
 }
 
 // Export for use in other modules

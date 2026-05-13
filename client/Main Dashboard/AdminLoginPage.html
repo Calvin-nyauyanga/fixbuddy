@@ -89,13 +89,14 @@
                 // Call backend admin login endpoint
                 const response = await adminAPI.adminLogin(email, password, adminCode);
 
+                // If we get here, login was successful
                 // Store auth token
-                if (response.token) {
+                if (response && response.token) {
                     localStorage.setItem('authToken', response.token);
                 }
 
                 // Store admin info
-                if (response.data) {
+                if (response && response.data) {
                     localStorage.setItem('admin', JSON.stringify(response.data));
                     localStorage.setItem('userRole', 'admin');
                 }
@@ -111,7 +112,15 @@
 
             } catch (error) {
                 console.error('Admin login error:', error);
-                loginMessage.textContent = `❌ Login failed: ${error.message}`;
+                // Extract error message from error
+                let errorMsg = error.message || 'Login failed';
+                
+                // Check if it's a server error response with a message
+                if (error.response && error.response.message) {
+                  errorMsg = error.response.message;
+                }
+                
+                loginMessage.textContent = `❌ Login failed: ${errorMsg}`;
                 loginMessage.style.color = '#d32f2f';
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Sign In as Admin';

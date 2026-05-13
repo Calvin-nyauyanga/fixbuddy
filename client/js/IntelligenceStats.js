@@ -381,8 +381,12 @@ async function loadIntelligenceData() {
 
     try {
         // Show loading state
-        document.querySelector('.admin-content').style.opacity = '0.6';
-        document.getElementById('refreshBtn').disabled = true;
+        const adminContent = document.querySelector('.admin-content');
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (adminContent) adminContent.style.opacity = '0.6';
+        if (refreshBtn) refreshBtn.disabled = true;
+
+        console.log('Fetching intelligence data with dateRange:', dateRange, 'category:', category);
 
         // Fetch all data in parallel
         const [analytics, accuracy, routing, sentiment, insights] = await Promise.all([
@@ -393,38 +397,80 @@ async function loadIntelligenceData() {
             INTELLIGENCE_API.getInsights(dateRange)
         ]);
 
+        console.log('API Responses:', { analytics, accuracy, routing, sentiment, insights });
+
         // Update statistics
-        if (analytics) updateStatistics(analytics, accuracy);
+        if (analytics) {
+            updateStatistics(analytics, accuracy);
+        }
 
         // Render charts
-        if (analytics?.categories) {
+        if (analytics?.categories && Object.keys(analytics.categories).length > 0) {
             renderCategoriesChart(analytics.categories);
+        } else {
+            console.warn('No category data available for chart');
+            const ctx = document.getElementById('categoriesChart');
+            if (ctx) {
+                ctx.parentElement.innerHTML = '<p class="no-data">No category data available</p>';
+            }
         }
-        if (analytics?.sentiment_by_category) {
+
+        if (analytics?.sentiment_by_category && Object.keys(analytics.sentiment_by_category).length > 0) {
             renderSentimentChart(analytics.sentiment_by_category);
+        } else {
+            console.warn('No sentiment data available for chart');
+            const ctx = document.getElementById('sentimentChart');
+            if (ctx) {
+                ctx.parentElement.innerHTML = '<p class="no-data">No sentiment data available</p>';
+            }
         }
 
         // Render tables
-        if (accuracy?.by_category) {
+        if (accuracy?.by_category && Array.isArray(accuracy.by_category)) {
+            console.log('Rendering accuracy table with:', accuracy.by_category);
             renderAccuracyTable(accuracy.by_category);
+        } else {
+            console.warn('No accuracy data available');
+            const tbody = document.getElementById('accuracyTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="no-data">No accuracy data available</td></tr>';
         }
-        if (sentiment?.by_category) {
+
+        if (sentiment?.by_category && Array.isArray(sentiment.by_category)) {
+            console.log('Rendering sentiment table with:', sentiment.by_category);
             renderSentimentTable(sentiment.by_category);
+        } else {
+            console.warn('No sentiment table data available');
+            const tbody = document.getElementById('sentimentTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="no-data">No sentiment data available</td></tr>';
         }
-        if (routing?.agents) {
+
+        if (routing?.agents && Array.isArray(routing.agents)) {
+            console.log('Rendering routing metrics with:', routing.agents);
             renderRoutingMetrics(routing.agents);
+        } else {
+            console.warn('No routing data available');
+            const list = document.getElementById('routingEffectivenessList');
+            if (list) list.innerHTML = '<li class="no-data">No routing data available</li>';
         }
-        if (insights?.insights) {
+
+        if (insights?.insights && Array.isArray(insights.insights)) {
+            console.log('Rendering insights with:', insights.insights);
             renderInsights(insights.insights);
+        } else {
+            console.warn('No insights available');
+            const container = document.getElementById('insightsContainer');
+            if (container) container.innerHTML = '<div class="alert alert-info"><i class="fa-solid fa-circle-info"></i><span>No insights available</span></div>';
         }
 
         showNotification('Intelligence data refreshed successfully!', 'success');
     } catch (error) {
         console.error('Error loading intelligence data:', error);
-        showNotification('Error loading intelligence data', 'error');
+        showNotification('Error loading intelligence data: ' + error.message, 'error');
     } finally {
-        document.querySelector('.admin-content').style.opacity = '1';
-        document.getElementById('refreshBtn').disabled = false;
+        const adminContent = document.querySelector('.admin-content');
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (adminContent) adminContent.style.opacity = '1';
+        if (refreshBtn) refreshBtn.disabled = false;
     }
 }
 
@@ -475,6 +521,41 @@ document.getElementById('searchIntelligence').addEventListener('keyup', (e) => {
     // Implement search functionality as needed
     console.log('Searching for:', searchTerm);
 });
+
+// ==================== INITIALIZATION ====================
+
+// Debug function - can be called from console
+window.debugIntelligenceAPI = async function() {
+    console.log('=== INTELLIGENCE API DEBUG ===');
+    const token = localStorage.getItem('authToken');
+    console.log('Auth token exists:', !!token);
+    
+    try {
+        console.log('\n1. Testing Analytics API...');
+        const analytics = await INTELLIGENCE_API.getAnalytics('30', '');
+        console.log('Analytics:', analytics);
+        
+        console.log('\n2. Testing Accuracy Metrics API...');
+        const accuracy = await INTELLIGENCE_API.getAccuracyMetrics('30');
+        console.log('Accuracy:', accuracy);
+        
+        console.log('\n3. Testing Routing Metrics API...');
+        const routing = await INTELLIGENCE_API.getRoutingMetrics('30');
+        console.log('Routing:', routing);
+        
+        console.log('\n4. Testing Sentiment Analysis API...');
+        const sentiment = await INTELLIGENCE_API.getSentimentAnalysis('30');
+        console.log('Sentiment:', sentiment);
+        
+        console.log('\n5. Testing Insights API...');
+        const insights = await INTELLIGENCE_API.getInsights('30');
+        console.log('Insights:', insights);
+        
+        console.log('\n=== ALL TESTS COMPLETE ===');
+    } catch (error) {
+        console.error('API Error:', error);
+    }
+};
 
 // ==================== INITIALIZATION ====================
 

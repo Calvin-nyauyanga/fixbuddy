@@ -63,10 +63,12 @@ router.put('/:id', adminAuthMiddleware, [
     body('email').optional().isEmail().withMessage('Valid email is required')
 ], updateUser);
 
-// ✅ UPDATE user status (Admin-only route) - protected (admin only)
-router.patch('/:id/status', adminAuthMiddleware, [
-    body('status').notEmpty().withMessage('Status is required'),
-    body('status').isIn(['available', 'on-break', 'away', 'offline', 'active', 'suspended']).withMessage('Invalid status')
+// ✅ UPDATE user status (Team Status for agents/staff/admin, Account Status for admin only)
+// Accepts either: { status: 'active'|'suspended' } or { teamStatus: 'available'|'on-break'|'away'|'offline' }
+// Agents/Staff can update their own team status, Admins can update anyone's status
+router.patch('/:id/status', staffAuthMiddleware, [
+    body('status').optional().isIn(['active', 'suspended']).withMessage('Invalid account status'),
+    body('teamStatus').optional().isIn(['available', 'on-break', 'away', 'offline']).withMessage('Invalid team status')
 ], updateUserStatus);
 
 // ✅ SUSPEND user - protected (admin only)

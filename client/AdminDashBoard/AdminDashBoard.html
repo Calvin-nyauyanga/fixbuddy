@@ -144,6 +144,7 @@
     </style>
      <script src="../js/themeApi.js"></script>
     <script src="../js/themeManager-v2.js"></script>
+    <script src="../js/settingsSync.js"></script>
 </head>
 <body class="admin-dashboard-body">
     <!-- Audio element for notification sound (using external file to comply with CSP) -->
@@ -725,6 +726,33 @@
         });
 
         // ========== PAGE LOAD ==========
+        // ========== GLOBAL ERROR HANDLER ==========
+        // Handle unhandled promise rejections from message passing
+        window.addEventListener('unhandledrejection', (event) => {
+            if (event.reason && event.reason.message && 
+                event.reason.message.includes('message channel closed')) {
+                // Suppress the error - it's from external message passing (extensions, etc)
+                console.debug('ℹ️ Suppressed external message channel error');
+                event.preventDefault();
+            }
+        });
+
+        // Handle any message events gracefully
+        if (window.chrome && window.chrome.runtime) {
+            try {
+                chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+                    try {
+                        sendResponse({ received: true });
+                    } catch (error) {
+                        console.debug('ℹ️ Message response failed (expected if port closed)');
+                    }
+                    return false; // Don't return true to avoid async channel issues
+                });
+            } catch (error) {
+                // Chrome API not available in this context
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
         
         // Also call directly in case DOM is already loaded
