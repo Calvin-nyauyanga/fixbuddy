@@ -28,9 +28,15 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                }
+                },
+                credentials: 'include'
             });
-            if (!response.ok) throw new Error('Failed to fetch analytics');
+            // Handle both 200 and 304 (Not Modified) as success
+            if (response.status === 304) {
+                console.log('Analytics: 304 Not Modified (cached response)');
+                return null; // Return null to indicate use cached data
+            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return await response.json();
         } catch (error) {
             console.error('Analytics fetch error:', error);
@@ -44,9 +50,14 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                }
+                },
+                credentials: 'include'
             });
-            if (!response.ok) throw new Error('Failed to fetch accuracy metrics');
+            if (response.status === 304) {
+                console.log('Accuracy Metrics: 304 Not Modified (cached response)');
+                return null;
+            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return await response.json();
         } catch (error) {
             console.error('Accuracy metrics fetch error:', error);
@@ -106,101 +117,148 @@ const INTELLIGENCE_API = {
 // ==================== CHART RENDERING ====================
 
 function renderCategoriesChart(data) {
-    const ctx = document.getElementById('categoriesChart').getContext('2d');
+    const ctx = document.getElementById('categoriesChart');
+    if (!ctx) {
+        console.error('Categories chart canvas not found');
+        return;
+    }
     
     if (categoriesChart) {
         categoriesChart.destroy();
     }
 
     const categories = Object.keys(data || {});
-    const counts = Object.values(data || {});
+    const counts = Object.values(data || {}).map(v => parseInt(v) || 0);
+    
+    if (categories.length === 0 || counts.length === 0) {
+        ctx.parentElement.innerHTML = '<p class="no-data">No category data available</p>';
+        return;
+    }
+
     const colors = [
         '#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe',
         '#43e97b', '#fa709a', '#fee140', '#30b0fe', '#a8edea'
     ];
 
-    categoriesChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: categories,
-            datasets: [{
-                label: 'Number of Tickets',
-                data: counts,
-                backgroundColor: colors.slice(0, categories.length),
-                borderRadius: 8,
-                borderSkipped: false,
-                hoverBackgroundColor: colors.slice(0, categories.length).map(c => c + 'dd')
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom'
-                }
+    try {
+        categoriesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: categories,
+                datasets: [{
+                    label: 'Number of Tickets',
+                    data: counts,
+                    backgroundColor: colors.slice(0, categories.length),
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    hoverBackgroundColor: colors.slice(0, categories.length).map(c => c + 'dd')
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error rendering categories chart:', error);
+        ctx.parentElement.innerHTML = '<p class="no-data">Error rendering chart</p>';
+    }
 }
 
 function renderSentimentChart(data) {
-    const ctx = document.getElementById('sentimentChart').getContext('2d');
+    const ctx = document.getElementById('sentimentChart');
+    if (!ctx) {
+        console.error('Sentiment chart canvas not found');
+        return;
+    }
     
     if (sentimentChart) {
         sentimentChart.destroy();
     }
 
-    const categories = Object.keys(data || {});
-    const scores = Object.values(data || {}).map(d => parseFloat(d) || 0);
+    // Handle both object and array data formats
+    let categories = [];
+    let scores = [];
+    
+    if (Array.isArray(data)) {
+        // If data is an array of objects with sentiment breakdown
+        categories = data.map(item => item.category || '');
+        scores = data.map(item => {
+            // Calculate sentiment score from positive/negative/neutral percentages
+            const positive = (item.positive_percentage || 0) / 100;
+            const negative = (item.negative_percentage || 0) / 100;
+            return positive - negative; // Range: -1 to 1
+        });
+    } else if (typeof data === 'object') {
+        // If data is an object with category keys and score values
+        categories = Object.keys(data || {});
+        scores = Object.values(data || {}).map(d => parseFloat(d) || 0);
+    }
 
-    sentimentChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: categories,
-            datasets: [{
-                label: 'Average Sentiment Score',
-                data: scores,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                pointRadius: 6,
-                pointBackgroundColor: '#667eea',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom'
-                }
+    // Validate that we have data to display
+    if (categories.length === 0 || scores.length === 0) {
+        console.warn('No valid sentiment data for chart rendering');
+        ctx.parentElement.innerHTML = '<p class="no-data">No sentiment data available</p>';
+        return;
+    }
+
+    try {
+        sentimentChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: categories,
+                datasets: [{
+                    label: 'Average Sentiment Score',
+                    data: scores,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    pointRadius: 6,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    tension: 0.4
+                }]
             },
-            scales: {
-                y: {
-                    min: -1,
-                    max: 1,
-                    ticks: {
-                        stepSize: 0.5
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        min: -1,
+                        max: 1,
+                        ticks: {
+                            stepSize: 0.5
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error rendering sentiment chart:', error);
+        ctx.parentElement.innerHTML = '<p class="no-data">Error rendering chart</p>';
+    }
 }
 
 // ==================== TABLE RENDERING ====================
@@ -213,25 +271,36 @@ function renderAccuracyTable(data) {
         return;
     }
 
-    tbody.innerHTML = data.map(item => `
+    tbody.innerHTML = data.map(item => {
+        // Calculate accuracy rate if not provided
+        const accuracyRate = item.accuracy_rate !== undefined ? item.accuracy_rate :
+            (item.total_classified > 0 ? (item.correct_classifications / item.total_classified) * 100 : 0);
+        
+        // Ensure values are numbers
+        const totalClassified = item.total_classified || 0;
+        const correctClassifications = item.correct_classifications || 0;
+        const avgConfidence = item.avg_confidence || 0;
+        const trend = item.trend || 0;
+        
+        return `
         <tr>
             <td><span class="category-badge category-${item.category.toLowerCase()}">${item.category}</span></td>
-            <td>${item.total_classified}</td>
-            <td>${item.correct_classifications}</td>
+            <td>${totalClassified}</td>
+            <td>${correctClassifications}</td>
             <td>
-                <strong style="color: ${item.accuracy_rate >= 80 ? '#4caf50' : item.accuracy_rate >= 60 ? '#ff9800' : '#f44336'};">
-                    ${item.accuracy_rate.toFixed(1)}%
+                <strong style="color: ${accuracyRate >= 80 ? '#4caf50' : accuracyRate >= 60 ? '#ff9800' : '#f44336'};">
+                    ${accuracyRate.toFixed(1)}%
                 </strong>
             </td>
-            <td>${item.avg_confidence.toFixed(1)}%</td>
+            <td>${avgConfidence.toFixed(1)}%</td>
             <td>
-                <span class="metric-change ${item.trend >= 0 ? 'positive' : 'negative'}">
-                    <i class="fa-solid fa-arrow-${item.trend >= 0 ? 'up' : 'down'}"></i>
-                    ${Math.abs(item.trend).toFixed(1)}%
+                <span class="metric-change ${trend >= 0 ? 'positive' : 'negative'}">
+                    <i class="fa-solid fa-arrow-${trend >= 0 ? 'up' : 'down'}"></i>
+                    ${Math.abs(trend).toFixed(1)}%
                 </span>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function renderSentimentTable(data) {
@@ -242,32 +311,43 @@ function renderSentimentTable(data) {
         return;
     }
 
-    tbody.innerHTML = data.map(item => `
+    tbody.innerHTML = data.map(item => {
+        // Safely extract and default all values
+        const category = item.category || 'Unknown';
+        const positiveCount = item.positive_count || 0;
+        const positivePercentage = item.positive_percentage || 0;
+        const neutralCount = item.neutral_count || 0;
+        const neutralPercentage = item.neutral_percentage || 0;
+        const negativeCount = item.negative_count || 0;
+        const negativePercentage = item.negative_percentage || 0;
+        const avgSentimentScore = item.avg_sentiment_score || 0;
+        
+        return `
         <tr>
-            <td><span class="category-badge category-${item.category.toLowerCase()}">${item.category}</span></td>
+            <td><span class="category-badge category-${category.toLowerCase()}">${category}</span></td>
             <td>
                 <span class="sentiment-indicator sentiment-positive">
                     <i class="fa-solid fa-smile"></i>
-                    ${item.positive_count} (${item.positive_percentage.toFixed(1)}%)
+                    ${positiveCount} (${positivePercentage.toFixed(1)}%)
                 </span>
             </td>
             <td>
                 <span class="sentiment-indicator sentiment-neutral">
                     <i class="fa-solid fa-circle"></i>
-                    ${item.neutral_count} (${item.neutral_percentage.toFixed(1)}%)
+                    ${neutralCount} (${neutralPercentage.toFixed(1)}%)
                 </span>
             </td>
             <td>
                 <span class="sentiment-indicator sentiment-negative">
                     <i class="fa-solid fa-frown"></i>
-                    ${item.negative_count} (${item.negative_percentage.toFixed(1)}%)
+                    ${negativeCount} (${negativePercentage.toFixed(1)}%)
                 </span>
             </td>
             <td>
-                <strong>${item.avg_sentiment_score.toFixed(2)}</strong>
+                <strong>${avgSentimentScore.toFixed(2)}</strong>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function renderRoutingMetrics(data) {
@@ -278,34 +358,43 @@ function renderRoutingMetrics(data) {
         return;
     }
 
-    list.innerHTML = data.map(agent => `
+    list.innerHTML = data.map(agent => {
+        // Ensure all values have safe defaults
+        const agentName = agent.agent_name || 'Unknown Agent';
+        const specialization = agent.specialization || 'General Support';
+        const totalAssigned = agent.total_assigned || 0;
+        const totalResolved = agent.total_resolved || 0;
+        const routingAccuracy = agent.routing_accuracy || 0;
+        const avgResolutionTime = agent.avg_resolution_time || 0;
+        
+        return `
         <li class="routing-item">
             <div>
-                <div class="routing-agent-name">${agent.agent_name}</div>
-                <small style="color: #999;">${agent.specialization || 'General Support'}</small>
+                <div class="routing-agent-name">${agentName}</div>
+                <small style="color: #999;">${specialization}</small>
             </div>
             <div class="routing-metrics">
                 <div class="routing-metric">
                     <div class="routing-metric-label">Assigned</div>
-                    <div class="routing-metric-value">${agent.total_assigned}</div>
+                    <div class="routing-metric-value">${totalAssigned}</div>
                 </div>
                 <div class="routing-metric">
                     <div class="routing-metric-label">Resolved</div>
-                    <div class="routing-metric-value">${agent.total_resolved}</div>
+                    <div class="routing-metric-value">${totalResolved}</div>
                 </div>
                 <div class="routing-metric">
                     <div class="routing-metric-label">Accuracy</div>
-                    <div class="routing-metric-value" style="color: ${agent.routing_accuracy >= 80 ? '#4caf50' : '#ff9800'};">
-                        ${agent.routing_accuracy.toFixed(1)}%
+                    <div class="routing-metric-value" style="color: ${routingAccuracy >= 80 ? '#4caf50' : '#ff9800'};">
+                        ${routingAccuracy.toFixed(1)}%
                     </div>
                 </div>
                 <div class="routing-metric">
                     <div class="routing-metric-label">Avg Resolution</div>
-                    <div class="routing-metric-value">${agent.avg_resolution_time.toFixed(1)}h</div>
+                    <div class="routing-metric-value">${avgResolutionTime.toFixed(1)}h</div>
                 </div>
             </div>
         </li>
-    `).join('');
+    `}).join('');
 }
 
 function renderInsights(data) {
@@ -338,39 +427,54 @@ function getInsightIcon(type) {
 // ==================== UPDATE STATISTICS ====================
 
 function updateStatistics(analytics, accuracy) {
-    // Total Analyzed
-    const totalTickets = analytics?.total_tickets || 0;
-    document.getElementById('totalAnalyzed').textContent = totalTickets;
+    try {
+        // Total Analyzed
+        const totalTickets = analytics?.total_tickets || 0;
+        document.getElementById('totalAnalyzed').textContent = totalTickets;
 
-    // Prediction Accuracy
-    const avgAccuracy = accuracy?.average_accuracy || 0;
-    document.getElementById('predictionAccuracy').textContent = avgAccuracy.toFixed(1) + '%';
-    document.getElementById('classificationAccuracy').textContent = avgAccuracy.toFixed(1) + '%';
+        // Prediction Accuracy - with fallback calculation
+        let avgAccuracy = accuracy?.average_accuracy || 0;
+        if (avgAccuracy === 0 && accuracy?.by_category && Array.isArray(accuracy.by_category) && accuracy.by_category.length > 0) {
+            // Calculate average from category data if not provided
+            const categoryAccuracies = accuracy.by_category
+                .map(cat => cat.accuracy_rate || (cat.total_classified > 0 ? (cat.correct_classifications / cat.total_classified) * 100 : 0))
+                .filter(val => !isNaN(val));
+            if (categoryAccuracies.length > 0) {
+                avgAccuracy = categoryAccuracies.reduce((a, b) => a + b, 0) / categoryAccuracies.length;
+            }
+        }
+        document.getElementById('predictionAccuracy').textContent = avgAccuracy.toFixed(1) + '%';
+        document.getElementById('classificationAccuracy').textContent = avgAccuracy.toFixed(1) + '%';
 
-    // Duplicates Detected
-    const duplicates = analytics?.duplicates_detected || 0;
-    document.getElementById('duplicatesDetected').textContent = duplicates;
-    document.getElementById('duplicateRate').textContent = totalTickets > 0 
-        ? ((duplicates / totalTickets) * 100).toFixed(1) + '%'
-        : '0%';
+        // Duplicates Detected
+        const duplicates = analytics?.duplicates_detected || 0;
+        document.getElementById('duplicatesDetected').textContent = duplicates;
+        document.getElementById('duplicateRate').textContent = totalTickets > 0 
+            ? ((duplicates / totalTickets) * 100).toFixed(1) + '%'
+            : '0%';
 
-    // Routing Success
-    const routingSuccess = analytics?.routing_accuracy || 0;
-    document.getElementById('routingSuccess').textContent = routingSuccess.toFixed(1) + '%';
+        // Routing Success
+        const routingSuccess = analytics?.routing_accuracy || 0;
+        document.getElementById('routingSuccess').textContent = routingSuccess.toFixed(1) + '%';
 
-    // Priority Score
-    const avgPriority = analytics?.avg_priority_score || 0;
-    document.getElementById('avgPriorityScore').textContent = avgPriority.toFixed(1);
+        // Priority Score
+        const avgPriority = analytics?.avg_priority_score || 0;
+        document.getElementById('avgPriorityScore').textContent = avgPriority.toFixed(1);
 
-    // Sentiment Score
-    const avgSentiment = analytics?.avg_sentiment_score || 0;
-    document.getElementById('avgSentimentScore').textContent = avgSentiment.toFixed(2);
+        // Sentiment Score
+        const avgSentiment = analytics?.avg_sentiment_score || 0;
+        document.getElementById('avgSentimentScore').textContent = avgSentiment.toFixed(2);
 
-    // Classification Trend
-    const trend = accuracy?.trend || 0;
-    const trendElement = document.getElementById('classificationTrend');
-    trendElement.textContent = (trend >= 0 ? '+' : '') + trend.toFixed(1) + '%';
-    trendElement.style.color = trend >= 0 ? '#4caf50' : '#f44336';
+        // Classification Trend
+        const trend = accuracy?.trend || 0;
+        const trendElement = document.getElementById('classificationTrend');
+        trendElement.textContent = (trend >= 0 ? '+' : '') + trend.toFixed(1) + '%';
+        trendElement.style.color = trend >= 0 ? '#4caf50' : '#f44336';
+        
+        console.log('Statistics updated successfully:', { totalTickets, avgAccuracy, duplicates, routingSuccess });
+    } catch (error) {
+        console.error('Error updating statistics:', error);
+    }
 }
 
 // ==================== LOAD ALL DATA ====================
@@ -402,6 +506,8 @@ async function loadIntelligenceData() {
         // Update statistics
         if (analytics) {
             updateStatistics(analytics, accuracy);
+        } else {
+            console.warn('No analytics data received');
         }
 
         // Render charts
@@ -415,8 +521,18 @@ async function loadIntelligenceData() {
             }
         }
 
+        // Handle sentiment chart - check multiple possible data sources
+        let sentimentChartData = null;
         if (analytics?.sentiment_by_category && Object.keys(analytics.sentiment_by_category).length > 0) {
-            renderSentimentChart(analytics.sentiment_by_category);
+            sentimentChartData = analytics.sentiment_by_category;
+            console.log('Using sentiment data from analytics.sentiment_by_category');
+        } else if (sentiment?.by_category && Array.isArray(sentiment.by_category) && sentiment.by_category.length > 0) {
+            sentimentChartData = sentiment.by_category;
+            console.log('Using sentiment data from sentiment.by_category');
+        }
+
+        if (sentimentChartData) {
+            renderSentimentChart(sentimentChartData);
         } else {
             console.warn('No sentiment data available for chart');
             const ctx = document.getElementById('sentimentChart');
@@ -582,5 +698,11 @@ async function initIntelligenceDashboard() {
     setInterval(loadIntelligenceData, 60000);
 }
 
-window.addEventListener('DOMContentLoaded', initIntelligenceDashboard);
-initIntelligenceDashboard();
+// Only initialize once when DOM is ready
+if (document.readyState === 'loading') {
+  // Script loaded before DOMContentLoaded
+  window.addEventListener('DOMContentLoaded', initIntelligenceDashboard);
+} else {
+  // Script loaded after DOMContentLoaded (more common with bottom script tag)
+  initIntelligenceDashboard();
+}
