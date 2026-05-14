@@ -382,52 +382,96 @@
         await loadAllReports();
     }
 
-    // ========== LOAD ALL REPORTS ==========
-    async function loadAllReports() {
-        try {
-            showLoading();
+   // ========== LOAD ALL REPORTS ==========
+async function loadAllReports() {
+    try {
+        showLoading();
+        console.log('📊 Loading all reports...');
 
-            // Load statistics
-            const statsResponse = await adminReportsAPI.getDashboardStats();
-            if (statsResponse.data) {
-                updateStatistics(statsResponse.data);
-            }
+        // Get selected date range
+        const dateRange = document.getElementById('dateRangeFilter').value;
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        
+        console.log(`📅 Using date range: ${dateRange}, Category: ${categoryFilter || 'All'}`);
 
-            // Load trends
-            const trendsResponse = await adminReportsAPI.getResolutionTrends();
-            if (trendsResponse.data) {
-                renderTicketsTrendChart(trendsResponse.data);
-            }
-
-            // Load status distribution
-            const statusResponse = await adminReportsAPI.getStatusDistribution();
-            if (statusResponse.data) {
-                renderStatusChart(statusResponse.data);
-            }
-
-            // Load categories
-            const categoryResponse = await adminReportsAPI.getCategoryBreakdown();
-            if (categoryResponse.data) {
-                renderCategoryChart(categoryResponse.data);
-            }
-
-            // Load priorities
-            const priorityResponse = await adminReportsAPI.getPriorityDistribution();
-            if (priorityResponse.data) {
-                renderPriorityChart(priorityResponse.data);
-            }
-
-            // Load top issues
-            await loadTopIssues();
-
-            hideLoading();
-            showMessage('Reports loaded successfully', 'success');
-        } catch (error) {
-            console.error('Error loading reports:', error);
-            showMessage('Error loading reports: ' + error.message, 'error');
-            hideLoading();
+        // Load statistics
+        console.log('1️⃣ Loading dashboard stats...');
+        const statsResponse = await adminReportsAPI.getDashboardStats();
+        console.log('✅ Stats response:', statsResponse);
+        if (statsResponse.data) {
+            updateStatistics(statsResponse.data);
         }
+
+        // Load trends with date filtering
+        console.log('2️⃣ Loading trends...');
+        const trendsResponse = await adminReportsAPI.getResolutionTrends(dateRange);
+        console.log('✅ Trends response:', trendsResponse);
+        if (trendsResponse.success && trendsResponse.data) {
+            renderTicketsTrendChart(trendsResponse.data);
+        } else {
+            console.warn('⚠️ No trends data received');
+        }
+
+        // Load status distribution
+        console.log('3️⃣ Loading status distribution...');
+        const statusResponse = await adminReportsAPI.getStatusDistribution();
+        console.log('✅ Status response:', statusResponse);
+        if (statusResponse.success && statusResponse.data) {
+            renderStatusChart(statusResponse.data);
+        }
+
+        // Load categories
+        console.log('4️⃣ Loading categories...');
+        const categoryResponse = await adminReportsAPI.getCategoryBreakdown();
+        console.log('✅ Category response:', categoryResponse);
+        if (categoryResponse.success && categoryResponse.data) {
+            renderCategoryChart(categoryResponse.data);
+            // Populate category filter dropdown
+            populateCategoryFilter(categoryResponse.data.categories);
+        }
+
+        // Load priorities
+        console.log('5️⃣ Loading priorities...');
+        const priorityResponse = await adminReportsAPI.getPriorityDistribution();
+        console.log('✅ Priority response:', priorityResponse);
+        if (priorityResponse.success && priorityResponse.data) {
+            renderPriorityChart(priorityResponse.data);
+        }
+
+        // Load top issues
+        console.log('6️⃣ Loading top issues...');
+        await loadTopIssues();
+
+        hideLoading();
+        showMessage('✅ Reports loaded successfully', 'success');
+    } catch (error) {
+        console.error('💥 Error loading reports:', error);
+        showMessage('❌ Error loading reports: ' + error.message, 'error');
+        hideLoading();
     }
+}
+
+// ========== POPULATE CATEGORY FILTER ==========
+function populateCategoryFilter(categories) {
+    const filterSelect = document.getElementById('categoryFilter');
+    const currentValue = filterSelect.value;
+    
+    // Clear existing options except the first one
+    while (filterSelect.options.length > 1) {
+        filterSelect.remove(1);
+    }
+    
+    // Add categories
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        filterSelect.appendChild(option);
+    });
+    
+    // Restore previously selected value
+    filterSelect.value = currentValue;
+}
 
     // ========== UPDATE STATISTICS ==========
     function updateStatistics(stats) {
@@ -437,49 +481,70 @@
         document.getElementById('statAvgResolution').textContent = (stats.avgResolutionTime || 0).toFixed(1) + 'd';
     }
 
-    // ========== RENDER CHARTS ==========
     function renderTicketsTrendChart(data) {
-        const ctx = document.getElementById('ticketsChart').getContext('2d');
-        
-        if (chartsInstances.ticketsChart) {
-            chartsInstances.ticketsChart.destroy();
-        }
+    console.log('📈 Rendering trends chart with data:', data);
+    
+    const ctx = document.getElementById('ticketsChart');
+    if (!ctx) {
+        console.error('❌ Chart canvas not found');
+        return;
+    }
+    
+    if (chartsInstances.ticketsChart) {
+        chartsInstances.ticketsChart.destroy();
+    }
 
-        chartsInstances.ticketsChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.dates || [],
-                datasets: [{
-                    label: 'Tickets Created',
-                    data: data.counts || [],
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 5,
-                    pointBackgroundColor: '#667eea'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
+    // Ensure we have valid data
+    const labels = data.dates && Array.isArray(data.dates) ? data.dates : [];
+    const counts = data.counts && Array.isArray(data.counts) ? data.counts : [];
+
+    console.log('📊 Chart data - Labels:', labels, 'Counts:', counts);
+
+    chartsInstances.ticketsChart = new Chart(ctx.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: labels.length > 0 ? labels : ['No Data'],
+            datasets: [{
+                label: 'Tickets Created',
+                data: counts.length > 0 ? counts : [0],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15
                     }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            return value;
                         }
                     }
                 }
             }
-        });
-    }
+        }
+    });
+}
 
     function renderStatusChart(data) {
         const ctx = document.getElementById('statusChart').getContext('2d');

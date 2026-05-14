@@ -26,7 +26,6 @@ async function authenticatedFetch(endpoint, options = {}) {
         'Authorization': `Bearer ${getAuthToken()}`
     };
 
-    // Only add Content-Type for non-GET requests
     const method = options.method || 'GET';
     if (method !== 'GET') {
         headers['Content-Type'] = 'application/json';
@@ -38,14 +37,15 @@ async function authenticatedFetch(endpoint, options = {}) {
     });
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`API Error: ${response.status} - ${errorData.message || response.statusText}`);
     }
 
     return response.json();
 }
 
 // ============================================
-// ADMIN REPORTS ENDPOINTS
+// ADMIN REPORTS ENDPOINTS (CORRECTED)
 // ============================================
 
 const adminReportsAPI = {
@@ -53,70 +53,62 @@ const adminReportsAPI = {
      * Get comprehensive dashboard statistics
      */
     getDashboardStats: async () => {
-        return authenticatedFetch('/helpdesk/stats');
+        console.log('📊 Fetching dashboard stats...');
+        try {
+            const response = await authenticatedFetch('/helpdesk/stats');
+            console.log('✅ Dashboard stats:', response);
+            return response;
+        } catch (error) {
+            console.error('❌ Error fetching dashboard stats:', error);
+            return { success: false, data: null, error: error.message };
+        }
     },
 
     /**
-     * Get all tickets with filters
+     * Get resolution trends with date filtering
      */
-    getAllTickets: async (filters = {}) => {
-        const params = new URLSearchParams(filters);
-        return authenticatedFetch(`/helpdesk/tickets?${params}`);
-    },
-
-    /**
-     * Get recent activities
-     */
-    getRecentActivities: async () => {
-        return authenticatedFetch('/helpdesk/activities');
-    },
-
-    /**
-     * Get notifications
-     */
-    getNotifications: async () => {
-        return authenticatedFetch('/helpdesk/notifications');
-    },
-
-    /**
-     * Get all users
-     */
-    getAllUsers: async () => {
-        return authenticatedFetch('/helpdesk/users');
-    },
-
-    /**
-     * Get ticket metrics and trends
-     */
-    getTicketMetrics: async () => {
-        return authenticatedFetch('/helpdesk/stats');
-    },
-
-    /**
-     * Get resolution trends (tickets created over time)
-     */
-    getResolutionTrends: async () => {
+    getResolutionTrends: async (dateRange = '30days') => {
+        console.log('📈 Fetching resolution trends for:', dateRange);
         try {
             const response = await authenticatedFetch('/helpdesk/tickets');
-            const tickets = response.data.tickets || [];
+            const tickets = response.data?.tickets || response.data || [];
             
-            // Group by date
+            // Calculate date range
+            const now = new Date();
+            let startDate = new Date();
+            
+            if (dateRange === '7days') startDate.setDate(now.getDate() - 7);
+            else if (dateRange === '30days') startDate.setDate(now.getDate() - 30);
+            else if (dateRange === '90days') startDate.setDate(now.getDate() - 90);
+            else startDate = new Date('2000-01-01'); // All time
+            
+            // Filter and group by date
             const dateMap = {};
             tickets.forEach(ticket => {
-                const date = new Date(ticket.createdAt).toLocaleDateString();
-                dateMap[date] = (dateMap[date] || 0) + 1;
+                const ticketDate = new Date(ticket.createdAt);
+                if (ticketDate >= startDate) {
+                    const date = ticketDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    dateMap[date] = (dateMap[date] || 0) + 1;
+                }
             });
 
+            // Sort dates chronologically
+            const sortedDates = Object.keys(dateMap).sort((a, b) => {
+                return new Date(a) - new Date(b);
+            });
+
+            console.log('✅ Trends data:', { dates: sortedDates, counts: sortedDates.map(d => dateMap[d]) });
+            
             return {
                 success: true,
                 data: {
-                    dates: Object.keys(dateMap),
-                    counts: Object.values(dateMap)
+                    dates: sortedDates,
+                    counts: sortedDates.map(d => dateMap[d])
                 }
             };
         } catch (error) {
-            console.error('Error getting resolution trends:', error);
-            return { success: false, error: error.message };
+            console.error('❌ Error getting resolution trends:', error);
+            return { success: false, data: null, error: error.message };
         }
     },
 
@@ -124,9 +116,10 @@ const adminReportsAPI = {
      * Get category breakdown
      */
     getCategoryBreakdown: async () => {
+        console.log('📂 Fetching category breakdown...');
         try {
             const response = await authenticatedFetch('/helpdesk/tickets');
-            const tickets = response.data.tickets || [];
+            const tickets = response.data?.tickets || response.data || [];
             
             const categoryMap = {};
             tickets.forEach(ticket => {
@@ -134,6 +127,8 @@ const adminReportsAPI = {
                 categoryMap[category] = (categoryMap[category] || 0) + 1;
             });
 
+            console.log('✅ Category data:', categoryMap);
+            
             return {
                 success: true,
                 data: {
@@ -142,8 +137,8 @@ const adminReportsAPI = {
                 }
             };
         } catch (error) {
-            console.error('Error getting category breakdown:', error);
-            return { success: false, error: error.message };
+            console.error('❌ Error getting category breakdown:', error);
+            return { success: false, data: null, error: error.message };
         }
     },
 
@@ -151,16 +146,19 @@ const adminReportsAPI = {
      * Get priority distribution
      */
     getPriorityDistribution: async () => {
+        console.log('🔴 Fetching priority distribution...');
         try {
             const response = await authenticatedFetch('/helpdesk/tickets');
-            const tickets = response.data.tickets || [];
+            const tickets = response.data?.tickets || response.data || [];
             
             const priorityMap = {};
             tickets.forEach(ticket => {
-                const priority = ticket.priority || 'Medium';
+                const priority = ticket.priority || 'medium';
                 priorityMap[priority] = (priorityMap[priority] || 0) + 1;
             });
 
+            console.log('✅ Priority data:', priorityMap);
+            
             return {
                 success: true,
                 data: {
@@ -169,8 +167,8 @@ const adminReportsAPI = {
                 }
             };
         } catch (error) {
-            console.error('Error getting priority distribution:', error);
-            return { success: false, error: error.message };
+            console.error('❌ Error getting priority distribution:', error);
+            return { success: false, data: null, error: error.message };
         }
     },
 
@@ -178,9 +176,10 @@ const adminReportsAPI = {
      * Get status distribution
      */
     getStatusDistribution: async () => {
+        console.log('🎯 Fetching status distribution...');
         try {
             const response = await authenticatedFetch('/helpdesk/tickets');
-            const tickets = response.data.tickets || [];
+            const tickets = response.data?.tickets || response.data || [];
             
             const statusMap = {};
             tickets.forEach(ticket => {
@@ -188,6 +187,8 @@ const adminReportsAPI = {
                 statusMap[status] = (statusMap[status] || 0) + 1;
             });
 
+            console.log('✅ Status data:', statusMap);
+            
             return {
                 success: true,
                 data: {
@@ -196,8 +197,16 @@ const adminReportsAPI = {
                 }
             };
         } catch (error) {
-            console.error('Error getting status distribution:', error);
-            return { success: false, error: error.message };
+            console.error('❌ Error getting status distribution:', error);
+            return { success: false, data: null, error: error.message };
         }
+    },
+
+    /**
+     * Get all tickets
+     */
+    getAllTickets: async (filters = {}) => {
+        const params = new URLSearchParams(filters);
+        return authenticatedFetch(`/helpdesk/tickets?${params}`);
     }
 };

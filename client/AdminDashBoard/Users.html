@@ -699,25 +699,7 @@
           }
       }
 
-     // ==========================================
-    // INITIALIZATION
-    // ==========================================
-    async function initUsersPage() {
-        const admin = JSON.parse(localStorage.getItem('admin') || 'null');
-        const token = localStorage.getItem('authToken');
-        const userRole = localStorage.getItem('userRole');
-
-        // Check authentication
-        if (!token || !admin || userRole !== 'admin') {
-            window.location.href = '../Main Dashboard/AdminLoginPage.html';
-            return;
-        }
-
-        // Display admin welcome message
-        document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
-        document.getElementById('year').textContent = new Date().getFullYear();
-
-       // ==========================================
+   // ==========================================
 // INITIALIZATION
 // ==========================================
 async function initUsersPage() {
@@ -725,34 +707,31 @@ async function initUsersPage() {
     const token = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('userRole');
 
-    // Check authentication
     if (!token || !admin || userRole !== 'admin') {
         window.location.href = '../Main Dashboard/AdminLoginPage.html';
         return;
     }
 
-    // Display admin welcome message
     document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // ✅ REMOVED: dashboardModule.initialize() - Only on AdminDashBoard.html
-
-    // Load users
     await loadAllUsers();
-
-    // Setup event listeners
     setupIconListeners();
-
-    // Update profile display
     updateProfileDisplay();
+
+    // ✅ Listen for changes from AdminDashBoard or other tabs
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'teamStatusUpdated') {
+            console.log('📢 Team status updated, refreshing...');
+            loadAllUsers();
+        }
+    });
+
+    // ✅ Auto-refresh every 30 seconds
+    setInterval(() => {
+        loadAllUsers();
+    }, 30000);
 }
-
-        // Load users
-        await loadAllUsers();
-
-        // Setup event listeners
-        setupIconListeners();
-    }
 
         // ========== SETUP ICON LISTENERS ==========
         function setupIconListeners() {
@@ -927,20 +906,22 @@ async function initUsersPage() {
 
         // ========== LOAD ALL USERS ==========
         async function loadAllUsers() {
-            try {
-                const container = document.getElementById('usersListContainer');
-                container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading users...</p></div>';
+    try {
+        const container = document.getElementById('usersListContainer');
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading users...</p></div>';
 
-                const response = await loadUsers();
-                allUsers = response || [];
-                displayUsers(allUsers);
-            } catch (error) {
-                console.error('Error loading users:', error);
-                showNotification(`❌ Failed to load users: ${error.message}`, 'error');
-                document.getElementById('usersListContainer').innerHTML = 
-                    '<p style="text-align: center; color: red;">Failed to load users. Please try again.</p>';
-            }
-        }
+        const response = await loadUsers();
+        allUsers = response || [];
+        
+        console.log('✅ Users synced from backend:', allUsers);
+        displayUsers(allUsers);
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showNotification(`❌ Failed to load users: ${error.message}`, 'error');
+        document.getElementById('usersListContainer').innerHTML = 
+            '<p style="text-align: center; color: red;">Failed to load users. Please try again.</p>';
+    }
+}
 
        // ========== DISPLAY USERS TABLE ==========
 function displayUsers(users) {
@@ -1222,6 +1203,65 @@ function closeChangeStatusModal() {
                 showNotification(`❌ Failed to update user: ${error.message}`, 'error');
             }
         }
+        // ========== SUBMIT ADD USER FORM ==========
+async function submitUserForm(event) {
+    event.preventDefault();
+
+    const userData = {
+        name: document.getElementById('userName').value,
+        email: document.getElementById('userEmail').value,
+        password: document.getElementById('userPassword').value,
+        role: document.getElementById('userRole').value
+    };
+
+    // Validation
+    if (!userData.name || !userData.email || !userData.password || !userData.role) {
+        showNotification('❌ Please fill all required fields', 'error');
+        return;
+    }
+
+    try {
+        console.log('📝 Adding new user:', { name: userData.name, email: userData.email, role: userData.role });
+
+        const response = await fetch('http://localhost:5000/api/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+        console.log('📥 API Response:', result);
+
+        if (!response.ok) {
+            const errorMsg = result.message || result.error || `Server error (${response.status})`;
+            console.error('❌ Failed to add user:', errorMsg);
+            throw new Error(errorMsg);
+        }
+
+        // ✅ SUCCESS - Add new user to local array
+        const newUser = result.data;
+        if (newUser) {
+            allUsers.push(newUser);
+            console.log('✅ New user added to local array:', newUser);
+        }
+
+        // Close modal
+        closeUserModal();
+        
+        // Show success message
+        showNotification(`✅ User ${userData.name} added successfully!`, 'success');
+        
+        // Refresh table display
+        displayUsers(allUsers);
+        
+    } catch (error) {
+        console.error('💥 Error adding user:', error);
+        showNotification(`❌ Failed to add user: ${error.message}`, 'error');
+    }
+}
 
         // ========== SUSPEND USER ==========
         async function confirmSuspendUser(userId) {
