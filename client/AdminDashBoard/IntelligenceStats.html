@@ -740,7 +740,382 @@
     <footer>
         <span>© <span id="year"></span> <strong>FixBuddy</strong> - Intelligence Analytics</span>
     </footer>
-    <script src="../js/IntelligenceStats.js"></script>
+         <script src="../js/IntelligenceStats.js"></script>
+    <script>
+        // ========== INTELLIGENCE STATS INITIALIZATION ==========
+        let chartsInstances = {};
+        const SAMPLE_CATEGORIES = ['Network', 'Hardware', 'Software', 'Security', 'Database', 'Email'];
+
+        // ========== PAGE INITIALIZATION ==========
+        async function initIntelligenceStatsPage() {
+            const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+            const token = localStorage.getItem('authToken');
+            const userRole = localStorage.getItem('userRole');
+
+            // Authentication check
+            if (!token || !admin || userRole !== 'admin') {
+                window.location.href = '../Main Dashboard/AdminLoginPage.html';
+                return;
+            }
+
+            document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+            document.getElementById('year').textContent = new Date().getFullYear();
+
+            // Load all intelligence data
+            await loadIntelligenceData();
+
+            // Setup event listeners
+            setupFilters();
+            setupRefreshButton();
+            setupLogout();
+        }
+
+        // ========== LOAD INTELLIGENCE DATA ==========
+        async function loadIntelligenceData() {
+            try {
+                // Simulate loading data (replace with actual API calls)
+                const intelligenceData = {
+                    totalAnalyzed: 1247,
+                    predictionAccuracy: 94.3,
+                    duplicatesDetected: 32,
+                    routingSuccess: 91.5
+                };
+
+                // Update header stats
+                updateIntelligenceStats(intelligenceData);
+
+                // Load and render charts
+                await loadCategoriesChart();
+                await loadSentimentChart();
+
+                // Load detailed tables
+                await loadAccuracyTable();
+                await loadRoutingEffectiveness();
+                await loadSentimentAnalysis();
+                await loadInsights();
+
+                console.log('✅ Intelligence data loaded successfully');
+            } catch (error) {
+                console.error('Error loading intelligence data:', error);
+            }
+        }
+
+        // ========== UPDATE INTELLIGENCE STATS ==========
+        function updateIntelligenceStats(data) {
+            document.getElementById('totalAnalyzed').textContent = data.totalAnalyzed || 0;
+            document.getElementById('predictionAccuracy').textContent = (data.predictionAccuracy || 0).toFixed(1) + '%';
+            document.getElementById('duplicatesDetected').textContent = data.duplicatesDetected || 0;
+            document.getElementById('routingSuccess').textContent = (data.routingSuccess || 0).toFixed(1) + '%';
+
+            // Update metric cards
+            document.getElementById('classificationAccuracy').textContent = (data.predictionAccuracy || 0).toFixed(1) + '%';
+            document.getElementById('classificationTrend').textContent = '+2.3%';
+            document.getElementById('avgPriorityScore').textContent = (data.totalAnalyzed * 0.076).toFixed(0);
+            document.getElementById('duplicateRate').textContent = ((data.duplicatesDetected / data.totalAnalyzed * 100) || 0).toFixed(2) + '%';
+            document.getElementById('avgSentimentScore').textContent = '0.42';
+        }
+
+        // ========== LOAD CATEGORIES CHART ==========
+        async function loadCategoriesChart() {
+            const ctx = document.getElementById('categoriesChart').getContext('2d');
+            
+            if (chartsInstances.categoriesChart) {
+                chartsInstances.categoriesChart.destroy();
+            }
+
+            const data = {
+                'Network': 245,
+                'Hardware': 187,
+                'Software': 342,
+                'Security': 156,
+                'Database': 198,
+                'Email': 119
+            };
+
+            chartsInstances.categoriesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        label: 'Tickets by Category',
+                        data: Object.values(data),
+                        backgroundColor: ['#1976d2', '#7b1fa2', '#00796b', '#c2185b', '#e65100', '#558b2f'],
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // ========== LOAD SENTIMENT CHART ==========
+        async function loadSentimentChart() {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            
+            if (chartsInstances.sentimentChart) {
+                chartsInstances.sentimentChart.destroy();
+            }
+
+            const sentimentData = {
+                'Network': 0.65,
+                'Hardware': 0.52,
+                'Software': 0.48,
+                'Security': 0.35,
+                'Database': 0.58,
+                'Email': 0.72
+            };
+
+            chartsInstances.sentimentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(sentimentData),
+                    datasets: [{
+                        label: 'Average Sentiment Score',
+                        data: Object.values(sentimentData),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { callback: function(value) { return value.toFixed(1); } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ========== LOAD ACCURACY TABLE ==========
+        async function loadAccuracyTable() {
+            const tbody = document.getElementById('accuracyTableBody');
+            const accuracyData = [
+                { category: 'Network', total: 245, correct: 234, confidence: 95.5 },
+                { category: 'Hardware', total: 187, correct: 172, confidence: 92.0 },
+                { category: 'Software', total: 342, correct: 315, confidence: 92.1 },
+                { category: 'Security', total: 156, correct: 137, confidence: 87.8 },
+                { category: 'Database', total: 198, correct: 186, confidence: 93.9 },
+                { category: 'Email', total: 119, correct: 110, confidence: 92.4 }
+            ];
+
+            tbody.innerHTML = '';
+            accuracyData.forEach(row => {
+                const accuracy = ((row.correct / row.total) * 100).toFixed(1);
+                const trend = accuracy > 90 ? '📈 Excellent' : accuracy > 80 ? '📊 Good' : '⚠️ Needs Work';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.category}</td>
+                    <td>${row.total}</td>
+                    <td>${row.correct}</td>
+                    <td><strong>${accuracy}%</strong></td>
+                    <td>${row.confidence.toFixed(1)}%</td>
+                    <td>${trend}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ========== LOAD ROUTING EFFECTIVENESS ==========
+        async function loadRoutingEffectiveness() {
+            const list = document.getElementById('routingEffectivenessList');
+            const routingData = [
+                { agent: 'John Smith', routed: 145, correct: 138, accuracy: 95.2, avgRating: 4.8 },
+                { agent: 'Sarah Johnson', routed: 132, correct: 124, accuracy: 93.9, avgRating: 4.7 },
+                { agent: 'Mike Wilson', routed: 118, correct: 109, accuracy: 92.4, avgRating: 4.5 },
+                { agent: 'Emma Davis', routed: 156, correct: 143, accuracy: 91.7, avgRating: 4.6 }
+            ];
+
+            list.innerHTML = '';
+            routingData.forEach(agent => {
+                const item = document.createElement('li');
+                item.className = 'routing-item';
+                item.innerHTML = `
+                    <div class="routing-agent-name">${agent.agent}</div>
+                    <div class="routing-metrics">
+                        <div class="routing-metric">
+                            <span class="routing-metric-label">Routed</span>
+                            <span class="routing-metric-value">${agent.routed}</span>
+                        </div>
+                        <div class="routing-metric">
+                            <span class="routing-metric-label">Correct</span>
+                            <span class="routing-metric-value">${agent.correct}</span>
+                        </div>
+                        <div class="routing-metric">
+                            <span class="routing-metric-label">Accuracy</span>
+                            <span class="routing-metric-value">${agent.accuracy.toFixed(1)}%</span>
+                        </div>
+                        <div class="routing-metric">
+                            <span class="routing-metric-label">Rating</span>
+                            <span class="routing-metric-value" style="color: #ff9800;">⭐ ${agent.avgRating}</span>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // ========== LOAD SENTIMENT ANALYSIS ==========
+        async function loadSentimentAnalysis() {
+            const tbody = document.getElementById('sentimentTableBody');
+            const sentimentData = [
+                { category: 'Network', positive: 159, neutral: 62, negative: 24, avgScore: 0.68 },
+                { category: 'Hardware', positive: 122, neutral: 48, negative: 17, avgScore: 0.65 },
+                { category: 'Software', positive: 187, neutral: 123, negative: 32, avgScore: 0.62 },
+                { category: 'Security', positive: 98, neutral: 42, negative: 16, avgScore: 0.58 },
+                { category: 'Database', positive: 128, neutral: 56, negative: 14, avgScore: 0.70 },
+                { category: 'Email', positive: 95, neutral: 18, negative: 6, avgScore: 0.75 }
+            ];
+
+            tbody.innerHTML = '';
+            sentimentData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.category}</td>
+                    <td><span class="sentiment-indicator sentiment-positive">😊 ${row.positive}</span></td>
+                    <td><span class="sentiment-indicator sentiment-neutral">😐 ${row.neutral}</span></td>
+                    <td><span class="sentiment-indicator sentiment-negative">😢 ${row.negative}</span></td>
+                    <td><strong>${row.avgScore.toFixed(2)}</strong></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ========== LOAD INSIGHTS ==========
+        async function loadInsights() {
+            const container = document.getElementById('insightsContainer');
+            const insights = [
+                { type: 'success', icon: 'fa-check-circle', title: 'High Accuracy Achievement', message: 'AI classification accuracy is at 94.3%, exceeding the 90% target.' },
+                { type: 'info', icon: 'fa-lightbulb', title: 'Routing Optimization Opportunity', message: 'Agent Sarah Johnson has the highest routing accuracy. Consider her approach for team training.' },
+                { type: 'warning', icon: 'fa-triangle-exclamation', title: 'Security Category Sentiment', message: 'Security-related tickets show lower satisfaction (0.35). May need specialized support.' },
+                { type: 'success', icon: 'fa-chart-line', title: 'Duplicate Detection Working Well', message: '32 duplicate tickets identified this month, preventing duplicate work.' }
+            ];
+
+            container.innerHTML = '';
+            insights.forEach(insight => {
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${insight.type}`;
+                alert.innerHTML = `
+                    <i class="fa-solid ${insight.icon}"></i>
+                    <div>
+                        <strong>${insight.title}</strong>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">${insight.message}</p>
+                    </div>
+                    <div class="alert-close" onclick="this.parentElement.style.display='none';">×</div>
+                `;
+                container.appendChild(alert);
+            });
+        }
+
+        // ========== SETUP FILTERS ==========
+        function setupFilters() {
+            const dateFilter = document.getElementById('dateFilter');
+            const categoryFilter = document.getElementById('categoryFilter');
+
+            dateFilter.addEventListener('change', async () => {
+                console.log('Date filter changed:', dateFilter.value);
+                await loadIntelligenceData();
+            });
+
+            categoryFilter.addEventListener('change', async () => {
+                console.log('Category filter changed:', categoryFilter.value);
+                await loadIntelligenceData();
+            });
+        }
+
+        // ========== SETUP REFRESH BUTTON ==========
+        function setupRefreshButton() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', async () => {
+                    refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing...';
+                    refreshBtn.disabled = true;
+                    
+                    await loadIntelligenceData();
+                    
+                    refreshBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Refresh Data';
+                    refreshBtn.disabled = false;
+                    
+                    // Show notification
+                    const notification = document.createElement('div');
+                    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4caf50; color: white; padding: 1rem; border-radius: 4px; z-index: 2000;';
+                    notification.textContent = '✅ Data refreshed successfully!';
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 3000);
+                });
+            }
+        }
+
+        // ========== SETUP LOGOUT ==========
+        function setupLogout() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('admin');
+                    localStorage.removeItem('userRole');
+                    window.location.href = '../Main Dashboard/AdminLoginPage.html';
+                });
+            }
+        }
+
+        // ========== SEARCH FUNCTIONALITY ==========
+        document.getElementById('searchIntelligence').addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const tables = document.querySelectorAll('.detailed-table table tbody tr');
+            
+            tables.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // ========== SETUP PROFILE ICON ==========
+        document.querySelector('.admin-profile-icon').addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
+
+        // ========== INITIALIZE ON PAGE LOAD ==========
+        function handleIntelligencePageLoad() {
+            initIntelligenceStatsPage().catch(error => {
+                console.error('Fatal error initializing intelligence page:', error);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', handleIntelligencePageLoad);
+
+        if (document.readyState === 'loading') {
+            // DOM still loading
+        } else {
+            // DOM already loaded
+            handleIntelligencePageLoad();
+        }
+    </script>
+
 </body>
 </html>
 
