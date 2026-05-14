@@ -1364,6 +1364,17 @@ function closeChangeStatusModal() {
             });
         }
         
+        // ========== PAGE VISIBILITY - REFRESH DATA WHEN RETURNING ==========
+        // When user returns to this page from another page, refresh the user list
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                console.log('📲 Users.html page is now visible - refreshing data...');
+                loadAllUsers().catch(error => {
+                    console.error('Error refreshing users on page visibility:', error);
+                });
+            }
+        });
+        
         // ========== GLOBAL ERROR HANDLER ==========
         // Handle unhandled promise rejections from message passing
         window.addEventListener('unhandledrejection', (event) => {

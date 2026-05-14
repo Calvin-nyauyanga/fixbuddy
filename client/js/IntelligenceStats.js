@@ -11,11 +11,19 @@ let intelligenceData = {
     accuracy: {},
     routing: [],
     totalTickets: 0,
-    predictedCorrectly: 0
+    predictedCorrectly: 0,
+    lastUpdate: null
 };
 
-// API Endpoints
-const API_BASE_URL = 'http://localhost:5000/api';
+// Cache for API responses to handle 304 responses
+const apiCache = {
+    analytics: null,
+    accuracy: null,
+    routing: null,
+    sentiment: null,
+    insights: null,
+    lastUpdate: Date.now()
+};
 
 const INTELLIGENCE_API = {
     async getAnalytics(dateRange = '30', category = '') {
@@ -28,8 +36,7 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                },
-                credentials: 'include'
+                }
             });
             // Handle both 200 and 304 (Not Modified) as success
             if (response.status === 304) {
@@ -50,8 +57,7 @@ const INTELLIGENCE_API = {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                },
-                credentials: 'include'
+                }
             });
             if (response.status === 304) {
                 console.log('Accuracy Metrics: 304 Not Modified (cached response)');
@@ -73,7 +79,11 @@ const INTELLIGENCE_API = {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
                 }
             });
-            if (!response.ok) throw new Error('Failed to fetch routing metrics');
+            if (response.status === 304) {
+                console.log('Routing Metrics: 304 Not Modified (cached response)');
+                return null;
+            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return await response.json();
         } catch (error) {
             console.error('Routing metrics fetch error:', error);
@@ -89,7 +99,11 @@ const INTELLIGENCE_API = {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
                 }
             });
-            if (!response.ok) throw new Error('Failed to fetch sentiment analysis');
+            if (response.status === 304) {
+                console.log('Sentiment Analysis: 304 Not Modified (cached response)');
+                return null;
+            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return await response.json();
         } catch (error) {
             console.error('Sentiment analysis fetch error:', error);
@@ -105,7 +119,11 @@ const INTELLIGENCE_API = {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
                 }
             });
-            if (!response.ok) throw new Error('Failed to fetch insights');
+            if (response.status === 304) {
+                console.log('Insights: 304 Not Modified (cached response)');
+                return null;
+            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             return await response.json();
         } catch (error) {
             console.error('Insights fetch error:', error);
@@ -490,7 +508,7 @@ async function loadIntelligenceData() {
         if (adminContent) adminContent.style.opacity = '0.6';
         if (refreshBtn) refreshBtn.disabled = true;
 
-        console.log('Fetching intelligence data with dateRange:', dateRange, 'category:', category);
+        console.log('🔄 Fetching intelligence data with dateRange:', dateRange, 'category:', category);
 
         // Fetch all data in parallel
         const [analytics, accuracy, routing, sentiment, insights] = await Promise.all([
@@ -501,86 +519,130 @@ async function loadIntelligenceData() {
             INTELLIGENCE_API.getInsights(dateRange)
         ]);
 
-        console.log('API Responses:', { analytics, accuracy, routing, sentiment, insights });
+        console.log('📊 Raw API Responses:', { analytics, accuracy, routing, sentiment, insights });
 
-        // Update statistics
-        if (analytics) {
-            updateStatistics(analytics, accuracy);
+        // Handle 304 responses by using cached data
+        const analyticsData = analytics || apiCache.analytics;
+        const accuracyData = accuracy || apiCache.accuracy;
+        const routingData = routing || apiCache.routing;
+        const sentimentData = sentiment || apiCache.sentiment;
+        const insightsData = insights || apiCache.insights;
+
+        // Update cache with new data
+        if (analytics) apiCache.analytics = analytics;
+        if (accuracy) apiCache.accuracy = accuracy;
+        if (routing) apiCache.routing = routing;
+        if (sentiment) apiCache.sentiment = sentiment;
+        if (insights) apiCache.insights = insights;
+        apiCache.lastUpdate = Date.now();
+
+        console.log('✅ Using Data:', { analyticsData, accuracyData, routingData, sentimentData, insightsData });
+
+        // Update statistics - ALWAYS call this
+        if (analyticsData) {
+            try {
+                updateStatistics(analyticsData, accuracyData);
+            } catch (e) {
+                console.error('❌ Error updating statistics:', e);
+            }
         } else {
-            console.warn('No analytics data received');
+            console.warn('⚠️ No analytics data available');
         }
 
         // Render charts
-        if (analytics?.categories && Object.keys(analytics.categories).length > 0) {
-            renderCategoriesChart(analytics.categories);
+        if (analyticsData?.categories && Object.keys(analyticsData.categories).length > 0) {
+            console.log('✅ Rendering categories chart with:', analyticsData.categories);
+            renderCategoriesChart(analyticsData.categories);
         } else {
-            console.warn('No category data available for chart');
+            console.warn('⚠️ No category data available for chart');
             const ctx = document.getElementById('categoriesChart');
-            if (ctx) {
+            if (ctx && ctx.parentElement) {
                 ctx.parentElement.innerHTML = '<p class="no-data">No category data available</p>';
             }
         }
 
         // Handle sentiment chart - check multiple possible data sources
         let sentimentChartData = null;
-        if (analytics?.sentiment_by_category && Object.keys(analytics.sentiment_by_category).length > 0) {
-            sentimentChartData = analytics.sentiment_by_category;
-            console.log('Using sentiment data from analytics.sentiment_by_category');
-        } else if (sentiment?.by_category && Array.isArray(sentiment.by_category) && sentiment.by_category.length > 0) {
-            sentimentChartData = sentiment.by_category;
-            console.log('Using sentiment data from sentiment.by_category');
+        if (analyticsData?.sentiment_by_category && Object.keys(analyticsData.sentiment_by_category).length > 0) {
+            sentimentChartData = analyticsData.sentiment_by_category;
+            console.log('✅ Using sentiment data from analytics.sentiment_by_category');
+        } else if (sentimentData?.by_category && Array.isArray(sentimentData.by_category) && sentimentData.by_category.length > 0) {
+            sentimentChartData = sentimentData.by_category;
+            console.log('✅ Using sentiment data from sentiment.by_category');
+        } else {
+            console.warn('⚠️ No sentiment data found in either source');
         }
 
         if (sentimentChartData) {
-            renderSentimentChart(sentimentChartData);
+            try {
+                renderSentimentChart(sentimentChartData);
+            } catch (e) {
+                console.error('❌ Error rendering sentiment chart:', e);
+            }
         } else {
-            console.warn('No sentiment data available for chart');
+            console.warn('⚠️ No sentiment data available for chart');
             const ctx = document.getElementById('sentimentChart');
-            if (ctx) {
+            if (ctx && ctx.parentElement) {
                 ctx.parentElement.innerHTML = '<p class="no-data">No sentiment data available</p>';
             }
         }
 
         // Render tables
-        if (accuracy?.by_category && Array.isArray(accuracy.by_category)) {
-            console.log('Rendering accuracy table with:', accuracy.by_category);
-            renderAccuracyTable(accuracy.by_category);
+        if (accuracyData?.by_category && Array.isArray(accuracyData.by_category) && accuracyData.by_category.length > 0) {
+            console.log('✅ Rendering accuracy table with:', accuracyData.by_category.length, 'rows');
+            try {
+                renderAccuracyTable(accuracyData.by_category);
+            } catch (e) {
+                console.error('❌ Error rendering accuracy table:', e);
+            }
         } else {
-            console.warn('No accuracy data available');
+            console.warn('⚠️ No accuracy data available');
             const tbody = document.getElementById('accuracyTableBody');
             if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="no-data">No accuracy data available</td></tr>';
         }
 
-        if (sentiment?.by_category && Array.isArray(sentiment.by_category)) {
-            console.log('Rendering sentiment table with:', sentiment.by_category);
-            renderSentimentTable(sentiment.by_category);
+        if (sentimentData?.by_category && Array.isArray(sentimentData.by_category) && sentimentData.by_category.length > 0) {
+            console.log('✅ Rendering sentiment table with:', sentimentData.by_category.length, 'rows');
+            try {
+                renderSentimentTable(sentimentData.by_category);
+            } catch (e) {
+                console.error('❌ Error rendering sentiment table:', e);
+            }
         } else {
-            console.warn('No sentiment table data available');
+            console.warn('⚠️ No sentiment table data available');
             const tbody = document.getElementById('sentimentTableBody');
             if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="no-data">No sentiment data available</td></tr>';
         }
 
-        if (routing?.agents && Array.isArray(routing.agents)) {
-            console.log('Rendering routing metrics with:', routing.agents);
-            renderRoutingMetrics(routing.agents);
+        if (routingData?.agents && Array.isArray(routingData.agents) && routingData.agents.length > 0) {
+            console.log('✅ Rendering routing metrics with:', routingData.agents.length, 'agents');
+            try {
+                renderRoutingMetrics(routingData.agents);
+            } catch (e) {
+                console.error('❌ Error rendering routing metrics:', e);
+            }
         } else {
-            console.warn('No routing data available');
+            console.warn('⚠️ No routing data available');
             const list = document.getElementById('routingEffectivenessList');
             if (list) list.innerHTML = '<li class="no-data">No routing data available</li>';
         }
 
-        if (insights?.insights && Array.isArray(insights.insights)) {
-            console.log('Rendering insights with:', insights.insights);
-            renderInsights(insights.insights);
+        if (insightsData?.insights && Array.isArray(insightsData.insights) && insightsData.insights.length > 0) {
+            console.log('✅ Rendering insights with:', insightsData.insights.length, 'insights');
+            try {
+                renderInsights(insightsData.insights);
+            } catch (e) {
+                console.error('❌ Error rendering insights:', e);
+            }
         } else {
-            console.warn('No insights available');
+            console.warn('⚠️ No insights available');
             const container = document.getElementById('insightsContainer');
             if (container) container.innerHTML = '<div class="alert alert-info"><i class="fa-solid fa-circle-info"></i><span>No insights available</span></div>';
         }
 
-        showNotification('Intelligence data refreshed successfully!', 'success');
+        showNotification('✅ Intelligence data refreshed successfully!', 'success');
     } catch (error) {
-        console.error('Error loading intelligence data:', error);
+        console.error('❌ Error loading intelligence data:', error);
         showNotification('Error loading intelligence data: ' + error.message, 'error');
     } finally {
         const adminContent = document.querySelector('.admin-content');
@@ -640,37 +702,102 @@ document.getElementById('searchIntelligence').addEventListener('keyup', (e) => {
 
 // ==================== INITIALIZATION ====================
 
+// ==================== DIAGNOSTICS ====================
+
+window.intelligenceDiagnostics = async function() {
+    console.log('====== INTELLIGENCE DASHBOARD DIAGNOSTICS ======');
+    console.log('📅 Timestamp:', new Date().toLocaleString());
+    
+    // 1. Check environment
+    console.log('\n1️⃣ ENVIRONMENT CHECK:');
+    const token = localStorage.getItem('authToken');
+    const role = localStorage.getItem('userRole');
+    const admin = localStorage.getItem('admin');
+    console.log('   Token exists:', !!token);
+    console.log('   Token length:', token?.length || 0);
+    console.log('   User role:', role);
+    console.log('   Is admin:', role === 'admin');
+    console.log('   Admin data:', admin);
+    
+    // 2. Check cache
+    console.log('\n2️⃣ API CACHE STATUS:');
+    console.log('   Cache age (ms):', Date.now() - apiCache.lastUpdate);
+    console.log('   Analytics cached:', !!apiCache.analytics);
+    console.log('   Accuracy cached:', !!apiCache.accuracy);
+    console.log('   Routing cached:', !!apiCache.routing);
+    console.log('   Sentiment cached:', !!apiCache.sentiment);
+    console.log('   Insights cached:', !!apiCache.insights);
+    
+    // 3. Check DOM elements
+    console.log('\n3️⃣ DOM ELEMENTS CHECK:');
+    const elements = {
+        categoriesChart: document.getElementById('categoriesChart'),
+        sentimentChart: document.getElementById('sentimentChart'),
+        accuracyTableBody: document.getElementById('accuracyTableBody'),
+        sentimentTableBody: document.getElementById('sentimentTableBody'),
+        routingEffectivenessList: document.getElementById('routingEffectivenessList'),
+        insightsContainer: document.getElementById('insightsContainer'),
+        dateFilter: document.getElementById('dateFilter'),
+        categoryFilter: document.getElementById('categoryFilter'),
+        refreshBtn: document.getElementById('refreshBtn')
+    };
+    Object.entries(elements).forEach(([name, el]) => {
+        console.log(`   ${name}:`, el ? '✅ Found' : '❌ Missing');
+    });
+    
+    // 4. Test each API endpoint
+    console.log('\n4️⃣ TESTING API ENDPOINTS:');
+    try {
+        const dateRange = document.getElementById('dateFilter').value || '7';
+        
+        console.log(`   Testing with dateRange: ${dateRange}`);
+        
+        console.log('   Testing Analytics...');
+        const analytics = await INTELLIGENCE_API.getAnalytics(dateRange);
+        console.log('   ✅ Analytics:', analytics ? 'Data received' : 'Empty');
+        if (analytics) console.log('      Keys:', Object.keys(analytics));
+        
+        console.log('   Testing Accuracy Metrics...');
+        const accuracy = await INTELLIGENCE_API.getAccuracyMetrics(dateRange);
+        console.log('   ✅ Accuracy:', accuracy ? 'Data received' : 'Empty');
+        if (accuracy) console.log('      Keys:', Object.keys(accuracy));
+        
+        console.log('   Testing Routing Metrics...');
+        const routing = await INTELLIGENCE_API.getRoutingMetrics(dateRange);
+        console.log('   ✅ Routing:', routing ? 'Data received' : 'Empty');
+        if (routing) console.log('      Keys:', Object.keys(routing));
+        
+        console.log('   Testing Sentiment Analysis...');
+        const sentiment = await INTELLIGENCE_API.getSentimentAnalysis(dateRange);
+        console.log('   ✅ Sentiment:', sentiment ? 'Data received' : 'Empty');
+        if (sentiment) console.log('      Keys:', Object.keys(sentiment));
+        
+        console.log('   Testing Insights...');
+        const insights = await INTELLIGENCE_API.getInsights(dateRange);
+        console.log('   ✅ Insights:', insights ? 'Data received' : 'Empty');
+        if (insights) console.log('      Keys:', Object.keys(insights));
+        
+    } catch (error) {
+        console.error('   ❌ API Test Error:', error);
+    }
+    
+    // 5. Summary
+    console.log('\n5️⃣ SUMMARY:');
+    console.log('   Chart instances:', { categories: !!categoriesChart, sentiment: !!sentimentChart });
+    console.log('   Last data refresh:', new Date(apiCache.lastUpdate).toLocaleTimeString());
+    console.log('   Current filter:', { dateRange: document.getElementById('dateFilter').value, category: document.getElementById('categoryFilter').value });
+    
+    console.log('\n====== END DIAGNOSTICS ======');
+    console.log('💡 TIP: Run intelligenceDiagnostics() again after clicking Refresh button');
+};
+
 // Debug function - can be called from console
 window.debugIntelligenceAPI = async function() {
-    console.log('=== INTELLIGENCE API DEBUG ===');
-    const token = localStorage.getItem('authToken');
-    console.log('Auth token exists:', !!token);
-    
-    try {
-        console.log('\n1. Testing Analytics API...');
-        const analytics = await INTELLIGENCE_API.getAnalytics('30', '');
-        console.log('Analytics:', analytics);
-        
-        console.log('\n2. Testing Accuracy Metrics API...');
-        const accuracy = await INTELLIGENCE_API.getAccuracyMetrics('30');
-        console.log('Accuracy:', accuracy);
-        
-        console.log('\n3. Testing Routing Metrics API...');
-        const routing = await INTELLIGENCE_API.getRoutingMetrics('30');
-        console.log('Routing:', routing);
-        
-        console.log('\n4. Testing Sentiment Analysis API...');
-        const sentiment = await INTELLIGENCE_API.getSentimentAnalysis('30');
-        console.log('Sentiment:', sentiment);
-        
-        console.log('\n5. Testing Insights API...');
-        const insights = await INTELLIGENCE_API.getInsights('30');
-        console.log('Insights:', insights);
-        
-        console.log('\n=== ALL TESTS COMPLETE ===');
-    } catch (error) {
-        console.error('API Error:', error);
-    }
+    console.log('=== RUNNING FULL INTELLIGENCE TEST ===');
+    await intelligenceDiagnostics();
+    console.log('=== RELOADING PAGE DATA ===');
+    await loadIntelligenceData();
+    console.log('=== TEST COMPLETE ===');
 };
 
 // ==================== INITIALIZATION ====================
@@ -678,19 +805,54 @@ window.debugIntelligenceAPI = async function() {
 document.getElementById('year').textContent = new Date().getFullYear();
 
 async function initIntelligenceDashboard() {
+    console.log('🚀 Initializing Intelligence Dashboard...');
+    
     const token = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('userRole');
-    const admin = JSON.parse(localStorage.getItem('admin') || 'null');
+    const adminStr = localStorage.getItem('admin');
+    let admin = null;
+    
+    console.log('🔐 Auth check - Token:', token ? '✅ Present' : '❌ Missing');
+    console.log('👤 Role check - Role:', userRole);
+    console.log('📦 Admin data:', adminStr ? '✅ Present' : '❌ Missing');
+    
+    try {
+        admin = adminStr ? JSON.parse(adminStr) : null;
+    } catch (e) {
+        console.warn('Could not parse admin data:', e);
+    }
 
     if (!token || userRole !== 'admin') {
+        console.error('❌ Not authenticated as admin, redirecting...');
         window.location.href = '../Main Dashboard/AdminLoginPage.html';
         return;
     }
 
-    if (admin) {
-        document.getElementById('adminWelcome').textContent = `👤 ${admin.name || admin.email}`;
+    // Update welcome message with admin info
+    if (admin && admin.name) {
+        console.log('✅ Displaying admin name:', admin.name);
+        document.getElementById('adminWelcome').textContent = `👤 ${admin.name}`;
+    } else if (admin && admin.email) {
+        console.log('✅ Displaying admin email:', admin.email);
+        document.getElementById('adminWelcome').textContent = `👤 ${admin.email}`;
+    } else {
+        // Fallback: try to get from user object
+        const userStr = localStorage.getItem('user');
+        try {
+            const user = userStr ? JSON.parse(userStr) : null;
+            if (user && user.email) {
+                console.log('✅ Displaying user email:', user.email);
+                document.getElementById('adminWelcome').textContent = `👤 ${user.email}`;
+            } else {
+                console.warn('⚠️ No user info found in localStorage');
+            }
+        } catch (e) {
+            console.warn('Could not parse user data:', e);
+        }
     }
 
+    console.log('✅ Authentication successful, loading data...');
+    
     // Load initial data
     await loadIntelligenceData();
 

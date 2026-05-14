@@ -12,6 +12,7 @@ export const getAllUsers = async (req, res) => {
                 email: true,
                 role: true,
                 status: true,
+                teamStatus: true,
                 createdAt: true,
                 updatedAt: true
             },
@@ -48,6 +49,7 @@ export const getUserById = async (req, res) => {
                 email: true,
                 role: true,
                 status: true,
+                teamStatus: true,
                 createdAt: true,
                 updatedAt: true
             }
@@ -100,6 +102,7 @@ export const searchUsers = async (req, res) => {
                 email: true,
                 role: true,
                 status: true,
+                teamStatus: true,
                 createdAt: true
             }
         });

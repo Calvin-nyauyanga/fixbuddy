@@ -37,11 +37,12 @@ async function seed() {
           name: `Support Agent ${i}`,
           phone: `+123456789${i}`,
           role: 'agent',
-          status: i === 1 || i === 2 ? 'available' : i === 3 ? 'on_break' : 'offline',
+          status: 'active',
+          teamStatus: i === 1 || i === 2 ? 'available' : i === 3 ? 'on-break' : 'offline',
         },
       });
       agents.push(agent);
-      console.log(`✅ Created agent:`, agent.name, `- Status: ${agent.status}`);
+      console.log(`✅ Created agent:`, agent.name, `- Team Status: ${agent.teamStatus}`);
     }
 
     // Create regular users
@@ -108,6 +109,27 @@ async function seed() {
           priority: ticketData.priority,
           createdById: customer.id,
           assignedToId: assignedAgent?.id || null,
+          // Add mock intelligence data
+          confidence: Math.random() * (0.98 - 0.65) + 0.65, // 65-98% confidence
+          sentiment: {
+            score: Math.random() * 2 - 1, // -1 to 1
+            label: Math.random() > 0.5 ? 'positive' : 'negative',
+            confidence: Math.random() * (0.95 - 0.60) + 0.60
+          },
+          intelligenceData: {
+            predicted_category: ticketData.category,
+            prediction_confidence: Math.random() * (0.99 - 0.70) + 0.70,
+            suggested_priority: ticketData.priority,
+            is_duplicate: Math.random() > 0.85, // 15% chance of duplicate
+            duplicate_of_id: null,
+            suggested_agent: assignedAgent?.name || 'General Queue',
+            routing_score: Math.random() * (0.98 - 0.60) + 0.60,
+            complexity_score: Math.floor(Math.random() * 100),
+            urgency_score: Math.floor(Math.random() * 100),
+            processing_time_estimate: Math.floor(Math.random() * 240) + 15, // 15-255 minutes
+            ai_notes: 'Analyzed by AI classification engine',
+            tags: ['auto-classified', ticketData.category]
+          }
         },
       });
 
