@@ -4,13 +4,18 @@
 // Purpose: Core AI logic, question classification, response generation
 // ============================================
 
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import CHATBOT_CONFIG from '../config/chatbot.config.js';
 import KNOWLEDGE_BASE from '../utils/knowledgeBase.js';
 import { ISSUE_CATEGORIES, SYSTEM_PROMPTS, TROUBLESHOOTING_STEPS } from '../utils/chatbotPrompts.js';
 import { getTranslation, detectLanguage } from '../utils/languageSupport.js';
 
-const prisma = new PrismaClient();
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 class ChatbotService {
   /**

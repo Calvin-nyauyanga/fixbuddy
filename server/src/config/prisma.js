@@ -1,9 +1,26 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
+// Validate DATABASE_URL exists
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = "postgresql://postgres:Abcd1234567890p@localhost:5432/fixbuddy_db?sslmode=disable";
+  throw new Error(
+    'DATABASE_URL environment variable is not set. Check your .env file.'
+  );
 }
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, closing Prisma Client...');
+  await prisma.$disconnect();
+  process.exit(0);
+});
 
 export default prisma;

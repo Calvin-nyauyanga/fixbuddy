@@ -1,12 +1,12 @@
-// Temporarily disabled for testing
-// import pkg from '@prisma/client';
-// import "dotenv/config";
+import "dotenv/config";
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
-// const { PrismaClient } = pkg;
+const connectionString = process.env.DATABASE_URL;
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter });
 
-// export default prisma;
-
-const prisma = null; // Mock for testing
 export default prisma;
