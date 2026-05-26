@@ -1,0 +1,96 @@
+/* ============================================
+   UNIVERSAL CHATBOT THEME
+   Location: client/CSS-STYLING-UNIVERSAL/chatbot-theme.css
+   Purpose: Shared theme variables and global styles
+   ============================================ */
+
+:root {
+    /* Light Mode */
+    --chatbot-primary: #0066cc;
+    --chatbot-primary-dark: #0052a3;
+    --chatbot-secondary: #f39c12;
+    --chatbot-success: #27ae60;
+    --chatbot-danger: #e74c3c;
+    --chatbot-warning: #f39c12;
+    --chatbot-info: #3498db;
+    
+    /* Backgrounds */
+    --chatbot-bg-light: #ffffff;
+    --chatbot-bg-dark: #1a1a1a;
+    --chatbot-bg-hover: #f5f5f5;
+    
+    /* Text Colors */
+    --chatbot-text-primary: #333333;
+    --chatbot-text-secondary: #666666;
+    --chatbot-text-light: #f0f0f0;
+    
+    /* Borders */
+    --chatbot-border: #e0e0e0;
+    --chatbot-border-dark: #404040;
+    
+    /* Shadows */
+    --chatbot-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --chatbot-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+    --chatbot-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
+    
+    /* Transitions */
+    --chatbot-transition-fast: all 0.2s ease;
+    --chatbot-transition: all 0.3s ease;
+    --chatbot-transition-slow: all 0.5s ease;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --chatbot-bg-light: #1a1a1a;
+        --chatbot-bg-dark: #ffffff;
+        --chatbot-text-primary: #f0f0f0;
+        --chatbot-text-secondary: #d0d0d0;
+        --chatbot-border: #404040;
+    }
+}
+
+/* Utility Classes */
+.chatbot-hidden {
+    display: none !important;
+}
+
+.chatbot-visible {
+    display: block !important;
+}
+
+.chatbot-flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chatbot-gradient-primary {
+    background: linear-gradient(135deg, var(--chatbot-primary), var(--chatbot-primary-dark));
+}
+
+.chatbot-shadow {
+    box-shadow: var(--chatbot-shadow-md);
+}
+
+/* Feedback Buttons */
+.feedback-btn {
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 11px;
+    margin-right: 6px;
+    transition: var(--chatbot-transition-fast);
+    color: #666;
+}
+
+.feedback-btn:hover {
+    background: #e0e0e0;
+    color: var(--chatbot-primary);
+}
+
+.feedback-btn i {
+    margin-right: 4px;
+}

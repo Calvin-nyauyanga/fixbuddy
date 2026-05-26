@@ -12,6 +12,7 @@ import settingsRoutes from './routes/settingsRoutes.js';
 import { loadSystemSettings } from './middleware/settingsMiddleware.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import intelligenceRoutes from './routes/intelligenceRoutes.js';
+import chatbotRoutes from './routes/chatbotRoutes.js';
 import intelligenceAnalyticsRoutes from './routes/intelligenceAnalyticsRoutes.js';
 import themeRoutes from '../src/routes/themeRoutes.js';
 
@@ -65,6 +66,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/intelligence', intelligenceRoutes);
 app.use('/api/intelligence', intelligenceAnalyticsRoutes);
 app.use('/api/theme', themeRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Temporary test route to verify routing (placed before userRoutes mounting)
 app.get('/api/users/test-route', (req, res) => {

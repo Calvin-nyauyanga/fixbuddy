@@ -30,6 +30,8 @@ model User {
   ticketsAssigned Ticket[] @relation("AssignedTo")
   comments Comment[]
   activities Activity[]
+  chatSessions      ChatSession[]
+  chatProfile       UserChatProfile?
 
   @@map("users")
 }
@@ -61,6 +63,7 @@ model Ticket {
 
   comments    Comment[]
   activities  Activity[]
+  chatMessages ChatMessage[]
 
   @@map("tickets")
 }
@@ -108,3 +111,97 @@ model Settings {
 
   @@map("settings")
 }
+// ============= CHATBOT MODELS =============
+
+// ChatSession: Tracks individual conversation sessions with the chatbot
+model ChatSession {
+  id            String    @id @default(cuid())
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  language      String    @default("en")   // en, sn, nd
+  sessionStatus String    @default("active") // active, closed, escalated
+  
+  createdAt     DateTime  @default(now())
+  closedAt      DateTime?
+  updatedAt     DateTime  @updatedAt
+  
+  messages      ChatMessage[]
+  
+  @@map("chat_sessions")
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ChatMessage: Individual messages in a conversation
+model ChatMessage {
+  id              String    @id @default(cuid())
+  sessionId       String
+  session         ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  sender          String    @default("user")  // user or bot
+  messageType     String    @default("text")  // text, system, escalation
+  content         String    @db.Text
+  
+  // AI Analysis metadata
+  category        String?   // hardware, software, network, account, etc.
+  sentiment       String?   // positive, neutral, negative
+  confidence      Float?    // 0-1 confidence score
+  resolvedIssue   Boolean   @default(false)
+  
+  // If this triggered ticket creation
+  ticketId        Int?
+  ticket          Ticket?   @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("chat_messages")
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+// UserChatProfile: Personalization data for each user
+model UserChatProfile {
+  id                String    @id @default(cuid())
+  userId            Int       @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  preferredLanguage String    @default("en")
+  skillLevel        String    @default("beginner")  // beginner, intermediate, advanced
+  totalQuestionsAsked Int     @default(0)
+  issuesResolved    Int       @default(0)
+  issuesEscalated   Int       @default(0)
+  
+  // Preferences
+  notificationPreference String @default("email")  // email, sms, push
+  chatbotSpeed      String    @default("normal")   // fast, normal, detailed
+  
+  lastInteraction   DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@map("user_chat_profiles")
+}
+
+// ChatbotAnalytics: Daily aggregated stats
+model ChatbotAnalytics {
+  id                    String    @id @default(cuid())
+  date                  DateTime
+  
+  totalSessions         Int       @default(0)
+  totalMessages         Int       @default(0)
+  issuesResolved        Int       @default(0)
+  issuesEscalated       Int       @default(0)
+  averageResolutionTime Int       @default(0)  // in minutes
+  
+  topCategories         Json      @default("[]")  // Array of {category, count}
+  topIssues             Json      @default("[]")  // Array of {issue, count}
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@map("chatbot_analytics")
+  @@unique([date])
+}
+
