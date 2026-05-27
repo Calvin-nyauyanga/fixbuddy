@@ -521,8 +521,15 @@
          */
         class ChatbotAnalyticsDashboard {
             constructor() {
-                this.apiBaseUrl = 'http://localhost:5000/api';
+                this.apiBaseUrl = 'http://localhost:5000/api/chatbot/analytics';
                 this.authToken = localStorage.getItem('authToken');
+                
+                if (!this.authToken) {
+                    alert('Please log in to view analytics');
+                    window.location.href = '../Main Dashboard/AdminLoginPage.html';
+                    return;
+                }
+                
                 this.init();
             }
 
@@ -542,21 +549,52 @@
                 const dateRange = document.getElementById('dateRange').value;
                 
                 try {
-                    // Fetch analytics from backend (simulated for now)
+                    // Fetch analytics from backend
+                    const response = await fetch(`${this.apiBaseUrl}/dashboard?period=${dateRange}`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.authToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    // Update stats with real data
                     this.updateStats({
-                        totalSessions: Math.floor(Math.random() * 500) + 100,
-                        issuesResolved: Math.floor(Math.random() * 400) + 80,
-                        issuesEscalated: Math.floor(Math.random() * 100) + 20,
-                        satisfaction: Math.floor(Math.random() * 30) + 70,
+                        totalSessions: data.totalSessions || 0,
+                        issuesResolved: data.issuesResolved || 0,
+                        issuesEscalated: data.issuesEscalated || 0,
+                        satisfaction: data.satisfactionRate || 0,
+                        avgResponseTime: data.avgResponseTime || '2.3s',
+                        resolutionRate: data.resolutionRate || 72,
+                        avgSessionDuration: data.avgSessionDuration || '3.5m',
+                        unresolvedIssues: data.unresolvedIssues || 0,
                     });
 
                     // Load tables
-                    this.loadTopIssues();
-                    this.loadTopQuestions();
-                    this.loadUnresolvedIssues();
+                    await this.loadTopIssues();
+                    await this.loadTopQuestions();
+                    await this.loadUnresolvedIssues();
 
                 } catch (error) {
                     console.error('Error loading analytics:', error);
+                    // Fallback to static data if API fails
+                    console.log('📊 Using fallback data for now...');
+                    this.updateStats({
+                        totalSessions: 347,
+                        issuesResolved: 289,
+                        issuesEscalated: 58,
+                        satisfaction: 78,
+                    });
+                    
+                    // Load tables with sample data
+                    this.loadTopIssues();
+                    this.loadTopQuestions();
+                    this.loadUnresolvedIssues();
                 }
             }
 
@@ -565,68 +603,166 @@
                 document.getElementById('issuesResolved').textContent = data.issuesResolved;
                 document.getElementById('issuesEscalated').textContent = data.issuesEscalated;
                 document.getElementById('satisfaction').textContent = data.satisfaction + '%';
+                
+                if (data.avgResponseTime) {
+                    document.getElementById('avgResponseTime').textContent = data.avgResponseTime;
+                }
+                if (data.resolutionRate) {
+                    document.getElementById('resolutionRate').textContent = data.resolutionRate + '%';
+                }
+                if (data.avgSessionDuration) {
+                    document.getElementById('avgSessionDuration').textContent = data.avgSessionDuration;
+                }
+                if (data.unresolvedIssues !== undefined) {
+                    document.getElementById('unresolvedIssues').textContent = data.unresolvedIssues;
+                }
             }
 
-            loadTopIssues() {
+            async loadTopIssues() {
                 const tbody = document.getElementById('topIssuesTable');
-                const issues = [
-                    { category: 'Network', frequency: 156, resolution: 78, time: '4.2m' },
-                    { category: 'Hardware', frequency: 134, resolution: 65, time: '6.1m' },
-                    { category: 'Software', frequency: 108, resolution: 72, time: '5.3m' },
-                    { category: 'Account', frequency: 89, resolution: 92, time: '2.1m' },
-                    { category: 'Security', frequency: 56, resolution: 45, time: '8.5m' },
-                ];
+                
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/top-issues`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.authToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
 
-                tbody.innerHTML = issues.map(issue => `
-                    <tr>
-                        <td><strong>${issue.category}</strong></td>
-                        <td><span class="badge badge-info">${issue.frequency}</span></td>
-                        <td><span class="badge badge-success">${issue.resolution}%</span></td>
-                        <td>${issue.time}</td>
-                        <td><span class="badge badge-success">Good</span></td>
-                    </tr>
-                `).join('');
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const issues = await response.json();
+                    tbody.innerHTML = issues.map(issue => `
+                        <tr>
+                            <td><strong>${issue.category}</strong></td>
+                            <td><span class="badge badge-info">${issue.frequency}</span></td>
+                            <td><span class="badge badge-success">${issue.resolutionRate || issue.resolution}%</span></td>
+                            <td>${issue.avgResolutionTime || issue.time}</td>
+                            <td><span class="badge ${issue.resolutionRate > 70 ? 'badge-success' : 'badge-warning'}">
+                                ${issue.resolutionRate > 70 ? 'Good' : 'Needs Review'}
+                            </span></td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    console.warn('Error loading top issues, using fallback:', error);
+                    // Fallback data
+                    const issues = [
+                        { category: 'Network', frequency: 156, resolution: 78, time: '4.2m' },
+                        { category: 'Hardware', frequency: 134, resolution: 65, time: '6.1m' },
+                        { category: 'Software', frequency: 108, resolution: 72, time: '5.3m' },
+                        { category: 'Account', frequency: 89, resolution: 92, time: '2.1m' },
+                        { category: 'Security', frequency: 56, resolution: 45, time: '8.5m' },
+                    ];
+
+                    tbody.innerHTML = issues.map(issue => `
+                        <tr>
+                            <td><strong>${issue.category}</strong></td>
+                            <td><span class="badge badge-info">${issue.frequency}</span></td>
+                            <td><span class="badge badge-success">${issue.resolution}%</span></td>
+                            <td>${issue.time}</td>
+                            <td><span class="badge badge-success">Good</span></td>
+                        </tr>
+                    `).join('');
+                }
             }
 
-            loadTopQuestions() {
+            async loadTopQuestions() {
                 const tbody = document.getElementById('topQuestionsTable');
-                const questions = [
-                    { q: 'How do I reset my password?', count: 342, resolution: 98, satisfaction: '⭐⭐⭐⭐⭐' },
-                    { q: 'Why is my computer slow?', count: 287, resolution: 72, satisfaction: '⭐⭐⭐⭐' },
-                    { q: 'How do I connect to WiFi?', count: 256, resolution: 85, satisfaction: '⭐⭐⭐⭐' },
-                    { q: 'My printer is not working', count: 198, resolution: 68, satisfaction: '⭐⭐⭐' },
-                ];
+                
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/top-questions`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.authToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
 
-                tbody.innerHTML = questions.map(q => `
-                    <tr>
-                        <td>${q.q}</td>
-                        <td><span class="badge badge-info">${q.count}</span></td>
-                        <td><span class="badge badge-success">${q.resolution}%</span></td>
-                        <td>${q.satisfaction}</td>
-                    </tr>
-                `).join('');
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const questions = await response.json();
+                    tbody.innerHTML = questions.map(q => `
+                        <tr>
+                            <td>${q.question || q.q}</td>
+                            <td><span class="badge badge-info">${q.askCount || q.count}</span></td>
+                            <td><span class="badge badge-success">${q.resolutionRate || q.resolution}%</span></td>
+                            <td>${q.satisfaction || '⭐⭐⭐⭐'}</td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    console.warn('Error loading top questions, using fallback:', error);
+                    // Fallback data
+                    const questions = [
+                        { q: 'How do I reset my password?', count: 342, resolution: 98, satisfaction: '⭐⭐⭐⭐⭐' },
+                        { q: 'Why is my computer slow?', count: 287, resolution: 72, satisfaction: '⭐⭐⭐⭐' },
+                        { q: 'How do I connect to WiFi?', count: 256, resolution: 85, satisfaction: '⭐⭐⭐⭐' },
+                        { q: 'My printer is not working', count: 198, resolution: 68, satisfaction: '⭐⭐⭐' },
+                    ];
+
+                    tbody.innerHTML = questions.map(q => `
+                        <tr>
+                            <td>${q.q}</td>
+                            <td><span class="badge badge-info">${q.count}</span></td>
+                            <td><span class="badge badge-success">${q.resolution}%</span></td>
+                            <td>${q.satisfaction}</td>
+                        </tr>
+                    `).join('');
+                }
             }
 
-            loadUnresolvedIssues() {
+            async loadUnresolvedIssues() {
                 const tbody = document.getElementById('issuesTable');
-                const issues = [
-                    { issue: 'Monitor not displaying correctly after update', count: 12, date: '2025-05-24' },
-                    { issue: 'VPN connection drops intermittently', count: 9, date: '2025-05-23' },
-                    { issue: 'Cannot install specific software', count: 7, date: '2025-05-22' },
-                ];
+                
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/unresolved-issues`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.authToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
 
-                tbody.innerHTML = issues.map(issue => `
-                    <tr>
-                        <td>${issue.issue}</td>
-                        <td><span class="badge badge-warning">${issue.count}</span></td>
-                        <td>${issue.date}</td>
-                        <td>
-                            <button class="btn" style="background: #f39c12; color: white; padding: 6px 12px; font-size: 12px;">
-                                Update KB
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const issues = await response.json();
+                    tbody.innerHTML = issues.map(issue => `
+                        <tr>
+                            <td>${issue.issue || issue.description}</td>
+                            <td><span class="badge badge-warning">${issue.escalationCount || issue.count}</span></td>
+                            <td>${new Date(issue.lastReported).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn" style="background: #f39c12; color: white; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer;">
+                                    Update KB
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    console.warn('Error loading unresolved issues, using fallback:', error);
+                    // Fallback data
+                    const issues = [
+                        { issue: 'Monitor not displaying correctly after update', count: 12, date: '2025-05-24' },
+                        { issue: 'VPN connection drops intermittently', count: 9, date: '2025-05-23' },
+                        { issue: 'Cannot install specific software', count: 7, date: '2025-05-22' },
+                    ];
+
+                    tbody.innerHTML = issues.map(issue => `
+                        <tr>
+                            <td>${issue.issue}</td>
+                            <td><span class="badge badge-warning">${issue.count}</span></td>
+                            <td>${issue.date}</td>
+                            <td>
+                                <button class="btn" style="background: #f39c12; color: white; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer;">
+                                    Update KB
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
             }
         }
 

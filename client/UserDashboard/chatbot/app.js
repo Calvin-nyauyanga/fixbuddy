@@ -48,9 +48,22 @@ class ChatbotApp {
    * Initialize chatbot
    */
   async init() {
+    // Wait for DOM if needed
+    if (document.readyState === 'loading') {
+      await new Promise(resolve => {
+        document.addEventListener('DOMContentLoaded', resolve);
+      });
+    }
+
     // Check authentication
     if (!this.authToken) {
       this.showError('Please log in to use the chatbot');
+      return;
+    }
+
+    // Verify critical elements exist
+    if (!this.elements.wrapper) {
+      console.error('❌ Chatbot wrapper not found. Chatbot initialization failed.');
       return;
     }
 
@@ -98,6 +111,15 @@ class ChatbotApp {
    * Attach event listeners
    */
   attachEventListeners() {
+    // Validate that required elements exist
+    if (!this.elements.sendBtn || !this.elements.input || !this.elements.closeBtn) {
+      console.error('❌ Critical chatbot elements not found in DOM');
+      console.error('sendBtn:', !!this.elements.sendBtn);
+      console.error('input:', !!this.elements.input);
+      console.error('closeBtn:', !!this.elements.closeBtn);
+      return;
+    }
+
     // Send message
     this.elements.sendBtn.addEventListener('click', this.sendMessage);
     this.elements.input.addEventListener('keypress', this.handleKeyPress);
@@ -106,39 +128,62 @@ class ChatbotApp {
     this.elements.closeBtn.addEventListener('click', () => this.toggleMinimize());
 
     // Language selection
-    this.elements.languageSelect.addEventListener('change', (e) => {
-      this.currentLanguage = e.target.value;
-      localStorage.setItem('chatbotLanguage', e.target.value);
-      console.log('🌐 Language changed to:', e.target.value);
-    });
+    if (this.elements.languageSelect) {
+      this.elements.languageSelect.addEventListener('change', (e) => {
+        this.currentLanguage = e.target.value;
+        localStorage.setItem('chatbotLanguage', e.target.value);
+        console.log('🌐 Language changed to:', e.target.value);
+      });
+    }
 
     // Action buttons
-    this.elements.escalateBtn.addEventListener('click', () => this.showEscalationModal());
-    this.elements.ticketBtn.addEventListener('click', () => this.showTicketModal());
+    if (this.elements.escalateBtn) {
+      this.elements.escalateBtn.addEventListener('click', () => this.showEscalationModal());
+    }
+    if (this.elements.ticketBtn) {
+      this.elements.ticketBtn.addEventListener('click', () => this.showTicketModal());
+    }
 
     // Modal controls
-    document.getElementById('closeTicketModal')?.addEventListener('click', () => {
-      this.closeModal('ticketModal');
-    });
+    const closeTicketBtn = document.getElementById('closeTicketModal');
+    if (closeTicketBtn) {
+      closeTicketBtn.addEventListener('click', () => {
+        this.closeModal('ticketModal');
+      });
+    }
 
-    document.getElementById('cancelTicketBtn')?.addEventListener('click', () => {
-      this.closeModal('ticketModal');
-    });
+    const cancelTicketBtn = document.getElementById('cancelTicketBtn');
+    if (cancelTicketBtn) {
+      cancelTicketBtn.addEventListener('click', () => {
+        this.closeModal('ticketModal');
+      });
+    }
 
-    document.getElementById('submitTicketBtn')?.addEventListener('click', () => {
-      this.submitTicket();
-    });
+    const submitTicketBtn = document.getElementById('submitTicketBtn');
+    if (submitTicketBtn) {
+      submitTicketBtn.addEventListener('click', () => {
+        this.submitTicket();
+      });
+    }
 
-    document.getElementById('closeEscalationModal')?.addEventListener('click', () => {
-      this.closeModal('escalationModal');
-    });
+    const closeEscalationBtn = document.getElementById('closeEscalationModal');
+    if (closeEscalationBtn) {
+      closeEscalationBtn.addEventListener('click', () => {
+        this.closeModal('escalationModal');
+      });
+    }
 
-    document.getElementById('cancelEscalationBtn')?.addEventListener('click', () => {
-      this.closeModal('escalationModal');
-    });
+    const cancelEscalationBtn = document.getElementById('cancelEscalationBtn');
+    if (cancelEscalationBtn) {
+      cancelEscalationBtn.addEventListener('click', () => {
+        this.closeModal('escalationModal');
+      });
+    }
 
     // FAB
-    this.elements.fab?.addEventListener('click', () => this.toggleMinimize());
+    if (this.elements.fab) {
+      this.elements.fab.addEventListener('click', () => this.toggleMinimize());
+    }
   }
 
   /**
@@ -155,6 +200,12 @@ class ChatbotApp {
    * Send message to chatbot
    */
   async sendMessage() {
+    // Validate elements
+    if (!this.elements.input) {
+      console.error('❌ Input element not found');
+      return;
+    }
+
     const message = this.elements.input.value.trim();
 
     if (!message) {
@@ -169,7 +220,9 @@ class ChatbotApp {
     this.elements.input.value = '';
 
     // Disable send button
-    this.elements.sendBtn.disabled = true;
+    if (this.elements.sendBtn) {
+      this.elements.sendBtn.disabled = true;
+    }
 
     // Show typing indicator
     this.showTypingIndicator();
@@ -203,8 +256,12 @@ class ChatbotApp {
       console.error('Error sending message:', error);
       this.addMessage('Connection error. Please check your internet and try again.', 'bot', { type: 'error' });
     } finally {
-      this.elements.sendBtn.disabled = false;
-      this.elements.input.focus();
+      if (this.elements.sendBtn) {
+        this.elements.sendBtn.disabled = false;
+      }
+      if (this.elements.input) {
+        this.elements.input.focus();
+      }
     }
   }
 
@@ -524,20 +581,39 @@ class ChatbotApp {
    * Toggle minimize
    */
   toggleMinimize() {
+    // Validate required elements exist
+    if (!this.elements.wrapper) {
+      console.error('❌ Chatbot wrapper element not found');
+      return;
+    }
+
     this.isMinimized = !this.isMinimized;
 
     if (this.isMinimized) {
       this.elements.wrapper.style.display = 'none';
-      this.elements.fab.style.display = 'flex';
-      if (this.messageCount > 0) {
+      
+      if (this.elements.fab) {
+        this.elements.fab.style.display = 'flex';
+      }
+      
+      if (this.messageCount > 0 && this.elements.fabBadge) {
         this.elements.fabBadge.textContent = this.messageCount;
         this.elements.fabBadge.style.display = 'flex';
       }
     } else {
       this.elements.wrapper.style.display = 'flex';
-      this.elements.fab.style.display = 'none';
-      this.elements.fabBadge.style.display = 'none';
-      this.elements.input.focus();
+      
+      if (this.elements.fab) {
+        this.elements.fab.style.display = 'none';
+      }
+      
+      if (this.elements.fabBadge) {
+        this.elements.fabBadge.style.display = 'none';
+      }
+      
+      if (this.elements.input) {
+        this.elements.input.focus();
+      }
     }
   }
 
@@ -588,6 +664,13 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Initialize chatbot when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('📌 DOM ready, initializing chatbot...');
+    window.chatbot = new ChatbotApp();
+  });
+} else {
+  // DOM already loaded
+  console.log('📌 DOM already loaded, initializing chatbot...');
   window.chatbot = new ChatbotApp();
-});
+}

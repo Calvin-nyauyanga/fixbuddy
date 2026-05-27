@@ -197,6 +197,192 @@ class ChatbotController {
     const messages = await chatbotService.getConversationHistory(sessionId, 100);
     return Math.floor(messages.length / 2); // Every message pair is one turn
   }
+
+  /**
+   * GET /api/chatbot/analytics/dashboard
+   * Get analytics dashboard data
+   */
+  async getAnalyticsDashboard(req, res) {
+    try {
+      const { period = '7days' } = req.query;
+
+      // Calculate date range
+      const now = new Date();
+      let startDate = new Date();
+
+      switch (period) {
+        case 'today':
+          startDate = new Date(now.setHours(0, 0, 0, 0));
+          break;
+        case '7days':
+          startDate = new Date(now.setDate(now.getDate() - 7));
+          break;
+        case '30days':
+          startDate = new Date(now.setDate(now.getDate() - 30));
+          break;
+        case '90days':
+          startDate = new Date(now.setDate(now.getDate() - 90));
+          break;
+        default:
+          startDate = new Date(now.setDate(now.getDate() - 7));
+      }
+
+      // Mock analytics data (in production, aggregate from database)
+      const analytics = {
+        totalSessions: Math.floor(Math.random() * 500) + 200,
+        issuesResolved: Math.floor(Math.random() * 400) + 150,
+        issuesEscalated: Math.floor(Math.random() * 100) + 20,
+        satisfactionRate: Math.floor(Math.random() * 30) + 70,
+        avgResponseTime: '2.3s',
+        resolutionRate: Math.floor(Math.random() * 30) + 65,
+        avgSessionDuration: '3.5m',
+        unresolvedIssues: Math.floor(Math.random() * 50) + 10,
+      };
+
+      res.json({
+        success: true,
+        period,
+        ...analytics,
+      });
+    } catch (error) {
+      console.error('Error in getAnalyticsDashboard:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/chatbot/analytics/top-issues
+   * Get top reported issues
+   */
+  async getTopIssues(req, res) {
+    try {
+      // Mock data for top issues
+      const topIssues = [
+        {
+          category: 'Network',
+          frequency: 156,
+          resolutionRate: 78,
+          avgResolutionTime: '4.2m',
+          status: 'Good',
+        },
+        {
+          category: 'Hardware',
+          frequency: 134,
+          resolutionRate: 65,
+          avgResolutionTime: '6.1m',
+          status: 'Needs Review',
+        },
+        {
+          category: 'Software',
+          frequency: 108,
+          resolutionRate: 72,
+          avgResolutionTime: '5.3m',
+          status: 'Good',
+        },
+        {
+          category: 'Account',
+          frequency: 89,
+          resolutionRate: 92,
+          avgResolutionTime: '2.1m',
+          status: 'Good',
+        },
+        {
+          category: 'Security',
+          frequency: 56,
+          resolutionRate: 45,
+          avgResolutionTime: '8.5m',
+          status: 'Needs Review',
+        },
+      ];
+
+      res.json({
+        success: true,
+        data: topIssues,
+      });
+    } catch (error) {
+      console.error('Error in getTopIssues:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/chatbot/analytics/top-questions
+   * Get most frequently asked questions
+   */
+  async getTopQuestions(req, res) {
+    try {
+      // Mock data for top questions
+      const topQuestions = [
+        {
+          question: 'How do I reset my password?',
+          askCount: 342,
+          resolutionRate: 98,
+          satisfaction: '⭐⭐⭐⭐⭐',
+        },
+        {
+          question: 'Why is my computer slow?',
+          askCount: 287,
+          resolutionRate: 72,
+          satisfaction: '⭐⭐⭐⭐',
+        },
+        {
+          question: 'How do I connect to WiFi?',
+          askCount: 256,
+          resolutionRate: 85,
+          satisfaction: '⭐⭐⭐⭐',
+        },
+        {
+          question: 'My printer is not working',
+          askCount: 198,
+          resolutionRate: 68,
+          satisfaction: '⭐⭐⭐',
+        },
+      ];
+
+      res.json({
+        success: true,
+        data: topQuestions,
+      });
+    } catch (error) {
+      console.error('Error in getTopQuestions:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/chatbot/analytics/unresolved-issues
+   * Get unresolved issues requiring KB updates
+   */
+  async getUnresolvedIssues(req, res) {
+    try {
+      // Mock data for unresolved issues
+      const unresolvedIssues = [
+        {
+          issue: 'Monitor not displaying correctly after update',
+          escalationCount: 12,
+          lastReported: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        },
+        {
+          issue: 'VPN connection drops intermittently',
+          escalationCount: 9,
+          lastReported: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+        },
+        {
+          issue: 'Cannot install specific software',
+          escalationCount: 7,
+          lastReported: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+        },
+      ];
+
+      res.json({
+        success: true,
+        data: unresolvedIssues,
+      });
+    } catch (error) {
+      console.error('Error in getUnresolvedIssues:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 export default new ChatbotController();

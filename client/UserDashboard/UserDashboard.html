@@ -7,7 +7,10 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; connect-src 'self' http://localhost:5000 http://localhost:5500 ws://localhost:*; img-src 'self' data: https:;">
     <title>FixBuddy – User Dashboard</title>
     <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/STYLING-UNIVERSAL.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <!-- CHATBOT STYLES -->
+    <link rel="stylesheet" href="chatbot/styles.css">
+    <link rel="stylesheet" href="../CSS-STYLING-UNIVERSAL/chatbot-theme.css">
     <style>
         /* User Profile Avatar - Shows first letter of name */
         .user-profile-avatar {
@@ -110,6 +113,167 @@
     <footer>
         <span>© <span id="year"></span> <strong>FixBuddy</strong></span>
     </footer>
+    <!-- CHATBOT WIDGET -->
+<div class="chatbot-wrapper">
+    <!-- Chatbot Header -->
+    <div class="chatbot-header">
+        <div class="chatbot-header-content">
+            <div class="chatbot-title">
+                <i class="fas fa-robot"></i>
+                <span>FixBot</span>
+            </div>
+            <p class="chatbot-subtitle">AI-Powered Support</p>
+        </div>
+        <button class="chatbot-close-btn" id="closeChatbot">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Chatbot Body - Messages Area -->
+    <div class="chatbot-body">
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="message bot-message welcome-message">
+                <div class="message-content">
+                    <p>👋 <strong>Welcome! I'm FixBot</strong></p>
+                    <p>I can help you with technical issues and answer computer-related questions.</p>
+                    <p style="margin-top: 10px; font-size: 13px; color: #888;">
+                        <em>💡 Tip: Ask me anything about hardware, software, network, or account issues!</em>
+                    </p>
+                </div>
+                <span class="message-time">Just now</span>
+            </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator" style="display: none;">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- Suggested Replies -->
+    <div class="suggested-replies" id="suggestedReplies" style="display: none;">
+        <div class="suggested-title">Suggested topics:</div>
+        <div class="suggested-buttons"></div>
+    </div>
+
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <select id="languageSelect" class="language-dropdown">
+            <option value="en">🇬🇧 English</option>
+            <option value="sn">🇿🇼 Shona</option>
+            <option value="nd">🇿🇼 Ndebele</option>
+        </select>
+    </div>
+
+    <!-- Input Area -->
+    <div class="chatbot-footer">
+        <div class="chatbot-input-wrapper">
+            <input 
+                type="text" 
+                id="chatbotInput" 
+                class="chatbot-input" 
+                placeholder="Ask me anything (or type 'help')..."
+                maxlength="500"
+            />
+            <button class="chatbot-send-btn" id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="chatbot-actions">
+        <button class="action-btn escalate-btn" id="escalateBtn" title="Escalate to Support Agent">
+            <i class="fas fa-phone"></i> Get Human Help
+        </button>
+        <button class="action-btn ticket-btn" id="ticketBtn" title="Create Support Ticket">
+            <i class="fas fa-ticket-alt"></i> Create Ticket
+        </button>
+    </div>
+</div>
+
+<!-- Modal for Creating Ticket -->
+<div class="modal" id="ticketModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create Support Ticket</h2>
+            <button class="modal-close" id="closeTicketModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="ticketForm">
+                <div class="form-group">
+                    <label for="ticketSummary">Issue Summary *</label>
+                    <input type="text" id="ticketSummary" class="form-input" required maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="ticketDescription">Description *</label>
+                    <textarea id="ticketDescription" class="form-textarea" rows="4" required maxlength="500"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="ticketUrgency">Urgency Level</label>
+                    <select id="ticketUrgency" class="form-input">
+                        <option value="low">Low - Can wait</option>
+                        <option value="medium" selected>Medium - Important</option>
+                        <option value="high">High - Urgent</option>
+                        <option value="critical">Critical - Blocking work</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ticketCategory">Category</label>
+                    <select id="ticketCategory" class="form-input">
+                        <option value="">-- Auto-detect --</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Software">Software</option>
+                        <option value="Network">Network</option>
+                        <option value="Account">Account</option>
+                        <option value="Security">Security</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ticketAttachment">Attach Screenshot (optional)</label>
+                    <input type="file" id="ticketAttachment" class="form-input" accept="image/*">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancelTicketBtn">Cancel</button>
+            <button class="btn btn-primary" id="submitTicketBtn">Create Ticket</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Escalation -->
+<div class="modal" id="escalationModal" style="display: none;">
+    <div class="modal-content modal-small">
+        <div class="modal-header">
+            <h2>Connect with Support Team</h2>
+            <button class="modal-close" id="closeEscalationModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>I'm connecting you with a support agent who can help you further.</p>
+            <div class="escalation-info" id="escalationInfo">
+                <div class="spinner"></div>
+                <p>Finding available agents...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancelEscalationBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button (minimized chatbot) -->
+<button class="chatbot-fab" id="chatbotFab" style="display: none;">
+    <i class="fas fa-comment-dots"></i>
+    <span class="fab-badge" id="fabBadge">1</span>
+</button>
 
     <script src="../js/api-client.js"></script>
     <script src="../js/themeManager-v2.js"></script>
